@@ -1,0 +1,12 @@
+bin
+Debug
+obj
+*.suo
+TestResults
+*.vsmdi
+*.opensdf
+*.sln.DotSettings.user
+_ReSharper*
+java/.metadata
+packages
+output
