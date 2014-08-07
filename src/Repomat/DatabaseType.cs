@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Repomat.Databases
+namespace Repomat
 {
     public enum DatabaseType
     {

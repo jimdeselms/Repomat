@@ -60,7 +60,7 @@
     <Compile Include="CodeGen\MethodBuilderFactory.cs" />
     <Compile Include="CodeGen\SqlServerRepositoryClassBuilder.cs" />
     <Compile Include="Runtime\ConcurrentlyLoadedCollection.cs" />
-    <Compile Include="Databases\DatabaseType.cs" />
+    <Compile Include="DatabaseType.cs" />
     <Compile Include="PropertyBuilder.cs" />
     <Compile Include="RepositoryBuilder.cs" />
     <Compile Include="MethodBuilder.cs" />

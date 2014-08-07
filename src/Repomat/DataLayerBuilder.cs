@@ -12,8 +12,9 @@ using Repomat.Schema;
 using System.Data.SqlClient;
 using System.Data.SQLite;
 using Repomat.Schema.Validators;
+using Repomat.Databases;
 
-namespace Repomat.Databases
+namespace Repomat
 {
     public abstract class DataLayerBuilder
     {

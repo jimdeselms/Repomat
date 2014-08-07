@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Repomat.Schema;
 
-namespace Repomat.Databases
+namespace Repomat
 {
     public class RepositoryBuilder<TType, TRepo>
     {
