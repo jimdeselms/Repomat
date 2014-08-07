@@ -94,6 +94,30 @@ namespace Repomat.UnitTests
             Assert.AreEqual(typeof(int), typeof(List<int>).GetCoreType());
         }
 
+        [Test]
+        public void IsEnumerableOfType_ListOfSameType_True()
+        {
+            Assert.IsTrue(typeof(List<int>).ImplementsIEnumerableOfType(typeof(int)));
+        }
+
+        [Test]
+        public void IsEnumerableOfType_ListOfDifferentType_False()
+        {
+            Assert.IsFalse(typeof(List<int>).ImplementsIEnumerableOfType(typeof(char)));
+        }
+
+        [Test]
+        public void IsEnumerableOfType_ArrayOfSameType_True()
+        {
+            Assert.IsTrue(typeof(List<char>).ImplementsIEnumerableOfType(typeof(char)));
+        }
+
+        [Test]
+        public void IsEnumerableOfType_ArrayOfDifferentType_False()
+        {
+            Assert.IsFalse(typeof(List<string>).ImplementsIEnumerableOfType(typeof(bool)));
+        }
+
         private class PrivateInnerClass
         {
         }

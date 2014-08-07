@@ -115,10 +115,16 @@ namespace Repomat
                 || t == typeof(string);
         }
 
-        public static bool IsEnumerableOfType(this Type t, Type coreType)
+        public static bool ImplementsIEnumerableOfType(this Type t, Type coreType)
         {
             var enumerable = typeof(IEnumerable<>).MakeGenericType(coreType);
-            return t.IsAssignableFrom(enumerable);
+            return enumerable.IsAssignableFrom(t);
+        }
+
+        public static bool IsIEnumerableOfType(this Type t, Type coreType)
+        {
+            var enumerable = typeof(IEnumerable<>).MakeGenericType(coreType);
+            return enumerable.Equals(t);
         }
 
         private static Dictionary<Type, string> _simpleTypeNames = new Dictionary<Type, string>();

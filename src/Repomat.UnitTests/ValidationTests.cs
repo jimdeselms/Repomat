@@ -76,6 +76,13 @@ namespace Repomat.UnitTests
                 Error("BothCreateAndInsert", "Create and Insert methods are mutually exclusive. Please choose one"));
         }
 
+        [Test]
+        public void Validate_CustomMethodDoesntHaveSqlDefined()
+        {
+            Validate<Person, ICustomMethodWithoutCustomSql>(
+                Error("CustomMethodWithoutSql", "Method looks custom, but does not have SQL defined. Call SetCustomSql() to define the SQL"));
+        }
+
         private interface IGetReturnsSomethingOtherThanDto
         {
             ColorThing Get(int personId);
@@ -117,6 +124,11 @@ namespace Repomat.UnitTests
         {
             void Create(Person p);
             void Update(Person p);
+        }
+
+        private interface ICustomMethodWithoutCustomSql
+        {
+            void DoSomethingSpecial();
         }
 
         #region Helpers

@@ -149,7 +149,7 @@ namespace Repomat.Schema
                 {
                     return MethodType.Exists;
                 }
-                else if (_methodName.StartsWith("Get") || _methodName.StartsWith("TryGet"))
+                else if (_methodName.StartsWith("Get") || _methodName.StartsWith("TryGet") || _methodName.StartsWith("Find") || _methodName.StartsWith("TryFind"))
                 {
                     return MethodType.Get;
                 }
@@ -173,7 +173,10 @@ namespace Repomat.Schema
                 {
                     return MethodType.Create;
                 }
-                throw new RepomatException("Can't determine method type for method " + _methodName);
+
+                // For now, we'll assume it's Custom. Later, come validation time, if the custom SQL
+                // isn't set, then we should fail.
+                return MethodType.Custom;
             }
         }
     }

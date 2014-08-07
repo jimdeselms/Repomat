@@ -87,6 +87,18 @@ namespace Repomat.UnitTests
         }
 
         [Test]
+        public void FindBy_FiltersResult()
+        {
+            var repo = CreateRepoWithJimAndSusan();
+
+            Person person = repo.FindByBirthday(new DateTime(1969, 3, 9));
+
+            Assert.AreEqual(1, person.PersonId);
+            Assert.AreEqual("Jim", person.Name);
+            Assert.AreEqual(new DateTime(1969, 3, 9), person.Birthday);
+        }
+
+        [Test]
         public void GetSingletonBy_ReturnsSingle()
         {
             var repo = CreateRepoWithJimAndSusan();
@@ -311,15 +323,6 @@ namespace Repomat.UnitTests
 
             Assert.AreEqual(1, micahId);
             Assert.AreEqual(2, nellyId);
-        }
-
-        [Test]
-        public void CreateRepository_InvalidMethodName_Throws()
-        {
-            var factory = CreateFactory(_connection);
-            factory.SetupRepo<Person, IRepositoryWithBogusMethodName>();
-
-            Assert.Throws<RepomatException>(() => factory.CreateRepo<IRepositoryWithBogusMethodName>());
         }
 
         [Test]

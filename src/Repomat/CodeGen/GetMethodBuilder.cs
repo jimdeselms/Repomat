@@ -208,7 +208,7 @@ namespace Repomat.CodeGen
                         }
                         CodeBuilder.CloseBrace();
                     }
-                    bool isEnumerable = MethodDef.ReturnType.IsEnumerableOfType(RepoDef.EntityType);
+                    bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(RepoDef.EntityType);
                     if (!isEnumerable)
                     {
                         CodeBuilder.WriteLine("var result = new System.Collections.Generic.List<{0}>();", RepoDef.EntityType.ToCSharp());

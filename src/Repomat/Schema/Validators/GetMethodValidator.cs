@@ -29,7 +29,7 @@ namespace Repomat.Schema.Validators
                         RepositoryDef.EntityType.ToCSharp(),
                         MethodDef.ReturnType.ToCSharp());
                 }
-                else if (!MethodDef.IsSingleton && !MethodDef.ReturnType.IsEnumerableOfType(RepositoryDef.EntityType))
+                else if (!MethodDef.IsSingleton && !MethodDef.ReturnType.ImplementsIEnumerableOfType(RepositoryDef.EntityType))
                 {
                     AddError("MultiGetReturnWrongType", "expected enumerable return type {0}, returns {1} instead",
                         RepositoryDef.EntityType.ToCSharp(),

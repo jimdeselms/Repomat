@@ -11,6 +11,7 @@ using Repomat.CodeGen;
 using Repomat.Schema;
 using System.Data.SqlClient;
 using System.Data.SQLite;
+using Repomat.Schema.Validators;
 
 namespace Repomat.Databases
 {
@@ -68,15 +69,17 @@ namespace Repomat.Databases
             _columnNamingConvention = NamingConvention.NoOp;
         }
 
-        internal TRepo CreateRepoFromTableDef<TRepo>(RepositoryDef tableDef)
+        internal TRepo CreateRepoFromTableDef<TRepo>(RepositoryDef repoDef)
         {
+            EnsureRepoIsValid(repoDef);
+
             string className;
-            string classCode = GenerateClassCode<TRepo>(tableDef, out className);
+            string classCode = GenerateClassCode<TRepo>(repoDef, out className);
 
             CSharpCodeProvider p = new CSharpCodeProvider();
             CompilerParameters parms = new CompilerParameters();
             AddReferenceToTypeAssembly(typeof(DataLayerBuilder), parms);
-            AddReferenceToTypeAssembly(tableDef.EntityType, parms);
+            AddReferenceToTypeAssembly(repoDef.EntityType, parms);
             AddReferenceToTypeAssembly(typeof(TRepo), parms);
             parms.ReferencedAssemblies.Add("System.Core.dll");
             parms.ReferencedAssemblies.Add("System.Data.dll");
@@ -98,7 +101,19 @@ namespace Repomat.Databases
             var asm = result.CompiledAssembly;
             var generatedType = asm.GetType(className);
 
-            return CreateRepoInstance<TRepo>(generatedType, tableDef);
+            return CreateRepoInstance<TRepo>(generatedType, repoDef);
+        }
+
+        private void EnsureRepoIsValid(RepositoryDef repoDef)
+        {
+            var validator = new RepositoryDefValidator();
+            var errors = validator.Validate(repoDef);
+
+            if (errors.Count != 0)
+            {
+                string errorMessage = "The repository has some validation errors:\r\n" + string.Join(Environment.NewLine, errors);
+                throw new RepomatException(errorMessage);
+            }
         }
 
         public DataLayerBuilder SetColumnNamingConvention(NamingConvention namingConvention)

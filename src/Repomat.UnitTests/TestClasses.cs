@@ -27,6 +27,8 @@ namespace Repomat.UnitTests
         IEnumerable<Person> GetByName(string name);
         Person GetSingletonByName(string name);
 
+        Person FindByBirthday(DateTime birthday);
+
         Person Get(int personId);
 
         int GetCountByName(string name);
