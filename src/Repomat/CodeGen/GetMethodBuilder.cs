@@ -11,11 +11,13 @@ namespace Repomat.CodeGen
     internal class GetMethodBuilder : MethodBuilder
     {
         private readonly int _customQueryIdx;
+        private bool _useStrictTyping;
 
-        internal GetMethodBuilder(CodeBuilder codeBuilder, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, MethodBuilderFactory methodBuilderFactory)
+        internal GetMethodBuilder(CodeBuilder codeBuilder, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, MethodBuilderFactory methodBuilderFactory, bool useStrictTyping)
             : base(codeBuilder, repoDef, methodDef, newConnectionEveryTime, methodBuilderFactory)
         {
             _customQueryIdx = customQueryIdx;
+            _useStrictTyping = useStrictTyping;
         }
 
         public override void GenerateCode()
@@ -294,7 +296,7 @@ namespace Repomat.CodeGen
 
         private string GetReaderGetExpression(Type t, string index)
         {
-            return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index);
+            return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
         }
 
         private string GetIndexExpr(int index, string propertyName, int? queryIndexOrNull)

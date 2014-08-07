@@ -11,6 +11,7 @@ namespace Repomat.CodeGen
     {
         private readonly bool _newConnectionEveryTime;
         private int _customQueryIdx = 1;
+        private bool _useStrictTypes = false;
 
         public SqlMethodBuilderFactory(CodeBuilder codeBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
             : base(codeBuilder, repoDef)
@@ -30,7 +31,7 @@ namespace Repomat.CodeGen
                 case MethodType.Delete: return new DeleteMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.DropTable: return new DropTableMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.Exists: return new ExistsMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
-                case MethodType.Get: return new GetMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, _customQueryIdx++, this);
+                case MethodType.Get: return new GetMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, _customQueryIdx++, this, _useStrictTypes);
                 case MethodType.GetCount: return new GetCountMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.Insert: return new InsertMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.TableExists: return new TableExistsMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
@@ -38,6 +39,16 @@ namespace Repomat.CodeGen
                 case MethodType.Upsert: return new UpsertMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 default: throw new RepomatException("Unhandled method type {0}", methodDef.MethodType);
             }
+        }
+
+        /// <summary>
+        /// Turns on strict typing; this improves query performance, but will cause exceptions if a column's datatype is
+        /// not the exact same type of the corresponding property. For example, if a column is BIGINT, but the column's
+        /// datatype is byte, this will fail if strict typing is turned on.
+        /// </summary>
+        public void UseStrictTyping()
+        {
+            _useStrictTypes = true;
         }
 
         protected virtual string MapTypeToSqlDatatype(Type t, bool isIdentity)

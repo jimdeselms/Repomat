@@ -25,9 +25,22 @@ namespace Repomat.CodeGen
         public string ScalarConvertExpr { get { return _scalarConvertExpr; } }
         public string SqlDatatype { get { return _sqlDatatype; } }
 
-        public string GetReaderGetExpr(string index)
+        public string GetReaderGetExpr(string index, bool useStrictTyping)
         {
-            return string.Format(_readerGetExpr, index);
+            // If you use strict types, then you can get better performance, since you're just
+            // getting the values directly without converting them. But, if your schema's types
+            // don't match the types defined in your code, then you'll get an exception.
+            //
+            // If you don't use strict types, it'll be a lot more forgiving, because it will just
+            // convert the resulting object to the correct type.
+            if (useStrictTyping)
+            {
+                return string.Format(_readerGetExpr, index);
+            }
+            else
+            {
+                return string.Format(_scalarConvertExpr, string.Format("reader.GetValue({0})", index));
+            }
         }
 
         public string GetScalarConvertExpr(string input)
