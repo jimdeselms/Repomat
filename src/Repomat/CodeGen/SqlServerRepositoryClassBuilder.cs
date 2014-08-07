@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Repomat.CodeGen
 {
-    internal class SqlServerRepositoryClassBuilder<TType, TRepo> : SqlRepositoryClassBuilderBase<TType, TRepo>
+    internal class SqlServerRepositoryClassBuilder : SqlRepositoryClassBuilderBase
     {
         public SqlServerRepositoryClassBuilder(RepositoryDef repositoryDef, bool newConnectionEveryTime) : base(repositoryDef, newConnectionEveryTime)
         {

@@ -21,9 +21,9 @@ namespace Repomat.Databases
         }
 
         // internal because protected will expose it to the outside.
-        internal override RepositoryClassBuilder<TRepo> CreateClassBuilder<TType, TRepo>(RepositoryDef tableDef)
+        internal override RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef)
         {
-            return new SQLiteRepositoryClassBuilder<TType, TRepo>(tableDef, NewConnectionEveryTime);
+            return new SQLiteRepositoryClassBuilder(tableDef, NewConnectionEveryTime);
         }
     }
 }

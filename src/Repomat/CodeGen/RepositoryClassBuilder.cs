@@ -14,7 +14,7 @@ using Repomat.Schema;
 
 namespace Repomat.CodeGen
 {
-    internal abstract class RepositoryClassBuilder<TRepo>
+    internal abstract class RepositoryClassBuilder
     {
         private readonly string _className;
         private readonly RepositoryDef _repositoryDef;
@@ -29,7 +29,7 @@ namespace Repomat.CodeGen
         {
             string guidToAlnum = Guid.NewGuid().ToString().Replace("{", "").Replace("}", "").Replace("-", "");
 
-            return string.Format("__{0}_{1}", typeof(TRepo).Name, guidToAlnum);
+            return string.Format("__{0}_{1}", _repositoryDef.RepositoryType.Name, guidToAlnum);
         }
 
         public string ClassName { get { return _className; } }

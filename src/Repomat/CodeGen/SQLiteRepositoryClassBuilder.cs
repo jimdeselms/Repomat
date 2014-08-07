@@ -8,7 +8,7 @@ using Repomat.Schema;
 
 namespace Repomat.CodeGen
 {
-    internal class SQLiteRepositoryClassBuilder<TType, TRepo> : SqlRepositoryClassBuilderBase<TType, TRepo>
+    internal class SQLiteRepositoryClassBuilder : SqlRepositoryClassBuilderBase
     {
         public SQLiteRepositoryClassBuilder(RepositoryDef repositoryDef, bool newConnectionEveryTime)
             : base(repositoryDef, newConnectionEveryTime)

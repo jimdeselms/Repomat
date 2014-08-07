@@ -70,18 +70,18 @@ namespace Repomat
             _columnNamingConvention = NamingConvention.NoOp;
         }
 
-        internal TRepo CreateRepoFromTableDef<TRepo>(RepositoryDef repoDef)
+        internal object CreateRepoFromTableDef(RepositoryDef repoDef)
         {
             EnsureRepoIsValid(repoDef);
 
             string className;
-            string classCode = GenerateClassCode<TRepo>(repoDef, out className);
+            string classCode = GenerateClassCode(repoDef, out className);
 
             CSharpCodeProvider p = new CSharpCodeProvider();
             CompilerParameters parms = new CompilerParameters();
             AddReferenceToTypeAssembly(typeof(DataLayerBuilder), parms);
             AddReferenceToTypeAssembly(repoDef.EntityType, parms);
-            AddReferenceToTypeAssembly(typeof(TRepo), parms);
+            AddReferenceToTypeAssembly(repoDef.RepositoryType, parms);
             parms.ReferencedAssemblies.Add("System.Core.dll");
             parms.ReferencedAssemblies.Add("System.Data.dll");
             parms.ReferencedAssemblies.Add("System.dll");
@@ -102,7 +102,7 @@ namespace Repomat
             var asm = result.CompiledAssembly;
             var generatedType = asm.GetType(className);
 
-            return CreateRepoInstance<TRepo>(generatedType, repoDef);
+            return CreateRepoInstance(generatedType, repoDef);
         }
 
         private void EnsureRepoIsValid(RepositoryDef repoDef)
@@ -151,24 +151,24 @@ namespace Repomat
         public TRepo CreateRepo<TRepo>()
         {
             var tableDef = _repoDefs[typeof(TRepo)];
-            return CreateRepoFromTableDef<TRepo>(tableDef);
+            return (TRepo)CreateRepoFromTableDef(tableDef);
         }
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        private string GenerateClassCode<TRepo>(RepositoryDef tableDef, out string className)
+        private string GenerateClassCode(RepositoryDef tableDef, out string className)
         {
-            var classBuilder = (RepositoryClassBuilder<TRepo>)_createClassBuilder.MakeGenericMethod(tableDef.EntityType, typeof(TRepo)).Invoke(this, new[] { tableDef });
+            var classBuilder = CreateClassBuilder(tableDef);
 
             className = classBuilder.ClassName;
             return classBuilder.GenerateClassDefinition();
         }
 
         // Internal so that I don't have to expose it to the outside by making it protected.
-        internal abstract RepositoryClassBuilder<TRepo> CreateClassBuilder<TType, TRepo>(RepositoryDef tableDef);
+        internal abstract RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef);
 
         // internal because protected will expose it to the outside.
-        internal abstract TRepo CreateRepoInstance<TRepo>(Type repoClass, RepositoryDef tableDef);
+        internal abstract object CreateRepoInstance(Type repoClass, RepositoryDef tableDef);
 
         private void AddReferenceToTypeAssembly(Type type, CompilerParameters parms)
         {

@@ -12,7 +12,7 @@ using System.Collections;
 
 namespace Repomat.CodeGen
 {
-    internal abstract class SqlRepositoryClassBuilderBase<TType, TRepo> : RepositoryClassBuilder<TRepo>
+    internal abstract class SqlRepositoryClassBuilderBase : RepositoryClassBuilder
     {
         private bool _newConnectionEveryTime;
 
@@ -27,7 +27,7 @@ namespace Repomat.CodeGen
         {
             CodeBuilder builder = new CodeBuilder();
 
-            builder.WriteLine("public class {0} : {1}", ClassName, typeof(TRepo).ToCSharp());
+            builder.WriteLine("public class {0} : {1}", ClassName, RepositoryDef.RepositoryType.ToCSharp());
             builder.OpenBrace();
             if (_newConnectionEveryTime)
             {
