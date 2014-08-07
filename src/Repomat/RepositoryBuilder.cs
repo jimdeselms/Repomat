@@ -20,7 +20,7 @@ namespace Repomat
 
         public TRepo CreateRepo()
         {
-            return (TRepo)_repositoryFactory.CreateRepoFromTableDef(_repoDef);
+            return (TRepo)_repositoryFactory.CreateRepo<TRepo>();
         }
 
         public RepositoryBuilder<TType, TRepo> SetTableName(string newTableName)

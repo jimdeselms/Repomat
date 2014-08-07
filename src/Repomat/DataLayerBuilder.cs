@@ -13,6 +13,7 @@ using System.Data.SqlClient;
 using System.Data.SQLite;
 using Repomat.Schema.Validators;
 using Repomat.Databases;
+using System.IO;
 
 namespace Repomat
 {
@@ -62,7 +63,11 @@ namespace Repomat
         private NamingConvention _tableNamingConvention;
         private NamingConvention _columnNamingConvention;
 
+        // This is where all of the repository definitions live
         private readonly Dictionary<Type, RepositoryDef> _repoDefs = new Dictionary<Type, RepositoryDef>();
+
+        // This is where all of the generated repositories are cached.
+        private readonly Dictionary<Type, object> _repoInstances = new Dictionary<Type, object>();
 
         protected DataLayerBuilder()
         {
@@ -70,18 +75,29 @@ namespace Repomat
             _columnNamingConvention = NamingConvention.NoOp;
         }
 
-        internal object CreateRepoFromTableDef(RepositoryDef repoDef)
+        internal void CreateReposFromTableDefs(IEnumerable<RepositoryDef> repoDefs)
         {
-            EnsureRepoIsValid(repoDef);
+            // Build up a list of all of the source code for all of the repositories.
+            var codeAndClassNames = new List<dynamic>();
 
-            string className;
-            string classCode = GenerateClassCode(repoDef, out className);
+            foreach (var repoDef in repoDefs)
+            {
+                string className;
+                string classCode = GenerateClassCode(repoDef, out className);
+
+                codeAndClassNames.Add(new { RepoDef = repoDef, ClassName = className, ClassCode = classCode });
+            }
 
             CSharpCodeProvider p = new CSharpCodeProvider();
             CompilerParameters parms = new CompilerParameters();
-            AddReferenceToTypeAssembly(typeof(DataLayerBuilder), parms);
-            AddReferenceToTypeAssembly(repoDef.EntityType, parms);
-            AddReferenceToTypeAssembly(repoDef.RepositoryType, parms);
+
+            var assemblies = GetDistinctAssembliesFromRepoDefs(codeAndClassNames.Select(x => (RepositoryDef)x.RepoDef));
+
+            foreach (var assembly in assemblies)
+            {
+                parms.ReferencedAssemblies.Add(Path.GetFileName(assembly.CodeBase));
+            }
+            parms.ReferencedAssemblies.Add(Path.GetFileName(typeof(DataLayerBuilder).Assembly.CodeBase));
             parms.ReferencedAssemblies.Add("System.Core.dll");
             parms.ReferencedAssemblies.Add("System.Data.dll");
             parms.ReferencedAssemblies.Add("System.dll");
@@ -89,7 +105,9 @@ namespace Repomat
 
             parms.GenerateInMemory = true;
 
-            var result = p.CompileAssemblyFromSource(parms, new[] { classCode });
+            // Compile all of the waiting repositories in one shot; this is way faster
+            // then doing them one at a time.
+            var result = p.CompileAssemblyFromSource(parms, codeAndClassNames.Select(x => (string)x.ClassCode).ToArray());
             if (result.Errors.HasErrors)
             {
                 StringBuilder errorList = new StringBuilder();
@@ -100,9 +118,21 @@ namespace Repomat
                 throw new RepomatException("Compilation Errors:\n" + string.Join("\n", errorList));
             }
             var asm = result.CompiledAssembly;
-            var generatedType = asm.GetType(className);
 
-            return CreateRepoInstance(generatedType, repoDef);
+            foreach (var entry in codeAndClassNames)
+            {
+                var repoType = entry.RepoDef.RepositoryType;
+                var generatedType = asm.GetType(entry.ClassName);
+                _repoInstances[repoType] = CreateRepoInstance(generatedType, _repoDefs[repoType]);
+            }
+        }
+
+        private IEnumerable<Assembly> GetDistinctAssembliesFromRepoDefs(IEnumerable<RepositoryDef> repoDefs)
+        {
+            return repoDefs
+                .Select(d => d.EntityType.Assembly)
+                .Concat(repoDefs.Select(d => d.RepositoryType.Assembly))
+                .Distinct();
         }
 
         private void EnsureRepoIsValid(RepositoryDef repoDef)
@@ -150,8 +180,23 @@ namespace Repomat
 
         public TRepo CreateRepo<TRepo>()
         {
-            var tableDef = _repoDefs[typeof(TRepo)];
-            return (TRepo)CreateRepoFromTableDef(tableDef);
+            var repoDef = _repoDefs[typeof(TRepo)];
+
+            object repo;
+            if (_repoInstances.TryGetValue(typeof(TRepo), out repo))
+            {
+                return (TRepo)repo;
+            }
+            else
+            {
+                EnsureRepoIsValid(repoDef);
+
+                var reposThatNeedToBeBuilt = _repoDefs.Values.Where(rd => !_repoInstances.Keys.Contains(rd.RepositoryType));
+
+                CreateReposFromTableDefs(reposThatNeedToBeBuilt);
+
+                return (TRepo)_repoInstances[typeof(TRepo)];
+            }
         }
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -172,8 +217,13 @@ namespace Repomat
 
         private void AddReferenceToTypeAssembly(Type type, CompilerParameters parms)
         {
-            parms.ReferencedAssemblies.Add(System.IO.Path.GetFileName(type.Assembly.CodeBase));
+            parms.ReferencedAssemblies.Add(Path.GetFileName(type.Assembly.CodeBase));
         }
 
+        // This is only here for unit testing.
+        internal object[] __GetRepositoryInstances()
+        {
+            return _repoInstances.Values.ToArray();
+        }
     }
 }
