@@ -9,12 +9,12 @@ namespace Repomat.CodeGen
 {
     internal class CreateTableMethodBuilder : MethodBuilder
     {
-        private readonly Func<Type, bool, string> _sqlDatatypeMapFunc;
+        private readonly Func<PropertyDef, bool, string> _sqlPropertyMapFunc;
 
-        internal CreateTableMethodBuilder(CodeBuilder codeBuilder, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, Func<Type, bool, string> sqlDatatypeMapFunc, MethodBuilderFactory methodBuilderFactory)
+        internal CreateTableMethodBuilder(CodeBuilder codeBuilder, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, Func<PropertyDef, bool, string> sqlPropertyMapFunc, MethodBuilderFactory methodBuilderFactory)
             : base(codeBuilder, repoDef, methodDef, newConnectionEveryTime, methodBuilderFactory)
         {
-            _sqlDatatypeMapFunc = sqlDatatypeMapFunc;
+            _sqlPropertyMapFunc = sqlPropertyMapFunc;
         }
 
         public override void GenerateCode()
@@ -24,10 +24,10 @@ namespace Repomat.CodeGen
             CodeBuilder.Write("cmd.CommandText = @\"create table {0} (", RepoDef.TableName);
 
             List<string> columns = new List<string>();
-            foreach (var column in RepoDef.Properties)
+            foreach (var property in RepoDef.Properties)
             {
-                bool isIdentity = RepoDef.HasIdentity && RepoDef.PrimaryKey[0].ColumnName == column.ColumnName;
-                columns.Add(string.Format("{0} {1}", column.ColumnName, _sqlDatatypeMapFunc(column.Type, isIdentity)));
+                bool isIdentity = RepoDef.HasIdentity && RepoDef.PrimaryKey[0].ColumnName == property.ColumnName;
+                columns.Add(string.Format("{0} {1}", property.ColumnName, _sqlPropertyMapFunc(property, isIdentity)));
             }
             CodeBuilder.Write(string.Join(", ", columns));
 

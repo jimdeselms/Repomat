@@ -26,7 +26,7 @@ namespace Repomat.CodeGen
             switch (methodType ?? methodDef.MethodType)
             {
                 case MethodType.Create: return new CreateMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, StatementSeparator, ScopeIdentityFunction, ScopeIdentityDatatype, this);
-                case MethodType.CreateTable: return new CreateTableMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, (t,b) => MapTypeToSqlDatatype(t,b), this);
+                case MethodType.CreateTable: return new CreateTableMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, (p,b) => MapPropertyToSqlDatatype(p,b), this);
                 case MethodType.Custom: return new CustomMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.Delete: return new DeleteMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.DropTable: return new DropTableMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
@@ -51,9 +51,11 @@ namespace Repomat.CodeGen
             _useStrictTypes = true;
         }
 
-        protected virtual string MapTypeToSqlDatatype(Type t, bool isIdentity)
+        protected virtual string MapPropertyToSqlDatatype(PropertyDef p, bool isIdentity)
         {
-            return PrimitiveTypeInfo.Get(t).GetSqlDatatype(isIdentity);
+            string width = p.StringWidthOrNull == null ? "MAX" : p.StringWidthOrNull.ToString();
+
+            return PrimitiveTypeInfo.Get(p.Type).GetSqlDatatype(isIdentity, width);
         }
 
         protected abstract string StatementSeparator { get; }

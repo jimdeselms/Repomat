@@ -69,8 +69,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeBuilderUnitTests.cs" />
-    <Compile Include="CompileCheck.cs" />
+    <Compile Include="CodeGen\CodeBuilderUnitTests.cs" />
+    <Compile Include="CodeGen\SqlCodeGenerationTests.cs" />
     <Compile Include="ConcurrentLoadedCollectionTests.cs" />
     <Compile Include="Connections.cs" />
     <Compile Include="CustomSqlTests.cs" />
@@ -85,14 +85,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReaderHelperTests.cs" />
     <Compile Include="RepositoryDefBuilderTests.cs" />
-    <Compile Include="RepositoryGenerationTestBase.cs" />
+    <Compile Include="CodeGen\RepositoryGenerationTestBase.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="SqliteHelper.cs" />
-    <Compile Include="SQLiteGenerationTests.cs" />
-    <Compile Include="SqlServerRepositoryGenerationTests.cs" />
+    <Compile Include="CodeGen\SQLiteGenerationTests.cs" />
+    <Compile Include="CodeGen\SqlServerRepositoryGenerationTests.cs" />
     <Compile Include="TestClasses.cs" />
     <Compile Include="ValidationTests.cs" />
-    <Compile Include="_Test.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

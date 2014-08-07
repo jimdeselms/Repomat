@@ -14,15 +14,15 @@ namespace Repomat.CodeGen
         {
         }
 
-        protected override string MapTypeToSqlDatatype(Type t, bool isIdentity)
+        protected override string MapPropertyToSqlDatatype(PropertyDef p, bool isIdentity)
         {
-            if (t == typeof(string))
+            if (p.Type == typeof(string) && p.StringWidthOrNull == null)
             {
                 return "VARCHAR(999)" + (isIdentity ? " IDENTITY" : "");
             }
             else
             {
-                return base.MapTypeToSqlDatatype(t, isIdentity);
+                return base.MapPropertyToSqlDatatype(p, isIdentity);
             }
         }
 

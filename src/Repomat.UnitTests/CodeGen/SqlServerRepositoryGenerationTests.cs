@@ -9,7 +9,7 @@ using Repomat.Databases;
 using Repomat.CodeGen;
 using NUnit.Framework;
 
-namespace Repomat.UnitTests
+namespace Repomat.UnitTests.CodeGen
 {
     /// <summary>
     /// How to create the database for these tests

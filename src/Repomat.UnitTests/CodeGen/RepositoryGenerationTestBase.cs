@@ -8,7 +8,7 @@ using Repomat.Databases;
 using NUnit.Framework;
 using Repomat.Schema;
 
-namespace Repomat.UnitTests
+namespace Repomat.UnitTests.CodeGen
 {
     public abstract class RepositoryGenerationTestBase
     {

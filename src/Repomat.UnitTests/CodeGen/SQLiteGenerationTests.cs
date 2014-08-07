@@ -9,7 +9,7 @@ using Repomat.Databases;
 using Repomat.CodeGen;
 using System.IO;
 
-namespace Repomat.UnitTests
+namespace Repomat.UnitTests.CodeGen
 {
     [TestFixture]
     public class SQLiteGenerationTests : RepositoryGenerationTestBase

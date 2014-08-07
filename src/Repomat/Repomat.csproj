@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeGen\CodeBuilder.cs" />
+    <Compile Include="CodeGen\ColumnDef.cs" />
     <Compile Include="CodeGen\CustomMethodBuilder.cs" />
     <Compile Include="CodeGen\ExistsMethodBuilder.cs" />
     <Compile Include="CodeGen\GetCountMethodBuilder.cs" />

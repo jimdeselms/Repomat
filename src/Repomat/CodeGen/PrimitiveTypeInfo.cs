@@ -48,10 +48,10 @@ namespace Repomat.CodeGen
             return string.Format(_scalarConvertExpr, input);
         }
 
-        public string GetSqlDatatype(bool isIdentity)
+        public string GetSqlDatatype(bool isIdentity, string width)
         {
             string identity = isIdentity ? "IDENTITY" : "";
-            string datatype = string.Format(_sqlDatatype, identity);
+            string datatype = string.Format(_sqlDatatype, identity, width);
 
             if (isIdentity)
             {
@@ -122,7 +122,7 @@ namespace Repomat.CodeGen
             CreateType(typeof(ushort?), "reader.IsDBNull({0}) ? null : (ushort?)reader.GetInt16({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ushort?)System.Convert.ToUInt16({0})", "SMALLINT");
             CreateType(typeof(ulong?), "reader.IsDBNull({0}) ? null : (ulong?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ulong?)System.Convert.ToUInt64({0})", "BIGINT");
             CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)");
-            CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR(MAX)");
+            CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})");
         }
 
         private static void CreateType(Type t, string readerGetExpr, string scalarConvertExpr, string sqlDatatype)

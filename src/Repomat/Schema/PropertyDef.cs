@@ -10,6 +10,7 @@ namespace Repomat.Schema
     {
         private readonly string _propertyName;
         private string _columnName;
+        private int? _stringWidthOrNull;
 
         private readonly Type _type;
 
@@ -17,6 +18,7 @@ namespace Repomat.Schema
         {
             _propertyName = propertyName;
             _columnName = columnName;
+            _stringWidthOrNull = null;
             _type = type;
         }
 
@@ -24,6 +26,12 @@ namespace Repomat.Schema
         {
             get { return _columnName; }
             set { _columnName = value; }
+        }
+
+        public int? StringWidthOrNull 
+        { 
+            get { return _stringWidthOrNull; }
+            set { _stringWidthOrNull = value; }
         }
 
         public string PropertyName { get { return _propertyName; } }
