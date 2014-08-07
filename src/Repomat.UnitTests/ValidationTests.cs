@@ -123,7 +123,7 @@ namespace Repomat.UnitTests
         private interface IRepoWithCreateAndInsert
         {
             void Create(Person p);
-            void Update(Person p);
+            void Insert(Person p);
         }
 
         private interface ICustomMethodWithoutCustomSql
