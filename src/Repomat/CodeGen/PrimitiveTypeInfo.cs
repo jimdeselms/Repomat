@@ -123,6 +123,7 @@ namespace Repomat.CodeGen
             CreateType(typeof(ulong?), "reader.IsDBNull({0}) ? null : (ulong?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ulong?)System.Convert.ToUInt64({0})", "BIGINT");
             CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)");
             CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})");
+            CreateType(typeof(byte[]), "(byte[])reader.GetValue({0})", "Repomat.Runtime.ReaderHelper.ConvertToBinary({0})", "VARBINARY({1})");
         }
 
         private static void CreateType(Type t, string readerGetExpr, string scalarConvertExpr, string sqlDatatype)

@@ -117,7 +117,7 @@ namespace Repomat.Schema
 
         public bool IsSimpleQuery
         {
-            get { return !IsTryGet && ReturnType.IsPrimitive(); }
+            get { return !IsTryGet && ReturnType.IsDatabaseType(); }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]

@@ -25,8 +25,10 @@ namespace Repomat.Runtime
             }
         }
 
+
         public static int GetIndexForColumn(IDataReader reader, string columnName)
         {
+            IDbCommand c;
             int count = reader.FieldCount;
             for (int i = 0; i < count; i++)
             {
@@ -38,6 +40,8 @@ namespace Repomat.Runtime
 
             throw new RepomatException(string.Format("Column {0} not found in result set", columnName));
         }
+
+        public static byte[] ConverttoByteArray(IDataReader reader)
 
         private static string GetColumnName(IDataReader reader, int i)
         {

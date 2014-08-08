@@ -64,6 +64,7 @@ namespace Repomat
 
         public static Type GetCoreType(this Type t)
         {
+            // TODO - does this still work for byte[]?
             if (t.IsArray)
             {
                 return t.GetElementType();
@@ -90,7 +91,7 @@ namespace Repomat
             return t.Name == "Nullable`1" && t.Namespace == "System";
         }
 
-        public static bool IsPrimitive(this Type t)
+        public static bool IsDatabaseType(this Type t)
         {
             return t == typeof(int)
                 || t == typeof(int?)
@@ -112,7 +113,8 @@ namespace Repomat
                 || t == typeof(char?)
                 || t == typeof(bool)
                 || t == typeof(bool?)
-                || t == typeof(string);
+                || t == typeof(string)
+                || t == typeof(byte[]);
         }
 
         public static bool ImplementsIEnumerableOfType(this Type t, Type coreType)
