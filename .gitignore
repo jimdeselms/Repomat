@@ -10,3 +10,4 @@ _ReSharper*
 java/.metadata
 packages
 output
+*.nupkg
