@@ -23,7 +23,7 @@ namespace Repomat
             return this;
         }
 
-        public PropertyBuilder SetStringWidth(int width)
+        public PropertyBuilder SetWidth(int width)
         {
             _columnDef.StringWidthOrNull = width;
 

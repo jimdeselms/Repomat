@@ -29,7 +29,7 @@ namespace Repomat.UnitTests.CodeGen
             var prop = repoDef.Properties.Where(p => p.PropertyName == "Hello").First();
 
             PropertyBuilder propBuilder = new PropertyBuilder(prop);
-            propBuilder.SetStringWidth(25);
+            propBuilder.SetWidth(25);
 
             var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, databaseType);
             StringAssert.Contains("VARCHAR(25)", code);

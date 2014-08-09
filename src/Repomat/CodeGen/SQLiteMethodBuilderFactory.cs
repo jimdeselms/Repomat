@@ -20,6 +20,10 @@ namespace Repomat.CodeGen
             {
                 return "VARCHAR(999)" + (isIdentity ? " IDENTITY" : "");
             }
+            else if (p.Type == typeof(byte[]) && p.StringWidthOrNull == null)
+            {
+                return "VARBINARY(999)" + (isIdentity ? " IDENTITY" : "");
+            }
             else
             {
                 return base.MapPropertyToSqlDatatype(p, isIdentity);

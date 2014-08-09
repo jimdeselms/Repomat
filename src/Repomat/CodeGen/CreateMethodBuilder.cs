@@ -33,13 +33,7 @@ namespace Repomat.CodeGen
 
             foreach (var column in RepoDef.NonPrimaryKeyColumns)
             {
-                string parmValue = GetParmValue(string.Format("{0}.{1}", MethodDef.DtoParameterOrNull.Name, column.PropertyName), column.Type);
-                CodeBuilder.OpenBrace();
-                CodeBuilder.WriteLine("var parm = cmd.CreateParameter();");
-                CodeBuilder.WriteLine("parm.ParameterName = \"@{0}\";", column.PropertyName);
-                CodeBuilder.WriteLine("parm.Value = {0};", parmValue);
-                CodeBuilder.WriteLine("cmd.Parameters.Add(parm);");
-                CodeBuilder.CloseBrace();
+                AddParameterToParameterList(column);
             }
 
             CodeBuilder.WriteLine("{0}.{1} = (int)({2})cmd.ExecuteScalar();", MethodDef.DtoParameterOrNull.Name, RepoDef.PrimaryKey[0].PropertyName, _scopeIdentityDatatype);

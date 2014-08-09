@@ -94,6 +94,25 @@ namespace Repomat.CodeGen
             CodeBuilder.CloseBrace();
         }
 
+        protected void AddParameterToParameterList(PropertyDef column)
+        {
+            string parmValue = GetParmValue(string.Format("{0}.{1}", MethodDef.DtoParameterOrNull.Name, column.PropertyName), column.Type);
+            CodeBuilder.OpenBrace();
+            CodeBuilder.WriteLine("var parm = cmd.CreateParameter();");
+            CodeBuilder.WriteLine("parm.ParameterName = \"@{0}\";", column.PropertyName);
+            CodeBuilder.WriteLine("parm.Value = {0};", parmValue);
+            if (column.Type == typeof(byte[]))
+            {
+                CodeBuilder.WriteLine("if (({0}) == System.DBNull.Value)", parmValue);
+                CodeBuilder.OpenBrace();
+                CodeBuilder.WriteLine("parm.Size = -1;");
+                CodeBuilder.WriteLine("parm.DbType = System.Data.DbType.Binary;");
+                CodeBuilder.CloseBrace();
+            }
+            CodeBuilder.WriteLine("cmd.Parameters.Add(parm);");
+            CodeBuilder.CloseBrace();
+        }
+
         protected string GetParmValue(string text, Type type)
         {
             // If the thing can be null, then convert it to DBNull.

@@ -12,6 +12,7 @@ namespace Repomat.UnitTests
         public int PersonId { get; set; }
         public string Name { get; set; }
         public DateTime Birthday { get; set; }
+        public byte[] Image { get; set; }
     }
 
     public interface IPersonRepository

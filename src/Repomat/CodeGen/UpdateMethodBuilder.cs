@@ -34,13 +34,7 @@ namespace Repomat.CodeGen
 
             foreach (var parm in RepoDef.Properties)
             {
-                string parmValue = GetParmValue(string.Format("{0}.{1}", MethodDef.DtoParameterOrNull.Name, parm.PropertyName), parm.Type);
-                CodeBuilder.OpenBrace();
-                CodeBuilder.WriteLine("var parm = cmd.CreateParameter();");
-                CodeBuilder.WriteLine("parm.ParameterName = \"@{0}\";", parm.PropertyName);
-                CodeBuilder.WriteLine("parm.Value = {0};", parmValue);
-                CodeBuilder.WriteLine("cmd.Parameters.Add(parm);");
-                CodeBuilder.CloseBrace();
+                AddParameterToParameterList(parm);
             }
 
             CodeBuilder.WriteLine("cmd.ExecuteNonQuery();");

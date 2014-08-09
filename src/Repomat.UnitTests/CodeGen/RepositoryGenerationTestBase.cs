@@ -162,6 +162,57 @@ namespace Repomat.UnitTests.CodeGen
         }
 
         [Test]
+        public void SelectInsertUpdate_VarBinary_PersistsValue()
+        {
+            var repo = CreateRepo();
+            if (repo.TableExists())
+            {
+                repo.DropTable();
+            }
+            repo.CreateTable();
+
+            var person = new Person();
+            person.PersonId = 1;
+            person.Name = "Fred";
+            person.Birthday = new DateTime(2012, 1, 1);
+            person.Image = new byte[] { 1, 2, 3 };
+            repo.Insert(person);
+
+            var selectedPerson = repo.Get(1);
+            CollectionAssert.AreEqual(person.Image, selectedPerson.Image);
+
+            // Now, null out the binary and make sure it persists.
+            person.Image = null;
+            repo.Update(person);
+
+            selectedPerson = repo.Get(1);
+            Assert.IsNull(selectedPerson.Image);
+
+            // Finally, put it back again and make sure that the updated value sticks.
+            person.Image = new byte[] { 4, 5, 6 };
+            repo.Update(person);
+
+            selectedPerson = repo.Get(1);
+            CollectionAssert.AreEqual(person.Image, selectedPerson.Image);
+        }
+
+        [Test]
+        public void VarBinary_DefineWidth_Success()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            dlBuilder.SetupRepo<Person, IPersonRepository>()
+                .SetupProperty("Image")
+                .SetWidth(100);
+
+            var repo = dlBuilder.CreateRepo<IPersonRepository>();
+            if (repo.TableExists())
+            {
+                repo.DropTable();
+            }
+            repo.CreateTable();
+        }
+
+        [Test]
         public void Insert_WithTransaction_Works()
         {
             var repo = CreateRepoWithJimAndSusan();
