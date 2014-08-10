@@ -21,6 +21,8 @@ namespace Repomat.Schema
         private readonly ParameterDetails _dtoParameterOrNull;
         private readonly bool _returnsInt;
         private string _customSqlOrNull;
+        private bool _customSqlIsStoredProcedure = false;
+
         private SingletonGetMethodBehavior _singletonGetMethodBehavior;
 
         public MethodDef(MethodInfo methodInfo) : this(methodInfo, methodInfo.Name, null)
@@ -77,6 +79,12 @@ namespace Repomat.Schema
         {
             get { return _customSqlOrNull; }
             set { _customSqlOrNull = value; }
+        }
+
+        public bool CustomSqlIsStoredProcedure
+        {
+            get { return _customSqlIsStoredProcedure; }
+            set { _customSqlIsStoredProcedure = value; }
         }
 
         public SingletonGetMethodBehavior SingletonGetMethodBehavior

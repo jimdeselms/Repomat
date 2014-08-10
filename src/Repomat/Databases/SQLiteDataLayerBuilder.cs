@@ -10,13 +10,13 @@ using Repomat.Schema;
 
 namespace Repomat.Databases
 {
-    internal class SQLiteDataLayerBuilder : SqlServerDataLayerBuilder
+    internal class SQLiteDataLayerBuilder : SqlDataLayerBuilder
     {
-        public SQLiteDataLayerBuilder(IDbConnection connection) : base(connection)
+        public SQLiteDataLayerBuilder(IDbConnection connection) : base(connection, DatabaseType.SQLite)
         {
         }
 
-        public SQLiteDataLayerBuilder(Func<IDbConnection> connectionFactory) : base(connectionFactory)
+        public SQLiteDataLayerBuilder(Func<IDbConnection> connectionFactory) : base(connectionFactory, DatabaseType.SQLite)
         {
         }
 

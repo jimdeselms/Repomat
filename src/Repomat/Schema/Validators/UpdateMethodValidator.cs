@@ -8,8 +8,8 @@ namespace Repomat.Schema.Validators
 {
     internal class UpdateMethodValidator : MethodValidator
     {
-        public UpdateMethodValidator(RepositoryDef repoDef, MethodDef methodDef, IList<ValidationError> errors)
-            : base(repoDef, methodDef, errors)
+        public UpdateMethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
+            : base(repoDef, methodDef, databaseType, errors)
         {
         }
     }

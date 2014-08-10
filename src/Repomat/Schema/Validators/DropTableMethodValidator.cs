@@ -8,8 +8,8 @@ namespace Repomat.Schema.Validators
 {
     internal class DropTableMethodValidator : MethodValidator
     {
-        public DropTableMethodValidator(RepositoryDef repoDef, MethodDef methodDef, IList<ValidationError> errors)
-            : base(repoDef, methodDef, errors)
+        public DropTableMethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
+            : base(repoDef, methodDef, databaseType, errors)
         {
         }
     }

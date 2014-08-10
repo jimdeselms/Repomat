@@ -37,28 +37,20 @@ namespace Repomat
 
         public static DataLayerBuilder DefineSqlDatabase(IDbConnection conn, DatabaseType type)
         {
-            switch (type)
-            {
-                case DatabaseType.SqlServer: return new SqlServerDataLayerBuilder(conn);
-                case DatabaseType.SQLite: return new SQLiteDataLayerBuilder(conn);
-                default: throw new RepomatException("DatabaseType {0} is not a SQL database", type);
-            }
+            return type.CreateDataLayerBuilder(conn);
         }
 
         public static DataLayerBuilder DefineSqlDatabase(Func<IDbConnection> conn, DatabaseType type)
         {
-            switch (type)
-            {
-                case DatabaseType.SqlServer: return new SqlServerDataLayerBuilder(conn);
-                case DatabaseType.SQLite: return new SQLiteDataLayerBuilder(conn);
-                default: throw new RepomatException("DatabaseType {0} is not a SQL database", type);
-            }
+            return type.CreateDataLayerBuilder(conn);
         }
 
         public static DataLayerBuilder DefineInMemoryDatabase()
         {
             return InMemoryDatabase.Create();
         }
+
+        public DatabaseType DatabaseType { get { return _databaseType; } }
 
         private NamingConvention _tableNamingConvention;
         private NamingConvention _columnNamingConvention;
@@ -69,10 +61,13 @@ namespace Repomat
         // This is where all of the generated repositories are cached.
         private readonly Dictionary<Type, object> _repoInstances = new Dictionary<Type, object>();
 
-        protected DataLayerBuilder()
+        private readonly DatabaseType _databaseType;
+
+        protected DataLayerBuilder(DatabaseType databaseType)
         {
             _tableNamingConvention = NamingConvention.NoOp;
             _columnNamingConvention = NamingConvention.NoOp;
+            _databaseType = databaseType;
         }
 
         internal void CreateReposFromTableDefs(IEnumerable<RepositoryDef> repoDefs)
@@ -137,7 +132,7 @@ namespace Repomat
 
         private void EnsureRepoIsValid(RepositoryDef repoDef)
         {
-            var validator = new RepositoryDefValidator();
+            var validator = new RepositoryDefValidator(_databaseType);
             var errors = validator.Validate(repoDef);
 
             if (errors.Count != 0)

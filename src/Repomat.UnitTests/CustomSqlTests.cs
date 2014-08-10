@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Repomat.Schema.Validators;
 
 namespace Repomat.UnitTests
 {
@@ -106,25 +107,67 @@ namespace Repomat.UnitTests
             Assert.AreEqual(3, repo.GetRowCount());
         }
 
+        [Test]
+        public void StoredProcedure_InDbThatSupportsIt_ExecutesStoredProcedure()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            var repoBuilder = dlBuilder.SetupRepo<Foo, IStoredProcedureRepo>();
+
+            repoBuilder.SetupMethod("CreateProc").ExecutesSql("CREATE PROCEDURE SayGreeting @name varchar(100), @greeting varchar(100) AS SELECT @greeting + ', ' + @name");
+            repoBuilder.SetupMethod("DropProc").ExecutesSql("DROP PROCEDURE SayGreeting");
+
+            // By default, calls the proc with the same name as the method.
+            repoBuilder.SetupMethod("SayGreeting").ExecutesStoredProcedure();
+
+            // But it can also be overridden.
+            repoBuilder.SetupMethod("Greet").ExecutesStoredProcedure("SayGreeting");
+
+            // Runs the same proc, but just ignores the result. Want to make sure that both queries and non-queries are handled.
+            repoBuilder.SetupMethod("SameThingButNonQuery").ExecutesStoredProcedure("SayGreeting");
+
+            var repo = dlBuilder.CreateRepo<IStoredProcedureRepo>();
+
+            try
+            {
+                // Just drop this in case the previous test didn't finish for some reason.
+                try { repo.DropProc(); } catch { }
+
+                repo.CreateProc();
+
+                // Notice that the parameters are in a different order; as long as they're all named, they'll get matched
+                // up with the right proc parameters.
+                Assert.AreEqual("Howdy, Pardner", repo.SayGreeting("Howdy", "Pardner"));
+                Assert.AreEqual("Hi, Jim", repo.Greet("Jim", "Hi"));
+
+                // And just make sure that this one doesn't fail.
+                // TODO: Just write a real test here and actually make sure this did something?
+                repo.SameThingButNonQuery("Fred", "Hola");
+            }
+            finally
+            {
+                repo.DropProc();
+            }
+        }
+
         private IFooRepo CreateRepo()
         {
             var db = DataLayerBuilder.DefineInMemoryDatabase();
             var repoBuilder = db.SetupRepo<Foo, IFooRepo>();
 
             repoBuilder.SetupMethod("MethodThatWritesARow")
-                .SetCustomSql("insert into Foo values (@someId, 'DingleDoodle', null, 1.5*@someId)");
+                .ExecutesSql("insert into Foo values (@someId, 'DingleDoodle', null, 1.5*@someId)");
             repoBuilder.SetupMethod("DingleSomething")
-                .SetCustomSql("select Id, Dingle, NullableWhatsit, MoneyMoney from Foo where Dingle = @theString");
+                .ExecutesSql("select Id, Dingle, NullableWhatsit, MoneyMoney from Foo where Dingle = @theString");
             repoBuilder.SetupMethod("QueryWithDifferentOrder")
-                .SetCustomSql("select NullableWhatsit, MoneyMoney, Id, Dingle from Foo where Dingle = @theString");
+                .ExecutesSql("select NullableWhatsit, MoneyMoney, Id, Dingle from Foo where Dingle = @theString");
             repoBuilder.SetupMethod("GetMultipleFoos")
-                .SetCustomSql("select Id, NullableWhatsit, Dingle, MoneyMoney from Foo");
+                .ExecutesSql("select Id, NullableWhatsit, Dingle, MoneyMoney from Foo");
             repoBuilder.SetupMethodWithParameters("GetMoneyMoney", typeof(int))
-                .SetCustomSql("select MoneyMoney from Foo where Id=@id");
+                .ExecutesSql("select MoneyMoney from Foo where Id=@id");
             repoBuilder.SetupMethodWithParameters("GetMoneyMoney", typeof(string))
-                .SetCustomSql("select MoneyMoney from Foo where Id=CAST(@id TO INT)");
+                .ExecutesSql("select MoneyMoney from Foo where Id=CAST(@id TO INT)");
             repoBuilder.SetupMethod("GetRowCount")
-                .SetCustomSql("select count(*) from Foo");
+                .ExecutesSql("select count(*) from Foo");
 
             return repoBuilder.CreateRepo();
         }
@@ -154,6 +197,21 @@ namespace Repomat.UnitTests
             decimal GetMoneyMoney(string id);
 
             int GetRowCount();
+        }
+
+        public interface IStoredProcedureRepo
+        {
+            void CreateProc();
+            void DropProc();
+
+            string SayGreeting(string greeting, string name);
+            string Greet(string name, string greeting);
+
+            void SameThingButNonQuery(string name, string greeting);
+        }
+
+        public interface ISingleMethodStoredProcedureRepo
+        {
         }
     }
 }

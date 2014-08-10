@@ -11,12 +11,14 @@ namespace Repomat.Schema.Validators
         private readonly RepositoryDef _repoDef;
         private readonly MethodDef _methodDef;
         private readonly IList<ValidationError> _errors;
+        private readonly DatabaseType _databaseType;
         private readonly List<Action> _validators = new List<Action>();
 
-        public MethodValidator(RepositoryDef repoDef, MethodDef methodDef, IList<ValidationError> errors)
+        public MethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
         {
             _repoDef = repoDef;
             _methodDef = methodDef;
+            _databaseType = databaseType;
             _errors = errors;
 
             AddValidators(
@@ -35,6 +37,8 @@ namespace Repomat.Schema.Validators
         public IReadOnlyList<string> Errors { get { return (List<string>)(_errors); } }
 
         public bool HasErrors { get { return _errors.Count > 0; } }
+
+        protected DatabaseType DatabaseType { get { return _databaseType; } }
 
         protected void AddValidators(params Action[] actions)
         {

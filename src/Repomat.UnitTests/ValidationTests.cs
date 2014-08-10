@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Repomat.UnitTests
 {
     [TestFixture]
-    class ValidationTests
+    public class ValidationTests
     {
         [Test]
         public void Validate_NoErrors()
@@ -83,6 +83,25 @@ namespace Repomat.UnitTests
                 Error("CustomMethodWithoutSql", "Method looks custom, but does not have SQL defined. Call SetCustomSql() to define the SQL"));
         }
 
+        [Test]
+        public void Validate_StoredProcInDbThatDoesntSupportIt()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+            var repoBuilder = dlBuilder.SetupRepo<Person, IProcRepo>();
+            repoBuilder.SetupMethod("Foo").ExecutesStoredProcedure();
+
+            try 
+            {
+                dlBuilder.CreateRepo<IProcRepo>();
+                Assert.Fail();
+            }
+            catch (RepomatException e) 
+            {
+                StringAssert.Contains("Database type SQLite does not support stored procedures", e.Message);
+            }
+
+        }
+
         private interface IGetReturnsSomethingOtherThanDto
         {
             ColorThing Get(int personId);
@@ -120,6 +139,11 @@ namespace Repomat.UnitTests
             Person Get(int personId, string birthday);
         }
 
+        public interface IProcRepo
+        {
+            void Foo();
+        }
+
         private interface IRepoWithCreateAndInsert
         {
             void Create(Person p);
@@ -136,7 +160,7 @@ namespace Repomat.UnitTests
         private void Validate<TType, TRepo>(params ValidationError[] expectedErrors)
         {
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<TType, TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
-            RepositoryDefValidator v = new RepositoryDefValidator();
+            RepositoryDefValidator v = new RepositoryDefValidator(DatabaseType.SqlServer);
             var errors = v.Validate(repoDef);
 
             Assert.AreEqual(expectedErrors.Length, errors.Count);

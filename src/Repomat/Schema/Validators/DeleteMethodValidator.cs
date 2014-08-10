@@ -8,8 +8,8 @@ namespace Repomat.Schema.Validators
 {
     internal class DeleteMethodValidator : MethodValidator
     {
-        public DeleteMethodValidator(RepositoryDef repoDef, MethodDef methodDef, IList<ValidationError> errors)
-            : base(repoDef, methodDef, errors)
+        public DeleteMethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
+            : base(repoDef, methodDef, databaseType, errors)
         {
         }
     }

@@ -8,8 +8,8 @@ namespace Repomat.Schema.Validators
 {
     internal class GetCountMethodValidator : MethodValidator
     {
-        public GetCountMethodValidator(RepositoryDef repoDef, MethodDef methodDef, IList<ValidationError> errors)
-            : base(repoDef, methodDef, errors)
+        public GetCountMethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
+            : base(repoDef, methodDef, databaseType, errors)
         {
         }
     }

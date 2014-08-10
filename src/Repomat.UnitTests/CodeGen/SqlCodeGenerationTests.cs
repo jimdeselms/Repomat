@@ -12,18 +12,23 @@ namespace Repomat.UnitTests.CodeGen
     [TestFixture]
     class SqlCodeGenerationTests
     {
-        [TestCase(DatabaseType.SqlServer, "Hello VARCHAR(MAX)")]
-        [TestCase(DatabaseType.SQLite, "Hello VARCHAR(999)")]
-        public void CreateTable_VarcharWidthIsNotSpecified_Max(DatabaseType databaseType, string expected)
+        public void CreateTable_VarcharWidthIsNotSqlServer_Max()
         {
             var repoDef = CreateRepoDef<Foo, IFooRepo>();
-            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, databaseType);
-            StringAssert.Contains(expected, code);
+            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, DatabaseType.SqlServer);
+            StringAssert.Contains("Hello VARCHAR(MAX)", code);
         }
 
-        [TestCase(DatabaseType.SqlServer)]
-        [TestCase(DatabaseType.SQLite)]
-        public void CreateTable_VarcharWidthIsSpecified_UsesSpecifiedWidth(DatabaseType databaseType)
+        public void CreateTable_VarcharWidthIsNotSpecifiedSQLite_Max()
+        {
+            var repoDef = CreateRepoDef<Foo, IFooRepo>();
+            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, DatabaseType.SQLite);
+            StringAssert.Contains("Hello VARCHAR(999)", code);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void CreateTable_VarcharWidthIsSpecified_UsesSpecifiedWidth(bool useSqlServer)
         {
             var repoDef = CreateRepoDef<Foo, IFooRepo>();
             var prop = repoDef.Properties.Where(p => p.PropertyName == "Hello").First();
@@ -31,7 +36,9 @@ namespace Repomat.UnitTests.CodeGen
             PropertyBuilder propBuilder = new PropertyBuilder(prop);
             propBuilder.SetWidth(25);
 
-            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, databaseType);
+            var dbType = useSqlServer ? DatabaseType.SqlServer : DatabaseType.SQLite;
+
+            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, dbType);
             StringAssert.Contains("VARCHAR(25)", code);
         }
 
@@ -40,20 +47,27 @@ namespace Repomat.UnitTests.CodeGen
             return RepositoryDefBuilder.BuildRepositoryDef<TType, TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
         }
 
-        private string GenerateCodeForMethod<TType, TRepo>(string method, RepositoryDef repoDef, DatabaseType database = DatabaseType.SqlServer)
+        private string GenerateCodeForMethod<TType, TRepo>(string method, RepositoryDef repoDef, DatabaseType database=null)
         {
+            if (database == null)
+            {
+                database = DatabaseType.SqlServer;
+            }
+
             var builder = new CodeBuilder();
 
-            SqlMethodBuilderFactory factory;
-            switch (database)
+            MethodBuilderFactory factory;
+            if (database == DatabaseType.SqlServer)
             {
-                case DatabaseType.SqlServer: 
-                    factory = new SqlServerMethodBuilderFactory(builder, repoDef, false);
-                    break;
-                case DatabaseType.SQLite: 
-                    factory = new SQLiteMethodBuilderFactory(builder, repoDef, false);
-                    break;
-                default: throw new NotImplementedException();
+                factory = new SqlServerMethodBuilderFactory(builder, repoDef, false);
+            }
+            else if (database == DatabaseType.SQLite)
+            {
+                factory = new SQLiteMethodBuilderFactory(builder, repoDef, false);
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
 
             var codeGenerator = factory.Create(FindMethod(repoDef, method), null);

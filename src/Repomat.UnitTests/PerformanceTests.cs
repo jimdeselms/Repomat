@@ -183,7 +183,7 @@ namespace Repomat.UnitTests
               .SetTableName("PerfTestTable");
 
             builder.SetupMethod("InsertStuffIntoTable")
-                .SetCustomSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
+                .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
             for (int i = 0; i < count; i++)
             {
@@ -228,7 +228,7 @@ namespace Repomat.UnitTests
               .SetTableName("PerfTestTable");
 
             builder.SetupMethod("InsertStuffIntoTable")
-                .SetCustomSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
+                .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
             return builder.CreateRepo();
         }

@@ -9,18 +9,18 @@ namespace Repomat
 {
     public class RepositoryBuilder<TType, TRepo>
     {
-        private readonly DataLayerBuilder _repositoryFactory;
+        private readonly DataLayerBuilder _dataLayerBuilder;
         private readonly RepositoryDef _repoDef;
 
         internal RepositoryBuilder(DataLayerBuilder repositoryFactory, RepositoryDef repoDef)
         {
-            _repositoryFactory = repositoryFactory;
+            _dataLayerBuilder = repositoryFactory;
             _repoDef = repoDef;
         }
 
         public TRepo CreateRepo()
         {
-            return (TRepo)_repositoryFactory.CreateRepo<TRepo>();
+            return (TRepo)_dataLayerBuilder.CreateRepo<TRepo>();
         }
 
         public RepositoryBuilder<TType, TRepo> SetTableName(string newTableName)
@@ -44,7 +44,7 @@ namespace Repomat
                 throw new RepomatException(string.Format("More than one method {0}.{1} found. Distinguish by passing the set of parameter types to SetupMethod", typeof(TType).ToCSharp(), methodName));
             }
 
-            return new MethodBuilder(methods[0]);
+            return new MethodBuilder(methods[0], _dataLayerBuilder.DatabaseType);
         }
 
         public MethodBuilder SetupMethodWithParameters(string methodName, params Type[] parameters)
@@ -72,7 +72,7 @@ namespace Repomat
                     continue;
                 }
 
-                return new MethodBuilder(method);
+                return new MethodBuilder(method, _dataLayerBuilder.DatabaseType);
             }
 
             throw new RepomatException(string.Format("Couldn't find method {0} matching the specified parameters", methodName));

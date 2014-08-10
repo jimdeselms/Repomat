@@ -1,6 +1,7 @@
 ﻿using Repomat.Schema;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,15 +11,33 @@ namespace Repomat
     public class MethodBuilder
     {
         private readonly MethodDef _method;
+        private readonly DatabaseType _databaseType;
 
-        internal MethodBuilder(MethodDef method)
+        internal MethodBuilder(MethodDef method, DatabaseType databaseType)
         {
             _method = method;
+            _databaseType = databaseType;
         }
 
-        public MethodBuilder SetCustomSql(string sql)
+        public MethodBuilder ExecutesSql(string sql)
         {
             _method.CustomSqlOrNull = sql;
+            _method.CustomSqlIsStoredProcedure = false;
+            return this;
+        }
+
+        public MethodBuilder ExecutesStoredProcedure(string procName = null)
+        {
+            if (!_databaseType.SupportsStoredProcedures)
+            {
+            }
+            if (procName == null)
+            {
+                procName = _method.MethodName;
+            }
+
+            _method.CustomSqlOrNull = procName;
+            _method.CustomSqlIsStoredProcedure = true;
 
             return this;
         }

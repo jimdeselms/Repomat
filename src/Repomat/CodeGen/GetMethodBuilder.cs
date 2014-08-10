@@ -86,6 +86,10 @@ namespace Repomat.CodeGen
                     columnsToGet = RepositoryDefBuilder.GetAssignableColumnsForType(NamingConvention.NoOp, typeToGet).ToArray();
                 }
                 CodeBuilder.Write("cmd.CommandText = \"{0}\";", MethodDef.CustomSqlOrNull.Replace("\"", "\"\""));
+                if (MethodDef.CustomSqlIsStoredProcedure)
+                {
+                    CodeBuilder.WriteLine("cmd.CommandType = System.Data.CommandType.StoredProcedure;");
+                }
             }
             else
             {

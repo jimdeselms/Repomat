@@ -33,6 +33,11 @@ namespace Repomat.CodeGen
 
             CodeBuilder.WriteLine("cmd.CommandText = @\"{0}\";", method.CustomSqlOrNull.Replace("\"", "\"\""));
 
+            if (method.CustomSqlIsStoredProcedure)
+            {
+                CodeBuilder.WriteLine("cmd.CommandType = System.Data.CommandType.StoredProcedure;");
+            }
+
             foreach (var arg in method.Parameters)
             {
                 if (arg.IsPrimitiveType)

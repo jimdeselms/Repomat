@@ -11,8 +11,8 @@ namespace Repomat.Schema.Validators
         //TODO: Other validations
         // There can be either an IDbConnection or IDbTransaction, but not both
         // The parameter names must match the property names of the entity
-        public GetMethodValidator(RepositoryDef repoDef, MethodDef methodDef, IList<ValidationError> errors)
-            : base(repoDef, methodDef, errors)
+        public GetMethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
+            : base(repoDef, methodDef, databaseType, errors)
         {
             AddValidators(
                 ReturnTypeValidations,
