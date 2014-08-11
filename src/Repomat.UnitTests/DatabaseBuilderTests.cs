@@ -14,23 +14,6 @@ namespace Repomat.UnitTests
     public class DatabaseBuilderTests
     {
         [Test]
-        public void ChangeTableName_NameIsDifferentInDatabase()
-        {
-            using (var conn = Connections.NewInMemoryConnection())
-            {
-                var dataLayerBuilder = DataLayerBuilder.DefineSqlDatabase(conn);
-                var repoBuilder = dataLayerBuilder
-                    .SetupRepo<Person, IPersonRepository>()
-                    .SetTableName("my_person_table");
-                var repo = dataLayerBuilder.CreateRepo<IPersonRepository>();
-
-                Assert.AreEqual("my_person_table", repoBuilder.RepoDef.TableName);
-
-                RunAllCommandsAgainstRepo(repo);
-            }
-        }
-
-        [Test]
         public void ChangeColumnName_NameIsDifferentInDatabase()
         {
             using (var conn = Connections.NewInMemoryConnection())
@@ -66,7 +49,7 @@ namespace Repomat.UnitTests
                 var builder = factory.SetupRepo<Person, IPersonRepository>();
                 var repo = builder.CreateRepo();
 
-                Assert.AreEqual("person_table", builder.RepoDef.TableName);
+                Assert.AreEqual("person_table", builder.RepoDef.Methods.First().EntityDef.TableName);
                 Assert.AreEqual("NAME_COLUMN", builder.RepoDef.Properties.First(c => c.PropertyName == "Name").ColumnName);
                 Assert.AreEqual("PERSON_ID", builder.RepoDef.Properties.First(c => c.PropertyName == "PersonId").ColumnName);
                 Assert.AreEqual("PERSON_ID", builder.RepoDef.PrimaryKey.First(c => c.PropertyName == "PersonId").ColumnName);

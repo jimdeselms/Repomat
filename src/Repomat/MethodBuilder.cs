@@ -26,6 +26,13 @@ namespace Repomat
             return this;
         }
 
+        public MethodBuilder SetTableName(string tableName)
+        {
+            _method.TableName = tableName;
+
+            return this;
+        }
+
         public MethodBuilder ExecutesStoredProcedure(string procName = null)
         {
             if (!_databaseType.SupportsStoredProcedures)

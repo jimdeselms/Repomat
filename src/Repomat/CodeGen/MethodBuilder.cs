@@ -20,6 +20,8 @@ namespace Repomat.CodeGen
         protected CodeBuilder CodeBuilder { get { return _codeBuilder; } }
         protected RepositoryDef RepoDef { get { return _repoDef; } }
         protected MethodDef MethodDef { get { return _methodDef; } }
+        protected EntityDef EntityDef { get { return MethodDef.EntityDef; } }
+
         protected bool NewConnectionEveryTime { get { return _newConnectionEveryTime; } }
 
         internal MethodBuilder(CodeBuilder codeBuilder, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, MethodBuilderFactory methodBuilderFactory)

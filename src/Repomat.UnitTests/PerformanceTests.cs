@@ -179,11 +179,12 @@ namespace Repomat.UnitTests
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            var builder = db.SetupRepo<Discount, IDiscountProvider>()
-              .SetTableName("PerfTestTable");
+            var builder = db.SetupRepo<Discount, IDiscountProvider>();
 
-            builder.SetupMethod("InsertStuffIntoTable")
-                .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
+            builder
+              .SetupMethod("InsertStuffIntoTable")
+              .SetTableName("PerfTestTable")
+              .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
             for (int i = 0; i < count; i++)
             {
@@ -224,11 +225,11 @@ namespace Repomat.UnitTests
         private IDiscountProvider CreateRepo(IDbConnection conn)
         {
             SqlServerDataLayerBuilder db = new SqlServerDataLayerBuilder(conn);
-            var builder = db.SetupRepo<Discount, IDiscountProvider>()
-              .SetTableName("PerfTestTable");
+            var builder = db.SetupRepo<Discount, IDiscountProvider>();
 
             builder.SetupMethod("InsertStuffIntoTable")
-                .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
+              .SetTableName("PerfTestTable")
+              .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
             return builder.CreateRepo();
         }

@@ -21,7 +21,7 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"create table {0} (", RepoDef.TableName);
+            CodeBuilder.Write("cmd.CommandText = @\"create table {0} (", EntityDef.TableName);
 
             List<string> columns = new List<string>();
             foreach (var property in RepoDef.Properties)
@@ -33,7 +33,7 @@ namespace Repomat.CodeGen
 
             if (RepoDef.PrimaryKey.Count > 0)
             {
-                CodeBuilder.Write(", CONSTRAINT pk_{0} PRIMARY KEY ({1})", RepoDef.TableName, string.Join(", ", RepoDef.PrimaryKey.Select(pk => pk.ColumnName)));
+                CodeBuilder.Write(", CONSTRAINT pk_{0} PRIMARY KEY ({1})", EntityDef.TableName, string.Join(", ", RepoDef.PrimaryKey.Select(pk => pk.ColumnName)));
             }
 
             CodeBuilder.WriteLine(")\";");

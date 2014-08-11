@@ -21,12 +21,6 @@ namespace Repomat.Schema
             _implementationDetails = implementationDetails.ToArray();
         }
 
-        public string TableName
-        {
-            get { return _entityDef.TableName; } 
-            set { _entityDef.TableName = value; }
-        }
-
         public IReadOnlyList<PropertyDef> Properties { get { return _entityDef.Columns; }} 
 
         public IReadOnlyList<PropertyDef> PrimaryKey { get { return _entityDef.PrimaryKey; }}

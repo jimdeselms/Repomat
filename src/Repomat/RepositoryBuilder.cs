@@ -23,12 +23,6 @@ namespace Repomat
             return (TRepo)_dataLayerBuilder.CreateRepo<TRepo>();
         }
 
-        public RepositoryBuilder<TType, TRepo> SetTableName(string newTableName)
-        {
-            _repoDef.TableName = newTableName;
-            return this;
-        }
-
         public MethodBuilder SetupMethod(string methodName)
         {
             var methods = _repoDef.Methods.Where(i => i.MethodName == methodName).ToArray();

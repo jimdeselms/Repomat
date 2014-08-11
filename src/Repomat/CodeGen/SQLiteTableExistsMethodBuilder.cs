@@ -18,7 +18,7 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.WriteLine("cmd.CommandText = \"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='{0}';\";", RepoDef.TableName);
+            CodeBuilder.WriteLine("cmd.CommandText = \"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='{0}';\";", EntityDef.TableName);
             CodeBuilder.WriteLine("return (long)cmd.ExecuteScalar() == 1L;");
 
             GenerateMethodFooter();

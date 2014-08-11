@@ -18,7 +18,7 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"update {0} set ", RepoDef.TableName);
+            CodeBuilder.Write("cmd.CommandText = @\"update {0} set ", EntityDef.TableName);
 
             var whereColumns = RepoDef.PrimaryKey.ToArray();
             var columnsToSet = RepoDef.Properties.Where(c => whereColumns.All(p => p.ColumnName != c.ColumnName)).ToArray();

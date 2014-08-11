@@ -14,7 +14,7 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.WriteLine("cmd.CommandText = @\"delete from {0} where ", RepoDef.TableName);
+            CodeBuilder.WriteLine("cmd.CommandText = @\"delete from {0} where ", MethodDef.EntityDef.TableName);
 
             var equations = RepoDef.PrimaryKey.Select(c => string.Format("{0} = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
             CodeBuilder.Write(string.Join(" and ", equations));

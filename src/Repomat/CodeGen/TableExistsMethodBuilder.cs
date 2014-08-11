@@ -18,10 +18,10 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.WriteLine("cmd.CommandText = \"if exists (select 1 from information_schema.tables where table_type='BASE TABLE' and table_name=@t) SELECT 1 ELSE SELECT 0\";", RepoDef.TableName);
+            CodeBuilder.WriteLine("cmd.CommandText = \"if exists (select 1 from information_schema.tables where table_type='BASE TABLE' and table_name=@t) SELECT 1 ELSE SELECT 0\";", EntityDef.TableName);
             CodeBuilder.WriteLine("var parm = cmd.CreateParameter();");
             CodeBuilder.WriteLine("parm.ParameterName = \"@t\";");
-            CodeBuilder.WriteLine("parm.Value = \"{0}\";", RepoDef.TableName);
+            CodeBuilder.WriteLine("parm.Value = \"{0}\";", EntityDef.TableName);
             CodeBuilder.WriteLine("cmd.Parameters.Add(parm);");
             CodeBuilder.WriteLine("return (int)cmd.ExecuteScalar() == 1;");
 

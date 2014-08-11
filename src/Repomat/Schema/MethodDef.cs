@@ -58,6 +58,8 @@ namespace Repomat.Schema
             return new MethodDef(_methodInfo, _entityDef, _methodInfo.Name, sql);
         }
 
+        internal EntityDef EntityDef { get { return _entityDef; } }
+
         public string MethodName { get { return _methodName; } }
         public IReadOnlyList<ParameterDetails> Parameters { get { return _parameters; } }
         public Type ReturnType { get { return _returnType; } }
@@ -75,6 +77,12 @@ namespace Repomat.Schema
             {
                 yield return new ParameterDetails(parm);
             }
+        }
+
+        public string TableName
+        {
+            get { return _entityDef.TableName; }
+            set { _entityDef.TableName = value; }
         }
 
         public string CustomSqlOrNull 

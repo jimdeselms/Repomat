@@ -98,7 +98,7 @@ namespace Repomat.CodeGen
 
                 CodeBuilder.Write(string.Join(", ", columnsToGet.Select(c => c.ColumnName.Capitalize())));
 
-                CodeBuilder.Write(" from {0} ", RepoDef.TableName);
+                CodeBuilder.Write(" from {0} ", EntityDef.TableName);
 
                 var argumentProperties = MethodDef.Parameters
                     .Select(p => RepoDef.Properties.FirstOrDefault(c => c.PropertyName == p.Name.Capitalize()))

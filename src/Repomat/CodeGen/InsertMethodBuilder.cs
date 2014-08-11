@@ -18,7 +18,7 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"insert into {0} (", RepoDef.TableName);
+            CodeBuilder.Write("cmd.CommandText = @\"insert into {0} (", EntityDef.TableName);
             CodeBuilder.Write(string.Join(", ", RepoDef.Properties.Select(c => c.ColumnName)));
             CodeBuilder.Write(") values (");
             CodeBuilder.Write(string.Join(", ", RepoDef.Properties.Select(c => "@" + c.PropertyName)));
