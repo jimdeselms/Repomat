@@ -10,34 +10,39 @@ namespace Repomat.Schema
     {
         public static RepositoryDef BuildRepositoryDef<TType, TRepo>(NamingConvention tableNamingConvention, NamingConvention columnNamingConvention)
         {
-            var entityType = typeof(TType);
             var repoType = typeof(TRepo);
 
-            string tableName = tableNamingConvention.Convert(entityType.Name);
+            var entityType = typeof(TType);
 
-            var repoDefBuilder = new RepositoryDefBuilder();
+            var finder = new RepositoryEntityFinder(repoType);
+            var typeDict = finder.GetRepositoryEntities().ToDictionary(e => e, e => GetEntityDef(repoType, tableNamingConvention, columnNamingConvention, e));
 
-            IEnumerable<PropertyDef> columns = GetAssignableColumnsForType(columnNamingConvention, entityType).ToArray();
+            IEnumerable<MethodDef> implementationDetails = GetImplementationDetails(repoType, typeDict);
 
-            // Get the primary columns that map to real columns. If there are any that don't map, ignore them.
-            // The validation will figure out what to do with them.
-            IEnumerable<PropertyDef> primaryKey = repoDefBuilder.GetPrimaryKeyColumns(entityType, repoType)
-                .Select(pk => columns.FirstOrDefault(c => c.PropertyName == pk))
-                .Where(pk => pk != null)
-                .ToArray();
-
-
-            var entityDef = new EntityDef(entityType, tableName, columns, primaryKey, GetHasIdentity(repoType), repoDefBuilder.GetCreateClassThroughConstructor(entityType));
-            IEnumerable<MethodDef> implementationDetails = repoDefBuilder.GetImplementationDetails(repoType, entityDef);
-
-            return new RepositoryDef(entityDef, typeof(TRepo), implementationDetails);
+            return new RepositoryDef(typeDict.Values.First(), typeof(TRepo), implementationDetails);
         }
 
         private RepositoryDefBuilder()
         {
         }
 
-        private bool GetCreateClassThroughConstructor(Type type)
+        private static EntityDef GetEntityDef(Type repoType, NamingConvention tableNamingConvention, NamingConvention columnNamingConvention, Type entityType)
+        {
+            string tableName = tableNamingConvention.Convert(entityType.Name);
+
+            IEnumerable<PropertyDef> columns = GetAssignableColumnsForType(columnNamingConvention, entityType).ToArray();
+
+            // Get the primary columns that map to real columns. If there are any that don't map, ignore them.
+            // The validation will figure out what to do with them.
+            IEnumerable<PropertyDef> primaryKey = GetPrimaryKeyColumns(entityType, repoType)
+                .Select(pk => columns.FirstOrDefault(c => c.PropertyName == pk))
+                .Where(pk => pk != null)
+                .ToArray();
+
+            return new EntityDef(entityType, tableName, columns, primaryKey, GetHasIdentity(repoType), GetCreateClassThroughConstructor(entityType));
+        }
+
+        private static bool GetCreateClassThroughConstructor(Type type)
         {
             // If the class only has a default constructor, then the properties must be generated throuh
             // property injection. If the class has more than one constructor, then we use the constructor with the
@@ -65,7 +70,7 @@ namespace Repomat.Schema
 
             var repoDefBuilder = new RepositoryDefBuilder();
 
-            bool createClassThroughConstructor = repoDefBuilder.GetCreateClassThroughConstructor(coreType);
+            bool createClassThroughConstructor = GetCreateClassThroughConstructor(coreType);
             if (createClassThroughConstructor)
             {
                 // If we're using the constructor, then we find the longest constructor.
@@ -104,15 +109,32 @@ namespace Repomat.Schema
             }
         }
 
-        private IEnumerable<MethodDef> GetImplementationDetails(Type repoType, EntityDef entityDef)
+        private static IEnumerable<MethodDef> GetImplementationDetails(Type repoType, Dictionary<Type, EntityDef> entityDefs)
         {
             foreach (var method in repoType.GetMethods())
             {
-                yield return new MethodDef(method, entityDef);
+                var entityType = RepositoryEntityFinder.GetEntityTypeForMethod(method);
+
+                EntityDef entityDefOrNull = null;
+                if (entityType != null)
+                {
+                    if (entityDefs.ContainsKey(entityType))
+                    {
+                        entityDefOrNull = entityDefs[entityType];
+                    }
+                }
+
+                // If there's only one entity type, then we'll assume that's what we've got.
+                if (entityDefOrNull == null && entityDefs.Count == 1)
+                {
+                    entityDefOrNull = entityDefs.Values.First();
+                }
+
+                yield return new MethodDef(method, entityDefOrNull);
             }
         }
 
-        private IEnumerable<string> GetPrimaryKeyColumns(Type entityType, Type repoType)
+        private static IEnumerable<string> GetPrimaryKeyColumns(Type entityType, Type repoType)
         {
             // Get all Get or TryGet methods that are singleton methods that return the entityType.
             var getMethods = repoType

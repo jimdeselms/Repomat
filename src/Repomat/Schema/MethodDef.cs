@@ -9,7 +9,7 @@ namespace Repomat.Schema
     internal class MethodDef
     {
         private readonly MethodInfo _methodInfo;
-        private readonly EntityDef _entityDef;
+        private readonly EntityDef _entityDefOrUndefined;
         private readonly string _methodName;
         private readonly IReadOnlyList<ParameterDetails> _parameters;
         private readonly IReadOnlyList<ParameterDetails> _properties;
@@ -33,7 +33,7 @@ namespace Repomat.Schema
         internal MethodDef(MethodInfo methodInfo, EntityDef entityDef, string methodName, string customSqlOrNull)
         {
             _methodInfo = methodInfo;
-            _entityDef = entityDef;
+            _entityDefOrUndefined = entityDef;
             _methodName = methodName;
             _parameters = GetParameters(methodInfo).ToList();
             _properties = GetProperties();
@@ -50,15 +50,33 @@ namespace Repomat.Schema
 
         internal MethodDef CloneWithNewName(string newName)
         {
-            return new MethodDef(_methodInfo, _entityDef, newName, null);
+            if (_entityDefOrUndefined == null)
+            {
+                throw new RepomatException("Can't clone a method to a new name unless the entity type is defined");
+            }
+            return new MethodDef(_methodInfo, _entityDefOrUndefined, newName, null);
         }
 
         internal MethodDef CloneToCustomQuery(string sql)
         {
-            return new MethodDef(_methodInfo, _entityDef, _methodInfo.Name, sql);
+            if (_entityDefOrUndefined == null)
+            {
+                throw new RepomatException("Can't clone a method to a new name unless the entity type is defined");
+            }
+            return new MethodDef(_methodInfo, _entityDefOrUndefined, _methodInfo.Name, sql);
         }
 
-        internal EntityDef EntityDef { get { return _entityDef; } }
+        internal EntityDef EntityDef
+        {
+            get
+            {
+                if (_entityDefOrUndefined == null)
+                {
+                    throw new RepomatException("Can't clone a method to a new name unless the entity type is defined");
+                }
+                return _entityDefOrUndefined;
+            }
+        }
 
         public string MethodName { get { return _methodName; } }
         public IReadOnlyList<ParameterDetails> Parameters { get { return _parameters; } }
@@ -81,8 +99,8 @@ namespace Repomat.Schema
 
         public string TableName
         {
-            get { return _entityDef.TableName; }
-            set { _entityDef.TableName = value; }
+            get { return _entityDefOrUndefined.TableName; }
+            set { _entityDefOrUndefined.TableName = value; }
         }
 
         public string CustomSqlOrNull 

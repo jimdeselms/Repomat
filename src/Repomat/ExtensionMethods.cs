@@ -65,7 +65,7 @@ namespace Repomat
         public static Type GetCoreType(this Type t)
         {
             // TODO - does this still work for byte[]?
-            if (t.IsArray)
+            if (t.GetElementType() != null)
             {
                 return t.GetElementType();
             }
