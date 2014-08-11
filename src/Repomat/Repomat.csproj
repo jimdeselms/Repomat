@@ -72,6 +72,7 @@
     <Compile Include="NamingConvention.cs" />
     <Compile Include="NamingConventionHelpers.cs" />
     <Compile Include="CodeGen\PrimitiveTypeInfo.cs" />
+    <Compile Include="Schema\EntityDef.cs" />
     <Compile Include="Schema\ValidationError.cs" />
     <Compile Include="Schema\Validators\ExistsMethodValidator.cs" />
     <Compile Include="Schema\Validators\CustomMethodValidator.cs" />

@@ -13,7 +13,7 @@ namespace Repomat.Schema
         private readonly IReadOnlyList<ParameterDetails> _parameters;
         private readonly IReadOnlyList<ParameterDetails> _properties;
         private readonly Type _returnType;
-
+        
         private readonly bool _isTryGet;
         private readonly bool _isSingleton;
         private readonly ParameterDetails _outParameterOrNull;
