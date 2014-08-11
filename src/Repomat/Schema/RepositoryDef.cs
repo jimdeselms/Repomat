@@ -14,9 +14,9 @@ namespace Repomat.Schema
         private readonly Type _repoType;
         private readonly IReadOnlyList<MethodDef> _implementationDetails;
 
-        public RepositoryDef(Type entityType, Type repoType, string tableName, IEnumerable<PropertyDef> columns, IEnumerable<PropertyDef> primaryKey, IEnumerable<MethodDef> implementationDetails, bool hasIdentity, bool createClassThroughConstructor)
+        public RepositoryDef(EntityDef entityDef, Type repoType, IEnumerable<MethodDef> implementationDetails)
         {
-            _entityDef = new EntityDef(entityType, tableName, columns, primaryKey, hasIdentity, createClassThroughConstructor);
+            _entityDef = entityDef;
             _repoType = repoType;
             _implementationDetails = implementationDetails.ToArray();
         }

@@ -45,7 +45,7 @@ namespace Repomat.Schema
         public IReadOnlyList<PropertyDef> Columns { get { return _columns; } }
         public IReadOnlyList<PropertyDef> PrimaryKey { get { return _primaryKey; } }
         public IReadOnlyList<PropertyDef> NonPkColumns { get { return _nonPkColumns; } }
-        public bool HasIdentity { get { return _hasIdentity; } }
         public bool CreateClassThroughConstructor { get { return _createClassThroughConstructor; } }
+        public bool HasIdentity { get { return _hasIdentity; } }
     }
 }

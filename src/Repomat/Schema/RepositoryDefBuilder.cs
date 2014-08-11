@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Repomat.Schema
 {
-    internal static class RepositoryDefBuilder
+    internal class RepositoryDefBuilder
     {
         public static RepositoryDef BuildRepositoryDef<TType, TRepo>(NamingConvention tableNamingConvention, NamingConvention columnNamingConvention)
         {
@@ -15,22 +15,29 @@ namespace Repomat.Schema
 
             string tableName = tableNamingConvention.Convert(entityType.Name);
 
+            var repoDefBuilder = new RepositoryDefBuilder();
+
             IEnumerable<PropertyDef> columns = GetAssignableColumnsForType(columnNamingConvention, entityType).ToArray();
 
             // Get the primary columns that map to real columns. If there are any that don't map, ignore them.
             // The validation will figure out what to do with them.
-            IEnumerable<PropertyDef> primaryKey = GetPrimaryKeyColumns(entityType, repoType)
+            IEnumerable<PropertyDef> primaryKey = repoDefBuilder.GetPrimaryKeyColumns(entityType, repoType)
                 .Select(pk => columns.FirstOrDefault(c => c.PropertyName == pk))
                 .Where(pk => pk != null)
                 .ToArray();
 
-            IEnumerable<MethodDef> implementationDetails = GetImplementationDetails(repoType);
-            bool hasIdentity = GetHasIdentity(repoType);
 
-            return new RepositoryDef(typeof(TType), typeof(TRepo), tableName, columns, primaryKey, implementationDetails, hasIdentity, GetCreateClassThroughConstructor(entityType));
+            var entityDef = new EntityDef(entityType, tableName, columns, primaryKey, GetHasIdentity(repoType), repoDefBuilder.GetCreateClassThroughConstructor(entityType));
+            IEnumerable<MethodDef> implementationDetails = repoDefBuilder.GetImplementationDetails(repoType, entityDef);
+
+            return new RepositoryDef(entityDef, typeof(TRepo), implementationDetails);
         }
 
-        private static bool GetCreateClassThroughConstructor(Type type)
+        private RepositoryDefBuilder()
+        {
+        }
+
+        private bool GetCreateClassThroughConstructor(Type type)
         {
             // If the class only has a default constructor, then the properties must be generated throuh
             // property injection. If the class has more than one constructor, then we use the constructor with the
@@ -46,11 +53,19 @@ namespace Repomat.Schema
             }
         }
 
+        public static bool GetHasIdentity(Type repoType)
+        {
+            return repoType.GetMethod("Create") != null;
+        }
+
+
         public static IEnumerable<PropertyDef> GetAssignableColumnsForType(NamingConvention columnNamingConvention, Type type)
         {
             var coreType = type.GetCoreType();
 
-            bool createClassThroughConstructor = GetCreateClassThroughConstructor(coreType);
+            var repoDefBuilder = new RepositoryDefBuilder();
+
+            bool createClassThroughConstructor = repoDefBuilder.GetCreateClassThroughConstructor(coreType);
             if (createClassThroughConstructor)
             {
                 // If we're using the constructor, then we find the longest constructor.
@@ -89,15 +104,15 @@ namespace Repomat.Schema
             }
         }
 
-        private static IEnumerable<MethodDef> GetImplementationDetails(Type repoType)
+        private IEnumerable<MethodDef> GetImplementationDetails(Type repoType, EntityDef entityDef)
         {
             foreach (var method in repoType.GetMethods())
             {
-                yield return new MethodDef(method);
+                yield return new MethodDef(method, entityDef);
             }
         }
 
-        private static IEnumerable<string> GetPrimaryKeyColumns(Type entityType, Type repoType)
+        private IEnumerable<string> GetPrimaryKeyColumns(Type entityType, Type repoType)
         {
             // Get all Get or TryGet methods that are singleton methods that return the entityType.
             var getMethods = repoType
@@ -150,12 +165,6 @@ namespace Repomat.Schema
 
             // No primary key.
             return Enumerable.Empty<string>();
-        }
-
-        private static bool GetHasIdentity(Type repoType)
-        {
-            var createMethod = repoType.GetMethod("Create");
-            return createMethod != null;
         }
     }
 }

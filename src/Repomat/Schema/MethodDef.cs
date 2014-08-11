@@ -9,6 +9,7 @@ namespace Repomat.Schema
     internal class MethodDef
     {
         private readonly MethodInfo _methodInfo;
+        private readonly EntityDef _entityDef;
         private readonly string _methodName;
         private readonly IReadOnlyList<ParameterDetails> _parameters;
         private readonly IReadOnlyList<ParameterDetails> _properties;
@@ -25,13 +26,14 @@ namespace Repomat.Schema
 
         private SingletonGetMethodBehavior _singletonGetMethodBehavior;
 
-        public MethodDef(MethodInfo methodInfo) : this(methodInfo, methodInfo.Name, null)
+        public MethodDef(MethodInfo methodInfo, EntityDef entityDef) : this(methodInfo, entityDef, methodInfo.Name, null)
         {
         }
 
-        internal MethodDef(MethodInfo methodInfo, string methodName, string customSqlOrNull)
+        internal MethodDef(MethodInfo methodInfo, EntityDef entityDef, string methodName, string customSqlOrNull)
         {
             _methodInfo = methodInfo;
+            _entityDef = entityDef;
             _methodName = methodName;
             _parameters = GetParameters(methodInfo).ToList();
             _properties = GetProperties();
@@ -48,12 +50,12 @@ namespace Repomat.Schema
 
         internal MethodDef CloneWithNewName(string newName)
         {
-            return new MethodDef(_methodInfo, newName, null);
+            return new MethodDef(_methodInfo, _entityDef, newName, null);
         }
 
         internal MethodDef CloneToCustomQuery(string sql)
         {
-            return new MethodDef(_methodInfo, _methodInfo.Name, sql);
+            return new MethodDef(_methodInfo, _entityDef, _methodInfo.Name, sql);
         }
 
         public string MethodName { get { return _methodName; } }
