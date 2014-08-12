@@ -179,7 +179,7 @@ namespace Repomat.UnitTests
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            var builder = db.SetupRepo<Discount, IDiscountProvider>();
+            var builder = db.SetupRepo<IDiscountProvider>();
 
             builder
               .SetupMethod("InsertStuffIntoTable")
@@ -225,7 +225,7 @@ namespace Repomat.UnitTests
         private IDiscountProvider CreateRepo(IDbConnection conn)
         {
             SqlServerDataLayerBuilder db = new SqlServerDataLayerBuilder(conn);
-            var builder = db.SetupRepo<Discount, IDiscountProvider>();
+            var builder = db.SetupRepo<IDiscountProvider>();
 
             builder.SetupMethod("InsertStuffIntoTable")
               .SetTableName("PerfTestTable")

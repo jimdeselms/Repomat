@@ -11,11 +11,13 @@ namespace Repomat
     public class MethodBuilder
     {
         private readonly MethodDef _method;
+        private readonly RepositoryDef _repositoryDef;
         private readonly DatabaseType _databaseType;
 
-        internal MethodBuilder(MethodDef method, DatabaseType databaseType)
+        internal MethodBuilder(MethodDef method, RepositoryDef repoDef, DatabaseType databaseType)
         {
             _method = method;
+            _repositoryDef = repoDef;
             _databaseType = databaseType;
         }
 
@@ -29,6 +31,13 @@ namespace Repomat
         public MethodBuilder SetTableName(string tableName)
         {
             _method.TableName = tableName;
+
+            return this;
+        }
+
+        public MethodBuilder SetEntityType(Type type)
+        {
+            _method.EntityDef = _repositoryDef.GetEntityDef(type);
 
             return this;
         }

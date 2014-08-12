@@ -9,7 +9,6 @@ namespace Repomat.Schema
     internal class MethodDef
     {
         private readonly MethodInfo _methodInfo;
-        private readonly EntityDef _entityDefOrUndefined;
         private readonly string _methodName;
         private readonly IReadOnlyList<ParameterDetails> _parameters;
         private readonly IReadOnlyList<ParameterDetails> _properties;
@@ -25,6 +24,7 @@ namespace Repomat.Schema
         private bool _customSqlIsStoredProcedure = false;
 
         private SingletonGetMethodBehavior _singletonGetMethodBehavior;
+        private EntityDef _entityDefOrUndefined;
 
         public MethodDef(MethodInfo methodInfo, EntityDef entityDef) : this(methodInfo, entityDef, methodInfo.Name, null)
         {
@@ -70,11 +70,15 @@ namespace Repomat.Schema
         {
             get
             {
-                if (_entityDefOrUndefined == null)
+                if (MethodType != MethodType.Custom && _entityDefOrUndefined == null)
                 {
                     throw new RepomatException("Can't clone a method to a new name unless the entity type is defined");
                 }
                 return _entityDefOrUndefined;
+            }
+            set
+            {
+                _entityDefOrUndefined = value;
             }
         }
 

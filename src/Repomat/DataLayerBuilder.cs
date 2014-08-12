@@ -164,13 +164,13 @@ namespace Repomat
             return SetTableNamingConvention(new NamingConvention(namingConventionFunc));
         }
 
-        public RepositoryBuilder<TType, TRepo> SetupRepo<TType, TRepo>()
+        public RepositoryBuilder<TRepo> SetupRepo<TRepo>()
         {
-            RepositoryDef tableDef = RepositoryDefBuilder.BuildRepositoryDef<TType, TRepo>(_tableNamingConvention, _columnNamingConvention);
+            RepositoryDef tableDef = RepositoryDefBuilder.BuildRepositoryDef<TRepo>(_tableNamingConvention, _columnNamingConvention);
 
             _repoDefs.Add(typeof(TRepo), tableDef);
 
-            return new RepositoryBuilder<TType, TRepo>(this, tableDef);
+            return new RepositoryBuilder<TRepo>(this, tableDef);
         }
 
         public TRepo CreateRepo<TRepo>()

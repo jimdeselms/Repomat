@@ -14,15 +14,15 @@ namespace Repomat.UnitTests.CodeGen
     {
         public void CreateTable_VarcharWidthIsNotSqlServer_Max()
         {
-            var repoDef = CreateRepoDef<Foo, IFooRepo>();
-            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, DatabaseType.SqlServer);
+            var repoDef = CreateRepoDef<IFooRepo>();
+            var code = GenerateCodeForMethod<IFooRepo>("CreateTable", repoDef, DatabaseType.SqlServer);
             StringAssert.Contains("Hello VARCHAR(MAX)", code);
         }
 
         public void CreateTable_VarcharWidthIsNotSpecifiedSQLite_Max()
         {
-            var repoDef = CreateRepoDef<Foo, IFooRepo>();
-            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, DatabaseType.SQLite);
+            var repoDef = CreateRepoDef<IFooRepo>();
+            var code = GenerateCodeForMethod<IFooRepo>("CreateTable", repoDef, DatabaseType.SQLite);
             StringAssert.Contains("Hello VARCHAR(999)", code);
         }
 
@@ -30,7 +30,7 @@ namespace Repomat.UnitTests.CodeGen
         [TestCase(false)]
         public void CreateTable_VarcharWidthIsSpecified_UsesSpecifiedWidth(bool useSqlServer)
         {
-            var repoDef = CreateRepoDef<Foo, IFooRepo>();
+            var repoDef = CreateRepoDef<IFooRepo>();
             var prop = repoDef.Properties.Where(p => p.PropertyName == "Hello").First();
 
             PropertyBuilder propBuilder = new PropertyBuilder(prop);
@@ -38,16 +38,16 @@ namespace Repomat.UnitTests.CodeGen
 
             var dbType = useSqlServer ? DatabaseType.SqlServer : DatabaseType.SQLite;
 
-            var code = GenerateCodeForMethod<Foo, IFooRepo>("CreateTable", repoDef, dbType);
+            var code = GenerateCodeForMethod<IFooRepo>("CreateTable", repoDef, dbType);
             StringAssert.Contains("VARCHAR(25)", code);
         }
 
-        private RepositoryDef CreateRepoDef<TType, TRepo>()
+        private RepositoryDef CreateRepoDef<TRepo>()
         {
-            return RepositoryDefBuilder.BuildRepositoryDef<TType, TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
+            return RepositoryDefBuilder.BuildRepositoryDef<TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
         }
 
-        private string GenerateCodeForMethod<TType, TRepo>(string method, RepositoryDef repoDef, DatabaseType database=null)
+        private string GenerateCodeForMethod<TRepo>(string method, RepositoryDef repoDef, DatabaseType database=null)
         {
             if (database == null)
             {

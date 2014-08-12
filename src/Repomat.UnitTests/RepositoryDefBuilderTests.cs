@@ -23,7 +23,7 @@ namespace Repomat.UnitTests
         [Test]
         public void Foo_InterfaceWithTwoGets_LongerGetDeterminesPrimaryKey()
         {
-            var def = RepositoryDefBuilder.BuildRepositoryDef<MyFoo, IMyFoos>(NamingConvention.NoOp, NamingConvention.NoOp);
+            var def = RepositoryDefBuilder.BuildRepositoryDef<IMyFoos>(NamingConvention.NoOp, NamingConvention.NoOp);
             Assert.AreEqual(2, def.PrimaryKey.Count);
             Assert.AreEqual("Id", def.PrimaryKey[0].PropertyName);
             Assert.AreEqual("Name", def.PrimaryKey[1].PropertyName);
@@ -32,7 +32,7 @@ namespace Repomat.UnitTests
         [Test]
         public void Foo_InterfaceWithTwoGetsWhereLongerIsNotSingleton_UseTheSingletonMethod()
         {
-            var def = RepositoryDefBuilder.BuildRepositoryDef<MyFoo, ITwoGetsLongerIsNotSingleton>(NamingConvention.NoOp, NamingConvention.NoOp);
+            var def = RepositoryDefBuilder.BuildRepositoryDef<ITwoGetsLongerIsNotSingleton>(NamingConvention.NoOp, NamingConvention.NoOp);
             Assert.AreEqual(1, def.PrimaryKey.Count);
             Assert.AreEqual("Id", def.PrimaryKey[0].PropertyName);
         }

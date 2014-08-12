@@ -19,7 +19,7 @@ namespace Repomat.UnitTests
             using (var conn = Connections.NewInMemoryConnection())
             {
                 var factory = DataLayerBuilder.DefineSqlDatabase(conn);
-                var builder = factory.SetupRepo<Person, IPersonRepository>();
+                var builder = factory.SetupRepo<IPersonRepository>();
                 builder.SetupProperty("Name").SetColumnName("person_name");
                 builder.SetupProperty("PersonId").SetColumnName("id");
                 var repo = builder.CreateRepo();
@@ -46,7 +46,7 @@ namespace Repomat.UnitTests
                 var factory = DataLayerBuilder.DefineSqlDatabase(conn)
                     .SetColumnNamingConvention(columnConvention)
                     .SetTableNamingConvention(tableConvention);
-                var builder = factory.SetupRepo<Person, IPersonRepository>();
+                var builder = factory.SetupRepo<IPersonRepository>();
                 var repo = builder.CreateRepo();
 
                 Assert.AreEqual("person_table", builder.RepoDef.Methods.First().EntityDef.TableName);
@@ -64,8 +64,8 @@ namespace Repomat.UnitTests
             // When two repositories are defined, when the first one is compiled,
             // it will also cause the second to be compiled and cached away.
             var dbBuilder = DataLayerBuilder.DefineInMemoryDatabase();
-            dbBuilder.SetupRepo<Person, IPersonRepository>();
-            dbBuilder.SetupRepo<Person, IPersonRepositoryWithCreate>();
+            dbBuilder.SetupRepo<IPersonRepository>();
+            dbBuilder.SetupRepo<IPersonRepositoryWithCreate>();
 
             Assert.AreEqual(0, dbBuilder.__GetRepositoryInstances().Length);
 
@@ -87,7 +87,7 @@ namespace Repomat.UnitTests
             // second one should come from the cache, rather than
             // trying to create it again.
             var dbBuilder = DataLayerBuilder.DefineInMemoryDatabase();
-            dbBuilder.SetupRepo<Person, IPersonRepository>();
+            dbBuilder.SetupRepo<IPersonRepository>();
 
             var repo = dbBuilder.CreateRepo<IPersonRepository>();
 
@@ -101,10 +101,10 @@ namespace Repomat.UnitTests
             // When we build a repo, then add another and build,
             // we shouldn't rebuild the original one.
             var dbBuilder = DataLayerBuilder.DefineInMemoryDatabase();
-            dbBuilder.SetupRepo<Person, IPersonRepository>();
+            dbBuilder.SetupRepo<IPersonRepository>();
             var repo = dbBuilder.CreateRepo<IPersonRepository>();
 
-            dbBuilder.SetupRepo<Person, IPersonRepositoryWithCreate>();
+            dbBuilder.SetupRepo<IPersonRepositoryWithCreate>();
             var other = dbBuilder.CreateRepo<IPersonRepositoryWithCreate>();
 
             var originalRepo = dbBuilder.__GetRepositoryInstances().Where(r => r is IPersonRepository).First();

@@ -19,33 +19,10 @@ namespace Repomat.UnitTests
         }
 
         [Test]
-        public void Validate_SingletonMethodThatReturnsTypeOtherThanDto()
-        {
-            Validate<Person, IGetReturnsSomethingOtherThanDto>(
-                Error("SingleGetReturnWrongType", "expected return type Repomat.UnitTests.Person, returns Repomat.UnitTests.ColorThing instead"));
-        }
-
-        [Test]
-        public void Validate_MultirowMethodThatReturnsTypeOtherThanDto()
-        {
-            Validate<Person, IGetReturnsCollectionOtherThanDto>(
-                Error("MultiGetReturnWrongType", "expected enumerable return type Repomat.UnitTests.Person, returns System.Collections.Generic.IEnumerable<Repomat.UnitTests.ColorThing> instead"),
-                Error("MultiGetReturnWrongType", "expected enumerable return type Repomat.UnitTests.Person, returns System.Collections.Generic.List<Repomat.UnitTests.ColorThing> instead"),
-                Error("MultiGetReturnWrongType", "expected enumerable return type Repomat.UnitTests.Person, returns Repomat.UnitTests.ColorThing[] instead"));
-        }
-
-        [Test]
         public void Validate_TryGetWithoutBoolReturn()
         {
             Validate<Person, ITryGetWithoutBoolReturn>(
                 Error("TryGetReturnWrongType", "expected return type bool, returns string instead"));
-        }
-
-        [Test]
-        public void Validate_TryGetWithWrongOutType()
-        {
-            Validate<Person, ITryGetWithWrongOutParam>(
-                Error("TryGetOutParamWrongType", "expected out parameter of type Repomat.UnitTests.Person, out parameter of type string instead"));
         }
 
         [Test]
@@ -87,7 +64,7 @@ namespace Repomat.UnitTests
         public void Validate_StoredProcInDbThatDoesntSupportIt()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
-            var repoBuilder = dlBuilder.SetupRepo<Person, IProcRepo>();
+            var repoBuilder = dlBuilder.SetupRepo<IProcRepo>();
             repoBuilder.SetupMethod("Foo").ExecutesStoredProcedure();
 
             try 
@@ -159,7 +136,7 @@ namespace Repomat.UnitTests
 
         private void Validate<TType, TRepo>(params ValidationError[] expectedErrors)
         {
-            var repoDef = RepositoryDefBuilder.BuildRepositoryDef<TType, TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
+            var repoDef = RepositoryDefBuilder.BuildRepositoryDef<TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
             RepositoryDefValidator v = new RepositoryDefValidator(DatabaseType.SqlServer);
             var errors = v.Validate(repoDef);
 

@@ -16,7 +16,7 @@ namespace Repomat.UnitTests
         public void Create_BuildDatabaseForUnmatchedMethod_Throws()
         {
             var db = DataLayerBuilder.DefineInMemoryDatabase();
-            Assert.Throws<RepomatException>(() => db.SetupRepo<Foo, IFooRepo>().CreateRepo());
+            Assert.Throws<RepomatException>(() => db.SetupRepo<IFooRepo>().CreateRepo());
         }
 
         [Test]
@@ -111,19 +111,30 @@ namespace Repomat.UnitTests
         public void StoredProcedure_InDbThatSupportsIt_ExecutesStoredProcedure()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            var repoBuilder = dlBuilder.SetupRepo<Foo, IStoredProcedureRepo>();
+            var repoBuilder = dlBuilder.SetupRepo<IStoredProcedureRepo>();
 
-            repoBuilder.SetupMethod("CreateProc").ExecutesSql("CREATE PROCEDURE SayGreeting @name varchar(100), @greeting varchar(100) AS SELECT @greeting + ', ' + @name");
-            repoBuilder.SetupMethod("DropProc").ExecutesSql("DROP PROCEDURE SayGreeting");
+            repoBuilder.SetupMethod("CreateProc")
+                .ExecutesSql("CREATE PROCEDURE SayGreeting @name varchar(100), @greeting varchar(100) AS SELECT @greeting + ', ' + @name")
+                .SetEntityType(typeof(void));
+            repoBuilder
+                .SetupMethod("DropProc")
+                .ExecutesSql("DROP PROCEDURE SayGreeting")
+                .SetEntityType(typeof(void));
 
             // By default, calls the proc with the same name as the method.
-            repoBuilder.SetupMethod("SayGreeting").ExecutesStoredProcedure();
+            repoBuilder.SetupMethod("SayGreeting")
+                .SetEntityType(typeof(void))
+                .ExecutesStoredProcedure();
 
             // But it can also be overridden.
-            repoBuilder.SetupMethod("Greet").ExecutesStoredProcedure("SayGreeting");
+            repoBuilder.SetupMethod("Greet")
+                .SetEntityType(typeof(void))
+                .ExecutesStoredProcedure("SayGreeting");
 
             // Runs the same proc, but just ignores the result. Want to make sure that both queries and non-queries are handled.
-            repoBuilder.SetupMethod("SameThingButNonQuery").ExecutesStoredProcedure("SayGreeting");
+            repoBuilder.SetupMethod("SameThingButNonQuery")
+                .SetEntityType(typeof(void))
+                .ExecutesStoredProcedure("SayGreeting");
 
             var repo = dlBuilder.CreateRepo<IStoredProcedureRepo>();
 
@@ -152,7 +163,7 @@ namespace Repomat.UnitTests
         private IFooRepo CreateRepo()
         {
             var db = DataLayerBuilder.DefineInMemoryDatabase();
-            var repoBuilder = db.SetupRepo<Foo, IFooRepo>();
+            var repoBuilder = db.SetupRepo<IFooRepo>();
 
             repoBuilder.SetupMethod("MethodThatWritesARow")
                 .ExecutesSql("insert into Foo values (@someId, 'DingleDoodle', null, 1.5*@someId)");

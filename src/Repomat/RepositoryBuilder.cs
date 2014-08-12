@@ -7,7 +7,7 @@ using Repomat.Schema;
 
 namespace Repomat
 {
-    public class RepositoryBuilder<TType, TRepo>
+    public class RepositoryBuilder<TRepo>
     {
         private readonly DataLayerBuilder _dataLayerBuilder;
         private readonly RepositoryDef _repoDef;
@@ -29,16 +29,16 @@ namespace Repomat
             if (methods.Length == 0)
             {
                 // TODO: Test
-                throw new RepomatException(string.Format("Method {0}.{1} not found", typeof(TType).ToCSharp(), methodName));
+                throw new RepomatException(string.Format("Method {0}.{1} not found", typeof(TRepo).ToCSharp(), methodName));
             }
 
             if (methods.Length > 1)
             {
                 // TODO: Test
-                throw new RepomatException(string.Format("More than one method {0}.{1} found. Distinguish by passing the set of parameter types to SetupMethod", typeof(TType).ToCSharp(), methodName));
+                throw new RepomatException(string.Format("More than one method {0}.{1} found. Distinguish by passing the set of parameter types to SetupMethod", typeof(TRepo).ToCSharp(), methodName));
             }
 
-            return new MethodBuilder(methods[0], _dataLayerBuilder.DatabaseType);
+            return new MethodBuilder(methods[0], _repoDef, _dataLayerBuilder.DatabaseType);
         }
 
         public MethodBuilder SetupMethodWithParameters(string methodName, params Type[] parameters)
@@ -66,7 +66,7 @@ namespace Repomat
                     continue;
                 }
 
-                return new MethodBuilder(method, _dataLayerBuilder.DatabaseType);
+                return new MethodBuilder(method, _repoDef, _dataLayerBuilder.DatabaseType);
             }
 
             throw new RepomatException(string.Format("Couldn't find method {0} matching the specified parameters", methodName));

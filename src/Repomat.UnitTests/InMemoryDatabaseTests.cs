@@ -15,13 +15,13 @@ namespace Repomat.UnitTests
         public void Create_CreateTwoFactories_EachFactoryHasSeparateInMemoryDatabase()
         {
             var repo1 = DataLayerBuilder.DefineInMemoryDatabase()
-                .SetupRepo<Person, IPersonRepository>()
+                .SetupRepo<IPersonRepository>()
                 .CreateRepo();
             
             repo1.CreateTable();
 
             var repo2 = DataLayerBuilder.DefineInMemoryDatabase()
-                .SetupRepo<Person, IPersonRepository>()
+                .SetupRepo<IPersonRepository>()
                 .CreateRepo();
 
             // The second repository won't know about the table.

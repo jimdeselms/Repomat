@@ -32,10 +32,12 @@ namespace Repomat.Schema
 
         public static Type GetEntityTypeForMethod(MethodInfo methodInfo)
         {
+            var coreType = methodInfo.ReturnType.GetCoreType();
+
             // Does it have an interesting return type? Then that's the entity type.
-            if (methodInfo.ReturnType != typeof (void) && !methodInfo.ReturnType.IsDatabaseType())
+            if (coreType != typeof (void) && !coreType.IsDatabaseType())
             {
-                return methodInfo.ReturnType;
+                return coreType;
             }
 
             // Does it have a parameter that's interesting?

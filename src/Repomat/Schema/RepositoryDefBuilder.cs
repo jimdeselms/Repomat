@@ -8,38 +8,45 @@ namespace Repomat.Schema
 {
     internal class RepositoryDefBuilder
     {
-        public static RepositoryDef BuildRepositoryDef<TType, TRepo>(NamingConvention tableNamingConvention, NamingConvention columnNamingConvention)
+        public static RepositoryDef BuildRepositoryDef<TRepo>(NamingConvention tableNamingConvention, NamingConvention columnNamingConvention)
         {
             var repoType = typeof(TRepo);
-
-            var entityType = typeof(TType);
 
             var finder = new RepositoryEntityFinder(repoType);
             var typeDict = finder.GetRepositoryEntities().ToDictionary(e => e, e => GetEntityDef(repoType, tableNamingConvention, columnNamingConvention, e));
 
             IEnumerable<MethodDef> implementationDetails = GetImplementationDetails(repoType, typeDict);
 
-            return new RepositoryDef(typeDict.Values.First(), typeof(TRepo), implementationDetails);
+            EntityDef entityDef = typeDict.Values.FirstOrDefault() ?? GetEntityDef(repoType, tableNamingConvention, columnNamingConvention, typeof(void));
+
+            return new RepositoryDef(entityDef, typeof(TRepo), implementationDetails, tableNamingConvention, columnNamingConvention);
         }
 
         private RepositoryDefBuilder()
         {
         }
 
-        private static EntityDef GetEntityDef(Type repoType, NamingConvention tableNamingConvention, NamingConvention columnNamingConvention, Type entityType)
+        internal static EntityDef GetEntityDef(Type repoType, NamingConvention tableNamingConvention, NamingConvention columnNamingConvention, Type entityType)
         {
-            string tableName = tableNamingConvention.Convert(entityType.Name);
+            if (entityType == typeof(void))
+            {
+                return new EntityDef(typeof(void), "void", Enumerable.Empty<PropertyDef>(), Enumerable.Empty<PropertyDef>(), false, false);
+            }
+            else
+            {
+                string tableName = tableNamingConvention.Convert(entityType.Name);
 
-            IEnumerable<PropertyDef> columns = GetAssignableColumnsForType(columnNamingConvention, entityType).ToArray();
+                IEnumerable<PropertyDef> columns = GetAssignableColumnsForType(columnNamingConvention, entityType).ToArray();
 
-            // Get the primary columns that map to real columns. If there are any that don't map, ignore them.
-            // The validation will figure out what to do with them.
-            IEnumerable<PropertyDef> primaryKey = GetPrimaryKeyColumns(entityType, repoType)
-                .Select(pk => columns.FirstOrDefault(c => c.PropertyName == pk))
-                .Where(pk => pk != null)
-                .ToArray();
+                // Get the primary columns that map to real columns. If there are any that don't map, ignore them.
+                // The validation will figure out what to do with them.
+                IEnumerable<PropertyDef> primaryKey = GetPrimaryKeyColumns(entityType, repoType)
+                    .Select(pk => columns.FirstOrDefault(c => c.PropertyName == pk))
+                    .Where(pk => pk != null)
+                    .ToArray();
 
-            return new EntityDef(entityType, tableName, columns, primaryKey, GetHasIdentity(repoType), GetCreateClassThroughConstructor(entityType));
+                return new EntityDef(entityType, tableName, columns, primaryKey, GetHasIdentity(repoType), GetCreateClassThroughConstructor(entityType));
+            }
         }
 
         private static bool GetCreateClassThroughConstructor(Type type)

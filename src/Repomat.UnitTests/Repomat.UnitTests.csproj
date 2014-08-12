@@ -80,6 +80,7 @@
     <Compile Include="DbHelperTests.cs" />
     <Compile Include="ExtensionMethodTests.cs" />
     <Compile Include="InMemoryDatabaseTests.cs" />
+    <Compile Include="MethodEntityTypeTests.cs" />
     <Compile Include="NamingConventionTests.cs" />
     <Compile Include="PerformanceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

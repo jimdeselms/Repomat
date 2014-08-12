@@ -200,7 +200,7 @@ namespace Repomat.UnitTests.CodeGen
         public void VarBinary_DefineWidth_Success()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            dlBuilder.SetupRepo<Person, IPersonRepository>()
+            dlBuilder.SetupRepo<IPersonRepository>()
                 .SetupProperty("Image")
                 .SetWidth(100);
 
@@ -380,7 +380,7 @@ namespace Repomat.UnitTests.CodeGen
         public void CreateRepository_ConstructorInjectedClass()
         {
             var repo = CreateFactory(_connection)
-                .SetupRepo<ConstructorInjected, IConstructorInjectedRepository>()
+                .SetupRepo<IConstructorInjectedRepository>()
                 .CreateRepo();
             if (repo.TableExists())
             {
@@ -401,7 +401,7 @@ namespace Repomat.UnitTests.CodeGen
         public void ClassWithEnum_InsertAndGet_WorkCorrectly()
         {
             var repo = CreateFactory(_connection)
-                .SetupRepo<ColorThing, IColorThingRepo>()
+                .SetupRepo<IColorThingRepo>()
                 .CreateRepo();
 
             if (repo.TableExists())
@@ -490,7 +490,7 @@ namespace Repomat.UnitTests.CodeGen
                 factory = CreateFactory(_connection);
             }
 
-            var builder = factory.SetupRepo<Person, IPersonRepository>();
+            var builder = factory.SetupRepo<IPersonRepository>();
             if (getBehavior.HasValue)
             {
                 builder.SetupMethod("GetSingletonByName").SetSingletonGetMethodBehavior(getBehavior.Value);
@@ -523,7 +523,7 @@ namespace Repomat.UnitTests.CodeGen
         private IPersonRepositoryWithCreate CreateRepoWithCreateMethod()
         {
             var repo = CreateFactory(_connection)
-                .SetupRepo<Person, IPersonRepositoryWithCreate>()
+                .SetupRepo<IPersonRepositoryWithCreate>()
                 .CreateRepo();
 
             if (repo.TableExists())

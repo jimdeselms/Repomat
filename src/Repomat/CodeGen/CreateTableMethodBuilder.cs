@@ -24,9 +24,9 @@ namespace Repomat.CodeGen
             CodeBuilder.Write("cmd.CommandText = @\"create table {0} (", EntityDef.TableName);
 
             List<string> columns = new List<string>();
-            foreach (var property in RepoDef.Properties)
+            foreach (var property in EntityDef.Columns)
             {
-                bool isIdentity = RepoDef.HasIdentity && RepoDef.PrimaryKey[0].ColumnName == property.ColumnName;
+                bool isIdentity = EntityDef.HasIdentity && EntityDef.PrimaryKey[0].ColumnName == property.ColumnName;
                 columns.Add(string.Format("{0} {1}", property.ColumnName, _sqlPropertyMapFunc(property, isIdentity)));
             }
             CodeBuilder.Write(string.Join(", ", columns));
