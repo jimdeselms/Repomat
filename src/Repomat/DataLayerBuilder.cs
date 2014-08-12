@@ -124,10 +124,20 @@ namespace Repomat
 
         private IEnumerable<Assembly> GetDistinctAssembliesFromRepoDefs(IEnumerable<RepositoryDef> repoDefs)
         {
-            return repoDefs
-                .Select(d => d.EntityType.Assembly)
-                .Concat(repoDefs.Select(d => d.RepositoryType.Assembly))
-                .Distinct();
+            HashSet<Assembly> asms = new HashSet<Assembly>();
+            foreach (var repoDef in repoDefs)
+            {
+                foreach (var method in repoDef.Methods)
+                {
+                    if (method.EntityDef != null)
+                    {
+                        asms.Add(method.EntityDef.Type.Assembly);
+                    }
+                }
+                asms.Add(repoDef.RepositoryType.Assembly);
+            }
+
+            return asms;
         }
 
         private void EnsureRepoIsValid(RepositoryDef repoDef)

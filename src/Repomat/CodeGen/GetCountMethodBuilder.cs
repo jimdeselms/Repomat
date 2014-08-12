@@ -16,7 +16,7 @@ namespace Repomat.CodeGen
 
         public override void GenerateCode()
         {
-            var equations = MethodDef.Parameters.Select(p => string.Format("{0}=@{1}", RepoDef.FindPropertyByParameterName(p.Name).ColumnName, p.Name));
+            var equations = MethodDef.Parameters.Select(p => string.Format("{0}=@{1}", EntityDef.FindPropertyByParameterName(p.Name).ColumnName, p.Name));
             string query = string.Format("select count(1) from {0} where {1}", EntityDef.TableName, string.Join(" AND ", equations));
             GenerateCodeForSql(query);
         }

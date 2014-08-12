@@ -56,7 +56,7 @@ namespace Repomat.CodeGen
             CodeBuilder.OpenBrace();
 
             CodeBuilder.WriteLine("return new Repomat.Runtime.ConcurrentlyLoadedCollection<{0}>({1}_Implementation({2}));\n",
-                RepoDef.EntityType.ToCSharp(),
+                EntityDef.Type.ToCSharp(),
                 MethodDef.MethodName,
                 string.Join(", ", MethodDef.Parameters.Select(p => p.Name)));
 
@@ -93,7 +93,7 @@ namespace Repomat.CodeGen
             }
             else
             {
-                columnsToGet = RepoDef.Properties.Where(c => !MethodDef.Properties.Select(p => p.Name.Capitalize()).Contains(c.ColumnName)).ToArray();
+                columnsToGet = EntityDef.Properties.Where(c => !MethodDef.Properties.Select(p => p.Name.Capitalize()).Contains(c.ColumnName)).ToArray();
                 CodeBuilder.Write("cmd.CommandText = \"select ");
 
                 CodeBuilder.Write(string.Join(", ", columnsToGet.Select(c => c.ColumnName.Capitalize())));
@@ -101,7 +101,7 @@ namespace Repomat.CodeGen
                 CodeBuilder.Write(" from {0} ", EntityDef.TableName);
 
                 var argumentProperties = MethodDef.Parameters
-                    .Select(p => RepoDef.Properties.FirstOrDefault(c => c.PropertyName == p.Name.Capitalize()))
+                    .Select(p => EntityDef.Properties.FirstOrDefault(c => c.PropertyName == p.Name.Capitalize()))
                     .Where(p => p != null)
                     .ToArray();
 
@@ -115,7 +115,7 @@ namespace Repomat.CodeGen
 
             foreach (var arg in MethodDef.Parameters)
             {
-                var column = RepoDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
+                var column = EntityDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
                 if (column == null)
                 {
                     if (MethodDef.CustomSqlOrNull != null)
@@ -183,7 +183,7 @@ namespace Repomat.CodeGen
                         CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
                         CodeBuilder.WriteLine("return true;");
                         CodeBuilder.CloseBrace();
-                        CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, RepoDef.EntityType.ToCSharp());
+                        CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
                         CodeBuilder.WriteLine("return false;");
                     }
                     else
@@ -197,7 +197,7 @@ namespace Repomat.CodeGen
                         }
                         else
                         {
-                            CodeBuilder.WriteLine("return default({0});", RepoDef.EntityType.ToCSharp());
+                            CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
                         }
                     }
                 }
@@ -214,10 +214,10 @@ namespace Repomat.CodeGen
                         }
                         CodeBuilder.CloseBrace();
                     }
-                    bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(RepoDef.EntityType);
+                    bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(EntityDef.Type);
                     if (!isEnumerable)
                     {
-                        CodeBuilder.WriteLine("var result = new System.Collections.Generic.List<{0}>();", RepoDef.EntityType.ToCSharp());
+                        CodeBuilder.WriteLine("var result = new System.Collections.Generic.List<{0}>();", EntityDef.Type.ToCSharp());
                     }
                     CodeBuilder.WriteLine("while (reader.Read())");
                     CodeBuilder.OpenBrace();
@@ -251,9 +251,9 @@ namespace Repomat.CodeGen
 
         private void AppendObjectSerialization(CodeBuilder body, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull)
         {
-            if (RepoDef.CreateClassThroughConstructor)
+            if (EntityDef.CreateClassThroughConstructor)
             {
-                body.WriteLine("var newObj = new {0}(", RepoDef.EntityType.ToCSharp());
+                body.WriteLine("var newObj = new {0}(", EntityDef.Type.ToCSharp());
 
                 var argToExprMap = new Dictionary<string, string>();
                 for (int i = 0; i < selectColumns.Count; i++)
@@ -268,7 +268,7 @@ namespace Repomat.CodeGen
                 }
 
                 var arguments = new List<string>();
-                foreach (var prop in RepoDef.Properties)
+                foreach (var prop in EntityDef.Properties)
                 {
                     arguments.Add(argToExprMap[prop.PropertyName.Uncapitalize()]);
                 }
@@ -279,7 +279,7 @@ namespace Repomat.CodeGen
             }
             else
             {
-                body.WriteLine("var newObj = new {0}();", RepoDef.EntityType.ToCSharp());
+                body.WriteLine("var newObj = new {0}();", EntityDef.Type.ToCSharp());
 
                 for (int i = 0; i < selectColumns.Count; i++)
                 {

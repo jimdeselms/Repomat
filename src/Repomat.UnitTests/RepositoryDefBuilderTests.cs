@@ -24,17 +24,20 @@ namespace Repomat.UnitTests
         public void Foo_InterfaceWithTwoGets_LongerGetDeterminesPrimaryKey()
         {
             var def = RepositoryDefBuilder.BuildRepositoryDef<IMyFoos>(NamingConvention.NoOp, NamingConvention.NoOp);
-            Assert.AreEqual(2, def.PrimaryKey.Count);
-            Assert.AreEqual("Id", def.PrimaryKey[0].PropertyName);
-            Assert.AreEqual("Name", def.PrimaryKey[1].PropertyName);
+
+            var pk = def.Methods.First().EntityDef.PrimaryKey;
+
+            Assert.AreEqual(2, pk.Count);
+            Assert.AreEqual("Id", pk[0].PropertyName);
+            Assert.AreEqual("Name", pk[1].PropertyName);
         }
 
         [Test]
         public void Foo_InterfaceWithTwoGetsWhereLongerIsNotSingleton_UseTheSingletonMethod()
         {
             var def = RepositoryDefBuilder.BuildRepositoryDef<ITwoGetsLongerIsNotSingleton>(NamingConvention.NoOp, NamingConvention.NoOp);
-            Assert.AreEqual(1, def.PrimaryKey.Count);
-            Assert.AreEqual("Id", def.PrimaryKey[0].PropertyName);
+            Assert.AreEqual(1, def.Methods.First().EntityDef.PrimaryKey.Count);
+            Assert.AreEqual("Id", def.Methods.First().EntityDef.PrimaryKey[0].PropertyName);
         }
 
         private class ClassWithTwoCtors

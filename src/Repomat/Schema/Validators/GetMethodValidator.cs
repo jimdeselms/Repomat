@@ -23,16 +23,16 @@ namespace Repomat.Schema.Validators
         {
             if (!MethodDef.IsTryGet)
             {
-                if (MethodDef.IsSingleton && MethodDef.ReturnType != RepositoryDef.EntityType)
+                if (MethodDef.IsSingleton && MethodDef.ReturnType != MethodDef.EntityDef.Type)
                 {
                     AddError("SingleGetReturnWrongType", "expected return type {0}, returns {1} instead",
-                        RepositoryDef.EntityType.ToCSharp(),
+                        MethodDef.EntityDef.Type.ToCSharp(),
                         MethodDef.ReturnType.ToCSharp());
                 }
                 else if (!MethodDef.IsSingleton && !MethodDef.ReturnType.ImplementsIEnumerableOfType(MethodDef.EntityDef.Type))
                 {
                     AddError("MultiGetReturnWrongType", "expected enumerable return type {0}, returns {1} instead",
-                        RepositoryDef.EntityType.ToCSharp(),
+                        MethodDef.EntityDef.Type.ToCSharp(),
                         MethodDef.ReturnType.ToCSharp());
                 }
             }
@@ -50,17 +50,17 @@ namespace Repomat.Schema.Validators
 
                 if (MethodDef.OutParameterOrNull != null)
                 {
-                    if (MethodDef.OutParameterOrNull.Type.GetElementType() != RepositoryDef.EntityType)
+                    if (MethodDef.OutParameterOrNull.Type.GetElementType() != MethodDef.EntityDef.Type)
                     {
                         AddError("TryGetOutParamWrongType", "expected out parameter of type {0}, out parameter of type {1} instead",
-                            RepositoryDef.EntityType.ToCSharp(),
+                            MethodDef.EntityDef.Type.ToCSharp(),
                             MethodDef.OutParameterOrNull.Type.GetElementType().ToCSharp());
                     }
                 }
                 else
                 {
                     AddError("TryGetNoOut", "missing out parameter of type {0}",
-                        RepositoryDef.EntityType.ToCSharp());
+                        MethodDef.EntityDef.Type.ToCSharp());
                 }
             }
         }

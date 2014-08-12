@@ -20,8 +20,8 @@ namespace Repomat.CodeGen
 
             CodeBuilder.Write("cmd.CommandText = @\"update {0} set ", EntityDef.TableName);
 
-            var whereColumns = RepoDef.PrimaryKey.ToArray();
-            var columnsToSet = RepoDef.Properties.Where(c => whereColumns.All(p => p.ColumnName != c.ColumnName)).ToArray();
+            var whereColumns = EntityDef.PrimaryKey.ToArray();
+            var columnsToSet = EntityDef.Properties.Where(c => whereColumns.All(p => p.ColumnName != c.ColumnName)).ToArray();
 
             var setEquations = columnsToSet.Select(c => string.Format("{0} = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
             CodeBuilder.Write(string.Join(", ", setEquations));
@@ -32,7 +32,7 @@ namespace Repomat.CodeGen
             CodeBuilder.Write(string.Join(" AND ", whereEquations));
             CodeBuilder.WriteLine("\";");
 
-            foreach (var parm in RepoDef.Properties)
+            foreach (var parm in EntityDef.Properties)
             {
                 AddParameterToParameterList(parm);
             }

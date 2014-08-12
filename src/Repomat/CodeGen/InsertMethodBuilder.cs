@@ -19,12 +19,12 @@ namespace Repomat.CodeGen
             GenerateConnectionAndStatementHeader();
 
             CodeBuilder.Write("cmd.CommandText = @\"insert into {0} (", EntityDef.TableName);
-            CodeBuilder.Write(string.Join(", ", RepoDef.Properties.Select(c => c.ColumnName)));
+            CodeBuilder.Write(string.Join(", ", EntityDef.Properties.Select(c => c.ColumnName)));
             CodeBuilder.Write(") values (");
-            CodeBuilder.Write(string.Join(", ", RepoDef.Properties.Select(c => "@" + c.PropertyName)));
+            CodeBuilder.Write(string.Join(", ", EntityDef.Properties.Select(c => "@" + c.PropertyName)));
             CodeBuilder.WriteLine(")\";");
 
-            foreach (var column in RepoDef.Properties)
+            foreach (var column in EntityDef.Properties)
             {
                 AddParameterToParameterList(column);
             }

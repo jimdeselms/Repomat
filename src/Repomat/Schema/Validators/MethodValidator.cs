@@ -68,7 +68,7 @@ namespace Repomat.Schema.Validators
                                  "found parameter {0} that does not map to a settable property {1}",
                                  argument.Name,
                                  argument.Name.Capitalize(),
-                                 RepositoryDef.EntityType.ToCSharp());
+                                 MethodDef.EntityDef.Type.ToCSharp());
                     }
                 }
             }
@@ -100,7 +100,7 @@ namespace Repomat.Schema.Validators
 
         private bool TryGetPropertyFromArgumentName(string propName, out PropertyDef property)
         {
-            property = RepositoryDef.Properties.FirstOrDefault(p => p.PropertyName == propName.Capitalize());
+            property = MethodDef.EntityDef.Properties.FirstOrDefault(p => p.PropertyName == propName.Capitalize());
             if (property == null)
             {
                 property = null;

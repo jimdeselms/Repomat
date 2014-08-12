@@ -16,11 +16,11 @@ namespace Repomat.CodeGen
 
             CodeBuilder.WriteLine("cmd.CommandText = @\"delete from {0} where ", MethodDef.EntityDef.TableName);
 
-            var equations = RepoDef.PrimaryKey.Select(c => string.Format("{0} = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
+            var equations = EntityDef.PrimaryKey.Select(c => string.Format("{0} = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
             CodeBuilder.Write(string.Join(" and ", equations));
             CodeBuilder.WriteLine("\";");
 
-            foreach (var key in RepoDef.PrimaryKey)
+            foreach (var key in EntityDef.PrimaryKey)
             {
                 string parmValue = GetParmValue(string.Format("{0}.{1}", methodDef.DtoParameterOrNull.Name, key.PropertyName), key.Type);
                 CodeBuilder.OpenBrace();

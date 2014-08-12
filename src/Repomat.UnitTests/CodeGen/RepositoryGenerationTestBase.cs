@@ -201,7 +201,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
             dlBuilder.SetupRepo<IPersonRepository>()
-                .SetupProperty("Image")
+                .SetupEntityProperty<Person>("Image")
                 .SetWidth(100);
 
             var repo = dlBuilder.CreateRepo<IPersonRepository>();

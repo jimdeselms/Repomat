@@ -26,21 +26,21 @@ namespace Repomat.CodeGen
             GenerateConnectionAndStatementHeader();
 
             CodeBuilder.Write("cmd.CommandText = @\"insert into {0} (", EntityDef.TableName);
-            CodeBuilder.Write(string.Join(", ", RepoDef.NonPrimaryKeyColumns.Select(c => c.ColumnName)));
+            CodeBuilder.Write(string.Join(", ", EntityDef.NonPrimaryKeyColumns.Select(c => c.ColumnName)));
             CodeBuilder.Write(") values (");
-            CodeBuilder.Write(string.Join(", ", RepoDef.NonPrimaryKeyColumns.Select(c => "@" + c.PropertyName)));
+            CodeBuilder.Write(string.Join(", ", EntityDef.NonPrimaryKeyColumns.Select(c => "@" + c.PropertyName)));
             CodeBuilder.WriteLine("){0} SELECT {1}\";", _statementSeparator, _scopeIdentityFunction);
 
-            foreach (var column in RepoDef.NonPrimaryKeyColumns)
+            foreach (var column in EntityDef.NonPrimaryKeyColumns)
             {
                 AddParameterToParameterList(column);
             }
 
-            CodeBuilder.WriteLine("{0}.{1} = (int)({2})cmd.ExecuteScalar();", MethodDef.DtoParameterOrNull.Name, RepoDef.PrimaryKey[0].PropertyName, _scopeIdentityDatatype);
+            CodeBuilder.WriteLine("{0}.{1} = (int)({2})cmd.ExecuteScalar();", MethodDef.DtoParameterOrNull.Name, EntityDef.PrimaryKey[0].PropertyName, _scopeIdentityDatatype);
 
             if (MethodDef.ReturnsInt)
             {
-                CodeBuilder.WriteLine("return {0}.{1};", MethodDef.DtoParameterOrNull.Name, RepoDef.PrimaryKey[0].PropertyName);
+                CodeBuilder.WriteLine("return {0}.{1};", MethodDef.DtoParameterOrNull.Name, EntityDef.PrimaryKey[0].PropertyName);
             }
 
             GenerateMethodFooter();

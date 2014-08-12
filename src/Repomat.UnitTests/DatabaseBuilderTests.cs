@@ -20,13 +20,15 @@ namespace Repomat.UnitTests
             {
                 var factory = DataLayerBuilder.DefineSqlDatabase(conn);
                 var builder = factory.SetupRepo<IPersonRepository>();
-                builder.SetupProperty("Name").SetColumnName("person_name");
-                builder.SetupProperty("PersonId").SetColumnName("id");
+                builder.SetupEntityProperty<Person>("Name").SetColumnName("person_name");
+                builder.SetupEntityProperty<Person>("PersonId").SetColumnName("id");
                 var repo = builder.CreateRepo();
 
-                Assert.AreEqual("person_name", builder.RepoDef.Properties.First(c => c.PropertyName == "Name").ColumnName);
-                Assert.AreEqual("id", builder.RepoDef.Properties.First(c => c.PropertyName == "PersonId").ColumnName);
-                Assert.AreEqual("id", builder.RepoDef.PrimaryKey.First(c => c.PropertyName == "PersonId").ColumnName);
+                var entityDef = builder.RepoDef.Methods.First().EntityDef;
+
+                Assert.AreEqual("person_name", entityDef.Properties.First(c => c.PropertyName == "Name").ColumnName);
+                Assert.AreEqual("id", entityDef.Properties.First(c => c.PropertyName == "PersonId").ColumnName);
+                Assert.AreEqual("id", entityDef.PrimaryKey.First(c => c.PropertyName == "PersonId").ColumnName);
 
                 RunAllCommandsAgainstRepo(repo);
             }
@@ -49,10 +51,12 @@ namespace Repomat.UnitTests
                 var builder = factory.SetupRepo<IPersonRepository>();
                 var repo = builder.CreateRepo();
 
-                Assert.AreEqual("person_table", builder.RepoDef.Methods.First().EntityDef.TableName);
-                Assert.AreEqual("NAME_COLUMN", builder.RepoDef.Properties.First(c => c.PropertyName == "Name").ColumnName);
-                Assert.AreEqual("PERSON_ID", builder.RepoDef.Properties.First(c => c.PropertyName == "PersonId").ColumnName);
-                Assert.AreEqual("PERSON_ID", builder.RepoDef.PrimaryKey.First(c => c.PropertyName == "PersonId").ColumnName);
+                var entityDef = builder.RepoDef.Methods.First().EntityDef;
+
+                Assert.AreEqual("person_table", entityDef.TableName);
+                Assert.AreEqual("NAME_COLUMN", entityDef.Properties.First(c => c.PropertyName == "Name").ColumnName);
+                Assert.AreEqual("PERSON_ID", entityDef.Properties.First(c => c.PropertyName == "PersonId").ColumnName);
+                Assert.AreEqual("PERSON_ID", entityDef.PrimaryKey.First(c => c.PropertyName == "PersonId").ColumnName);
 
                 RunAllCommandsAgainstRepo(repo);
             }

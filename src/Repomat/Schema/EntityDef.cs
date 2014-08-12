@@ -41,10 +41,15 @@ namespace Repomat.Schema
                 _tableName = value; 
             } 
         }
-        
-        public IReadOnlyList<PropertyDef> Columns { get { return _columns; } }
+
+        public PropertyDef FindPropertyByParameterName(string parameterName)
+        {
+            return Properties.First(c => c.PropertyName.Uncapitalize() == parameterName);
+        }
+
+        public IReadOnlyList<PropertyDef> Properties { get { return _columns; } }
         public IReadOnlyList<PropertyDef> PrimaryKey { get { return _primaryKey; } }
-        public IReadOnlyList<PropertyDef> NonPkColumns { get { return _nonPkColumns; } }
+        public IReadOnlyList<PropertyDef> NonPrimaryKeyColumns { get { return _nonPkColumns; } }
         public bool CreateClassThroughConstructor { get { return _createClassThroughConstructor; } }
         public bool HasIdentity { get { return _hasIdentity; } }
     }

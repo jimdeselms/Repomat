@@ -72,9 +72,10 @@ namespace Repomat
             throw new RepomatException(string.Format("Couldn't find method {0} matching the specified parameters", methodName));
         }
 
-        public PropertyBuilder SetupProperty(string propertyName)
+        public PropertyBuilder SetupEntityProperty<T>(string propertyName)
         {
-            return new PropertyBuilder(RepoDef.Properties.First(c => c.PropertyName == propertyName));
+            var entityDef = _repoDef.Methods.First(m => m.EntityDef.Type == typeof(T)).EntityDef;
+            return new PropertyBuilder(entityDef.Properties.First(p => p.PropertyName == propertyName));
         }
 
         internal RepositoryDef RepoDef { get { return _repoDef; } }

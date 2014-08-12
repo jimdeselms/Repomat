@@ -31,7 +31,7 @@ namespace Repomat.UnitTests.CodeGen
         public void CreateTable_VarcharWidthIsSpecified_UsesSpecifiedWidth(bool useSqlServer)
         {
             var repoDef = CreateRepoDef<IFooRepo>();
-            var prop = repoDef.Properties.Where(p => p.PropertyName == "Hello").First();
+            var prop = repoDef.Methods.First().EntityDef.Properties.Where(p => p.PropertyName == "Hello").First();
 
             PropertyBuilder propBuilder = new PropertyBuilder(prop);
             propBuilder.SetWidth(25);

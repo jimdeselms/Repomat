@@ -17,9 +17,7 @@ namespace Repomat.Schema
 
             IEnumerable<MethodDef> implementationDetails = GetImplementationDetails(repoType, typeDict);
 
-            EntityDef entityDef = typeDict.Values.FirstOrDefault() ?? GetEntityDef(repoType, tableNamingConvention, columnNamingConvention, typeof(void));
-
-            return new RepositoryDef(entityDef, typeof(TRepo), implementationDetails, tableNamingConvention, columnNamingConvention);
+            return new RepositoryDef(typeof(TRepo), implementationDetails, tableNamingConvention, columnNamingConvention);
         }
 
         private RepositoryDefBuilder()
