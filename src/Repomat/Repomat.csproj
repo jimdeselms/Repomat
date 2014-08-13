@@ -63,6 +63,7 @@
     <Compile Include="Databases\SqlDataLayerBuilder.cs" />
     <Compile Include="DatabaseTypes\SQLiteDatabaseType.cs" />
     <Compile Include="DatabaseTypes\SqlServerDatabaseType.cs" />
+    <Compile Include="EntityBuilder.cs" />
     <Compile Include="Runtime\ConcurrentlyLoadedCollection.cs" />
     <Compile Include="DatabaseType.cs" />
     <Compile Include="PropertyBuilder.cs" />

@@ -20,8 +20,8 @@ namespace Repomat.UnitTests
             {
                 var factory = DataLayerBuilder.DefineSqlDatabase(conn);
                 var builder = factory.SetupRepo<IPersonRepository>();
-                builder.SetupEntityProperty<Person>("Name").SetColumnName("person_name");
-                builder.SetupEntityProperty<Person>("PersonId").SetColumnName("id");
+                builder.SetupEntity<Person>().SetupProperty("Name").SetColumnName("person_name");
+                builder.SetupEntity<Person>().SetupProperty("PersonId").SetColumnName("id");
                 var repo = builder.CreateRepo();
 
                 var entityDef = builder.RepoDef.Methods.First().EntityDef;
