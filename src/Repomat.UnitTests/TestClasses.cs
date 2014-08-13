@@ -26,9 +26,8 @@ namespace Repomat.UnitTests
         IEnumerable<Person> GetAll();
 
         IEnumerable<Person> GetByName(string name);
-        Person GetSingletonByName(string name);
 
-        Person FindByBirthday(DateTime birthday);
+        IEnumerable<Person> FindByBirthday(DateTime birthday);
 
         Person Get(int personId);
 
@@ -71,7 +70,6 @@ namespace Repomat.UnitTests
         IEnumerable<ConstructorInjected> GetAll();
 
         IEnumerable<ConstructorInjected> GetByName(string name);
-        ConstructorInjected GetSingletonByName(string name);
 
         ConstructorInjected Get(int personId);
         bool TryGet(int personId, out ConstructorInjected result);

@@ -144,7 +144,7 @@ namespace Repomat.Schema
             // Get all Get or TryGet methods that are singleton methods that return the entityType.
             var getMethods = repoType
                 .GetMethods()
-                .Where(m => m.Name == "Get" || m.Name == "TryGet")
+                .Where(m => MethodDef.MethodIsPrimaryKeyGet(m, entityType))
                 .Where(m => m.ReturnType == entityType)
                 .ToArray();
             MethodInfo longestGet = null;

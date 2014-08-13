@@ -91,7 +91,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateRepoWithJimAndSusan();
 
-            Person person = repo.FindByBirthday(new DateTime(1969, 3, 9));
+            Person person = repo.FindByBirthday(new DateTime(1969, 3, 9)).First();
 
             Assert.AreEqual(1, person.PersonId);
             Assert.AreEqual("Jim", person.Name);
@@ -103,7 +103,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateRepoWithJimAndSusan();
 
-            var susan = repo.GetSingletonByName("Susan");
+            var susan = repo.Get(2);
             Assert.AreEqual(2, susan.PersonId);
             Assert.AreEqual("Susan", susan.Name);
         }
@@ -113,7 +113,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateRepoWithJimAndSusan();
 
-            Assert.Throws<RepomatException>(() => repo.GetSingletonByName("Shlomo"));
+            Assert.Throws<RepomatException>(() => repo.Get(92834));
         }
 
         [Test]
@@ -269,7 +269,10 @@ namespace Repomat.UnitTests.CodeGen
             Assert.Throws<RepomatException>(() => repo.TryGetByName("Jim", out person));
         }
 
+        // TODO need to make this work when I create a way to define a singleton method as not being
+        // based on the primary key
         [Test]
+        [Ignore]
         public void GetSingletonBy_TooManyFound_Throws()
         {
             var repo = CreateRepoWithJimAndSusan();
@@ -277,10 +280,13 @@ namespace Repomat.UnitTests.CodeGen
             var jimTwo = new Person { PersonId = 3, Name = "Jim", Birthday = new DateTime(2000, 1, 1) };
             repo.Insert(jimTwo);
 
-            Assert.Throws<RepomatException>(() => repo.GetSingletonByName("Jim"));
+            Assert.Throws<RepomatException>(() => repo.Get(3));
         }
 
+        // TODO - this also doesn't make sense if there's no way to say that a singleton query does not
+        // cause a primary key to be created.
         [Test]
+        [Ignore]
         public void GetSingletonBy_TooManyFoundWithLooseBehavior_ReturnsFirst()
         {
             var repo = CreateRepoWithJimAndSusan(getMethodBehavior: SingletonGetMethodBehavior.Loose);
@@ -289,7 +295,7 @@ namespace Repomat.UnitTests.CodeGen
             repo.Insert(jimTwo);
 
             // The first row is returned, and it should match the row that was already in the database
-            var first = repo.GetSingletonByName("Jim");
+            var first = repo.Get(3);
             Assert.AreEqual(1, first.PersonId);
         }
 
@@ -298,9 +304,11 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateRepoWithJimAndSusan(getMethodBehavior: SingletonGetMethodBehavior.Loose);
 
-            Assert.IsNull(repo.GetSingletonByName("Shlomo"));
+            Assert.IsNull(repo.Get(987));
         }
 
+        // TODO - currently, no way to make this query return too many rows
+        [Ignore]
         [Test]
         public void TryGetBy_TooManyFoundWithLooseBehavior_ReturnsFirst()
         {
@@ -493,8 +501,8 @@ namespace Repomat.UnitTests.CodeGen
             var builder = factory.SetupRepo<IPersonRepository>();
             if (getBehavior.HasValue)
             {
-                builder.SetupMethod("GetSingletonByName").SetSingletonGetMethodBehavior(getBehavior.Value);
                 builder.SetupMethod("TryGetByName").SetSingletonGetMethodBehavior(getBehavior.Value);
+                builder.SetupMethod("Get").SetSingletonGetMethodBehavior(getBehavior.Value);
             }
             var repo = builder.CreateRepo();
 

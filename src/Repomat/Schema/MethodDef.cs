@@ -160,7 +160,72 @@ namespace Repomat.Schema
             get { return !IsTryGet && ReturnType.IsDatabaseType(); }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
+        internal static MethodType GetMethodTypeFromName(string methodName)
+        {
+            if (methodName.StartsWith("CreateTable"))
+            {
+                return MethodType.CreateTable;
+            }
+            else if (methodName.StartsWith("DropTable"))
+            {
+                return MethodType.DropTable;
+            }
+            else if (methodName.StartsWith("TableExists"))
+            {
+                return MethodType.TableExists;
+            }
+            else if (methodName.StartsWith("GetCount"))
+            {
+                return MethodType.GetCount;
+            }
+            else if (methodName.Contains("Exists"))
+            {
+                return MethodType.Exists;
+            }
+            else if (methodName.StartsWith("Get") || methodName.StartsWith("TryGet") || methodName.StartsWith("Find") || methodName.StartsWith("TryFind"))
+            {
+                return MethodType.Get;
+            }
+            else if (methodName.StartsWith("Insert"))
+            {
+                return MethodType.Insert;
+            }
+            else if (methodName.StartsWith("Delete"))
+            {
+                return MethodType.Delete;
+            }
+            else if (methodName.StartsWith("Update"))
+            {
+                return MethodType.Update;
+            }
+            else if (methodName.StartsWith("Upsert"))
+            {
+                return MethodType.Upsert;
+            }
+            else if (methodName.StartsWith("Create"))
+            {
+                return MethodType.Create;
+            }
+
+            // For now, we'll assume it's Custom. Later, come validation time, if the custom SQL
+            // isn't set, then we should fail.
+            return MethodType.Custom;
+        }
+
+        internal static bool MethodIsPrimaryKeyGet(MethodInfo methodInfo, Type entityType)
+        {
+            if (methodInfo.Name.StartsWith("TryGet"))
+            {
+                return true;
+            }
+            else if (GetMethodTypeFromName(methodInfo.Name) == MethodType.Get && methodInfo.ReturnType == entityType)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public MethodType MethodType
         {
             get
@@ -169,54 +234,10 @@ namespace Repomat.Schema
                 {
                     return MethodType.Custom;
                 }
-                else if (_methodName.StartsWith("CreateTable"))
+                else
                 {
-                    return MethodType.CreateTable;
+                    return GetMethodTypeFromName(_methodName);
                 }
-                else if (_methodName.StartsWith("DropTable"))
-                {
-                    return MethodType.DropTable;
-                }
-                else if (_methodName.StartsWith("TableExists"))
-                {
-                    return MethodType.TableExists;
-                }
-                else if (_methodName.StartsWith("GetCount"))
-                {
-                    return MethodType.GetCount;
-                }
-                else if (_methodName.Contains("Exists"))
-                {
-                    return MethodType.Exists;
-                }
-                else if (_methodName.StartsWith("Get") || _methodName.StartsWith("TryGet") || _methodName.StartsWith("Find") || _methodName.StartsWith("TryFind"))
-                {
-                    return MethodType.Get;
-                }
-                else if (_methodName.StartsWith("Insert"))
-                {
-                    return MethodType.Insert;
-                }
-                else if (_methodName.StartsWith("Delete"))
-                {
-                    return MethodType.Delete;
-                }
-                else if (_methodName.StartsWith("Update"))
-                {
-                    return MethodType.Update;
-                }
-                else if (_methodName.StartsWith("Upsert"))
-                {
-                    return MethodType.Upsert;
-                }
-                else if (_methodName.StartsWith("Create"))
-                {
-                    return MethodType.Create;
-                }
-
-                // For now, we'll assume it's Custom. Later, come validation time, if the custom SQL
-                // isn't set, then we should fail.
-                return MethodType.Custom;
             }
         }
     }
