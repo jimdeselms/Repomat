@@ -31,5 +31,7 @@ namespace Repomat.Schema
         public IReadOnlyList<MethodDef> Methods { get { return _implementationDetails; } }
 
         public Type RepositoryType { get { return _repoType; } }
+
+        public NamingConvention ColumnNamingConvention { get { return _columnNamingConvention; } }
     }
 }

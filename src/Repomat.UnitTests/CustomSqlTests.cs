@@ -23,24 +23,24 @@ namespace Repomat.UnitTests
         public void ExecuteCustomNonQuerySql()
         {
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(500);
             var foo = repo.Get(500);
 
             Assert.AreEqual(500, foo.Id);
-            Assert.AreEqual("DingleDoodle", foo.Dingle);
+            Assert.AreEqual("DingleDoodle", foo.ColumnNameDifferentFromPropertyName);
         }
 
         [Test]
         public void ExecuteSingletonQuerySql()
         {
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(25);
             var foo = repo.DingleSomething("DingleDoodle");
 
             Assert.AreEqual(25, foo.Id);
-            Assert.AreEqual("DingleDoodle", foo.Dingle);
+            Assert.AreEqual("DingleDoodle", foo.ColumnNameDifferentFromPropertyName);
             Assert.IsNull(foo.NullableWhatsit);
             Assert.AreEqual(37.5M, foo.MoneyMoney);
         }
@@ -51,12 +51,12 @@ namespace Repomat.UnitTests
             // Handles the case where the columns in the result set are not
             // in the same order as the parameters of the query.
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(25);
             var foo = repo.QueryWithDifferentOrder("DingleDoodle");
 
             Assert.AreEqual(25, foo.Id);
-            Assert.AreEqual("DingleDoodle", foo.Dingle);
+            Assert.AreEqual("DingleDoodle", foo.ColumnNameDifferentFromPropertyName);
             Assert.IsNull(foo.NullableWhatsit);
             Assert.AreEqual(37.5M, foo.MoneyMoney);
         }
@@ -65,15 +65,15 @@ namespace Repomat.UnitTests
         public void ExecuteMultiRowQuery()
         {
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(25);
             repo.MethodThatWritesARow(100);
 
             var result = repo.GetMultipleFoos().ToArray();
             Assert.AreEqual(25, result[0].Id);
             Assert.AreEqual(100, result[1].Id);
-            Assert.AreEqual("DingleDoodle", result[0].Dingle);
-            Assert.AreEqual("DingleDoodle", result[1].Dingle);
+            Assert.AreEqual("DingleDoodle", result[0].ColumnNameDifferentFromPropertyName);
+            Assert.AreEqual("DingleDoodle", result[1].ColumnNameDifferentFromPropertyName);
             Assert.IsNull(result[0].NullableWhatsit);
             Assert.IsNull(result[1].NullableWhatsit);
         }
@@ -82,7 +82,7 @@ namespace Repomat.UnitTests
         public void ExecuteScalarQuery()
         {
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(2);
             Assert.AreEqual(3M, repo.GetMoneyMoney(2));
         }
@@ -91,7 +91,7 @@ namespace Repomat.UnitTests
         public void ExecuteScalarQueryThatReturnsNull()
         {
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(2);
             Assert.IsNull(repo.GetMoneyMoney(999));
         }
@@ -100,7 +100,7 @@ namespace Repomat.UnitTests
         public void ExecuteCountScalarQuery()
         {
             var repo = CreateRepo();
-            repo.CreateTable();
+            repo.CreateTheTable();
             repo.MethodThatWritesARow(2);
             repo.MethodThatWritesARow(3);
             repo.MethodThatWritesARow(4);
@@ -114,11 +114,11 @@ namespace Repomat.UnitTests
             var repoBuilder = dlBuilder.SetupRepo<IStoredProcedureRepo>();
 
             repoBuilder.SetupMethod("CreateProc")
-                .ExecutesSql("CREATE PROCEDURE SayGreeting @name varchar(100), @greeting varchar(100) AS SELECT @greeting + ', ' + @name")
+                .ExecutesSql("CREATE PROCEDURE \r\nSayGreeting @name varchar(100), @greeting varchar(100) AS SELECT @greeting + ', ' + @name")
                 .SetEntityType(typeof(void));
             repoBuilder
                 .SetupMethod("DropProc")
-                .ExecutesSql("DROP PROCEDURE SayGreeting")
+                .ExecutesSql("DROP PROCEDURE \nSayGreeting")
                 .SetEntityType(typeof(void));
 
             // By default, calls the proc with the same name as the method.
@@ -162,15 +162,22 @@ namespace Repomat.UnitTests
 
         private IFooRepo CreateRepo()
         {
+            var columnNamingConvention = NamingConvention.NoOp
+                .AddOverride("ColumnNameDifferentFromPropertyName", "Dingle");
+
             var db = DataLayerBuilder.DefineInMemoryDatabase();
+            db.SetColumnNamingConvention(columnNamingConvention);
             var repoBuilder = db.SetupRepo<IFooRepo>();
 
+            repoBuilder.SetupMethod("CreateTheTable")
+                .ExecutesSql("create table Foo (Id int, Dingle varchar(100), NullableWhatsit int, MoneyMoney money)");
+
             repoBuilder.SetupMethod("MethodThatWritesARow")
-                .ExecutesSql("insert into Foo values (@someId, 'DingleDoodle', null, 1.5*@someId)");
+                .ExecutesSql("insert into Foo \r\nvalues (@someId, 'DingleDoodle', null, 1.5*@someId)");
             repoBuilder.SetupMethod("DingleSomething")
-                .ExecutesSql("select Id, Dingle, NullableWhatsit, MoneyMoney from Foo where Dingle = @theString");
+                .ExecutesSql("select Id, Dingle, NullableWhatsit, MoneyMoney \nfrom Foo where Dingle = @theString");
             repoBuilder.SetupMethod("QueryWithDifferentOrder")
-                .ExecutesSql("select NullableWhatsit, MoneyMoney, Id, Dingle from Foo where Dingle = @theString");
+                .ExecutesSql("select NullableWhatsit, MoneyMoney, Id, Dingle \r\nfrom Foo where Dingle = @theString");
             repoBuilder.SetupMethod("GetMultipleFoos")
                 .ExecutesSql("select Id, NullableWhatsit, Dingle, MoneyMoney from Foo");
             repoBuilder.SetupMethodWithParameters("GetMoneyMoney", typeof(int))
@@ -186,14 +193,14 @@ namespace Repomat.UnitTests
         public class Foo
         {
             public int Id { get; set; }
-            public string Dingle { get; set; }
+            public string ColumnNameDifferentFromPropertyName { get; set; }
             public int? NullableWhatsit { get; set; }
             public decimal MoneyMoney { get; set; }
         }
 
         public interface IFooRepo
         {
-            void CreateTable();
+            void CreateTheTable();
 
             Foo Get(int id);
 

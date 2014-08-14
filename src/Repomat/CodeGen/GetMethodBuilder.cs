@@ -25,7 +25,7 @@ namespace Repomat.CodeGen
              if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsSimpleQuery)
             {
                 CodeBuilder.WriteLine("private bool _query{0}_columnIndexesAssigned = false;", _customQueryIdx);
-                foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(NamingConvention.NoOp, MethodDef.ReturnType))
+                foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
                 {
                     CodeBuilder.WriteLine("private int _query{0}_column{1}Idx = 0;", _customQueryIdx, col.PropertyName);
                 }
@@ -70,7 +70,7 @@ namespace Repomat.CodeGen
 
             WriteSqlStatement(columnsToGet);
 
-            WriteParameterAssignments(columnsToGet);
+            WriteParameterAssignments();
 
             if (MethodDef.IsSimpleQuery)
             {
@@ -108,7 +108,7 @@ namespace Repomat.CodeGen
                 }
                 else
                 {
-                    columnsToGet = RepositoryDefBuilder.GetAssignableColumnsForType(NamingConvention.NoOp, typeToGet).ToArray();
+                    columnsToGet = RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, typeToGet).ToArray();
                 }
             }
             else
@@ -123,7 +123,7 @@ namespace Repomat.CodeGen
         {
             if (MethodDef.CustomSqlOrNull != null)
             {
-                CodeBuilder.Write("cmd.CommandText = \"{0}\";", MethodDef.CustomSqlOrNull.Replace("\"", "\"\""));
+                CodeBuilder.Write("cmd.CommandText = @\"{0}\";", MethodDef.CustomSqlOrNull.Replace("\"", "\"\""));
                 if (MethodDef.CustomSqlIsStoredProcedure)
                 {
                     CodeBuilder.WriteLine("cmd.CommandType = System.Data.CommandType.StoredProcedure;");
@@ -151,7 +151,7 @@ namespace Repomat.CodeGen
             }
         }
 
-        private void WriteParameterAssignments(PropertyDef[] columnsToGet)
+        private void WriteParameterAssignments()
         {
             foreach (var arg in MethodDef.Parameters)
             {
@@ -186,7 +186,7 @@ namespace Repomat.CodeGen
                 CodeBuilder.WriteLine("Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);");
                 foreach (var columnToGet in columnsToGet)
                 {
-                    CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{1}\");", queryIdx, columnToGet.PropertyName);
+                    CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName);
                 }
                 CodeBuilder.CloseBrace();
             }
@@ -242,7 +242,7 @@ namespace Repomat.CodeGen
                 CodeBuilder.WriteLine("Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);");
                 foreach (var columnToGet in columnsToGet)
                 {
-                    CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{1}\");", queryIdx, columnToGet.PropertyName);
+                    CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName);
                 }
                 CodeBuilder.CloseBrace();
             }

@@ -3,6 +3,7 @@ require 'rake/clean'
 
 DOT_NET_PATH = "#{ENV["SystemRoot"]}\\Microsoft.NET\\Framework\\v4.0.30319"
 NUNIT_EXE = "packages/NUnit.Runners.2.6.3/tools/nunit-console.exe"
+NUGET_EXE = ".nuget/nuget.exe"
 SOURCE_PATH = "../src"
 OUTPUT_PATH = "output"
 CONFIG = "Debug"
@@ -13,7 +14,7 @@ task :default => ["clean", "build:all"]
  
 namespace :build do
   
-  task :all => [:compile, :test]
+  task :all => [:restore, :compile, :test]
       
   desc "Build solutions using MSBuild"
   task :compile do
@@ -29,7 +30,11 @@ namespace :build do
     sh "if not exist #{OUTPUT_PATH} mkdir #{OUTPUT_PATH}"	
     sh "#{NUNIT_EXE} #{tests} /nologo /xml=#{OUTPUT_PATH}/TestResults.xml"
   end
-  
+
+  task :restore do
+    sh "#{NUGET_EXE} restore"
+  end
+
 end
 
 msbuild :build do |b|
@@ -37,3 +42,4 @@ msbuild :build do |b|
 	b.targets = [ :Build ]
 	b.solution = "Spededebe.sln"
 end
+
