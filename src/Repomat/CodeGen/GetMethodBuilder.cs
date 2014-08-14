@@ -65,17 +65,42 @@ namespace Repomat.CodeGen
 
         private void GenerateGetMethodBody(int queryIdx)
         {
-            ParameterDetails tryGetOutColumn = null;
-            if (MethodDef.IsTryGet)
-            {
-                tryGetOutColumn = MethodDef.OutParameterOrNull;
-            }
+            Type typeToGet = MethodDef.ReturnType.GetCoreType();
+            PropertyDef[] columnsToGet = DetermineColumnsToGet(typeToGet);
 
+            WriteSqlStatement(columnsToGet);
+
+            WriteParameterAssignments(columnsToGet);
+
+            if (MethodDef.IsSimpleQuery)
+            {
+                CodeBuilder.WriteLine("var ___result = cmd.ExecuteScalar();");
+                CodeBuilder.WriteLine("return {0};", GetScalarConvertExpression(MethodDef.ReturnType, "___result"));
+            }
+            else
+            {
+                CodeBuilder.WriteLine("using (var reader = cmd.ExecuteReader())");
+
+                CodeBuilder.OpenBrace();
+
+                if (MethodDef.IsSingleton)
+                {
+                    WriteSingletonResultRead(columnsToGet, queryIdx);
+                }
+                else
+                {
+                    WriteMultiRowResultRead(columnsToGet, queryIdx);
+                }
+                CodeBuilder.CloseBrace();
+            }
+        }
+
+        private PropertyDef[] DetermineColumnsToGet(Type typeToGet)
+        {
             PropertyDef[] columnsToGet;
+
             if (MethodDef.CustomSqlOrNull != null)
             {
-                Type typeToGet = MethodDef.ReturnType.GetCoreType();
-
                 // TODO: Get this naming convention from the database instead of using noop.
                 if (MethodDef.IsSimpleQuery)
                 {
@@ -85,6 +110,19 @@ namespace Repomat.CodeGen
                 {
                     columnsToGet = RepositoryDefBuilder.GetAssignableColumnsForType(NamingConvention.NoOp, typeToGet).ToArray();
                 }
+            }
+            else
+            {
+                columnsToGet = EntityDef.Properties.Where(c => !MethodDef.Properties.Select(p => p.Name.Capitalize()).Contains(c.ColumnName)).ToArray();
+            }
+
+            return columnsToGet;
+        }
+
+        private void WriteSqlStatement(PropertyDef[] columnsToGet)
+        {
+            if (MethodDef.CustomSqlOrNull != null)
+            {
                 CodeBuilder.Write("cmd.CommandText = \"{0}\";", MethodDef.CustomSqlOrNull.Replace("\"", "\"\""));
                 if (MethodDef.CustomSqlIsStoredProcedure)
                 {
@@ -93,7 +131,6 @@ namespace Repomat.CodeGen
             }
             else
             {
-                columnsToGet = EntityDef.Properties.Where(c => !MethodDef.Properties.Select(p => p.Name.Capitalize()).Contains(c.ColumnName)).ToArray();
                 CodeBuilder.Write("cmd.CommandText = \"select ");
 
                 CodeBuilder.Write(string.Join(", ", columnsToGet.Select(c => string.Format("[{0}]", c.ColumnName.Capitalize()))));
@@ -112,7 +149,10 @@ namespace Repomat.CodeGen
                 }
                 CodeBuilder.WriteLine("\";");
             }
+        }
 
+        private void WriteParameterAssignments(PropertyDef[] columnsToGet)
+        {
             foreach (var arg in MethodDef.Parameters)
             {
                 var column = EntityDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
@@ -135,122 +175,111 @@ namespace Repomat.CodeGen
                 CodeBuilder.WriteLine("cmd.Parameters.Add(parm);");
                 CodeBuilder.CloseBrace();
             }
+        }
 
-            if (MethodDef.IsSimpleQuery)
+        private void WriteSingletonResultRead(PropertyDef[] columnsToGet, int queryIdx)
+        {
+            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
             {
-                CodeBuilder.WriteLine("var ___result = cmd.ExecuteScalar();");
-                CodeBuilder.WriteLine("return {0};", GetScalarConvertExpression(MethodDef.ReturnType, "___result"));
+                CodeBuilder.WriteLine("if (!_query{0}_columnIndexesAssigned)", queryIdx);
+                CodeBuilder.OpenBrace();
+                CodeBuilder.WriteLine("Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);");
+                foreach (var columnToGet in columnsToGet)
+                {
+                    CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{1}\");", queryIdx, columnToGet.PropertyName);
+                }
+                CodeBuilder.CloseBrace();
+            }
+            CodeBuilder.WriteLine("if (reader.Read())");
+            CodeBuilder.OpenBrace();
+            if (MethodDef.CustomSqlOrNull != null)
+            {
+                AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
             }
             else
             {
-                CodeBuilder.WriteLine("using (var reader = cmd.ExecuteReader())");
-
+                AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), MethodDef.Properties, null);
+            }
+            if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
+            {
+                CodeBuilder.WriteLine("if (reader.Read())");
                 CodeBuilder.OpenBrace();
+                CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"More than one row returned from singleton query\");");
+                CodeBuilder.CloseBrace();
+            }
 
-                if (MethodDef.IsSingleton)
+            if (MethodDef.IsTryGet)
+            {
+                var tryGetOutColumn = MethodDef.OutParameterOrNull;
+                CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
+                CodeBuilder.WriteLine("return true;");
+                CodeBuilder.CloseBrace();
+                CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
+                CodeBuilder.WriteLine("return false;");
+            }
+            else
+            {
+                CodeBuilder.WriteLine("return newObj;");
+                CodeBuilder.CloseBrace();
+
+                if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
                 {
-                    if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
-                    {
-                        CodeBuilder.WriteLine("if (!_query{0}_columnIndexesAssigned)", queryIdx);
-                        CodeBuilder.OpenBrace();
-                        CodeBuilder.WriteLine("Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);");
-                        foreach (var columnToGet in columnsToGet)
-                        {
-                            CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{1}\");", queryIdx, columnToGet.PropertyName);
-                        }
-                        CodeBuilder.CloseBrace();
-                    }
-                    CodeBuilder.WriteLine("if (reader.Read())");
-                    CodeBuilder.OpenBrace();
-                    if (MethodDef.CustomSqlOrNull != null)
-                    {
-                        AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
-                    }
-                    else
-                    {
-                        AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), MethodDef.Properties, null);
-                    }
-                    if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
-                    {
-                        CodeBuilder.WriteLine("if (reader.Read())");
-                        CodeBuilder.OpenBrace();
-                        CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"More than one row returned from singleton query\");");
-                        CodeBuilder.CloseBrace();
-                    }
-
-                    if (MethodDef.IsTryGet)
-                    {
-                        CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
-                        CodeBuilder.WriteLine("return true;");
-                        CodeBuilder.CloseBrace();
-                        CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
-                        CodeBuilder.WriteLine("return false;");
-                    }
-                    else
-                    {
-                        CodeBuilder.WriteLine("return newObj;");
-                        CodeBuilder.CloseBrace();
-
-                        if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
-                        {
-                            CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"No rows returned from singleton query\");");
-                        }
-                        else
-                        {
-                            CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
-                        }
-                    }
+                    CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"No rows returned from singleton query\");");
                 }
                 else
                 {
-                    if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
-                    {
-                        CodeBuilder.WriteLine("if (!_query{0}_columnIndexesAssigned)", queryIdx);
-                        CodeBuilder.OpenBrace();
-                        CodeBuilder.WriteLine("Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);");
-                        foreach (var columnToGet in columnsToGet)
-                        {
-                            CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{1}\");", queryIdx, columnToGet.PropertyName);
-                        }
-                        CodeBuilder.CloseBrace();
-                    }
-                    bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(EntityDef.Type);
-                    if (!isEnumerable)
-                    {
-                        CodeBuilder.WriteLine("var result = new System.Collections.Generic.List<{0}>();", EntityDef.Type.ToCSharp());
-                    }
-                    CodeBuilder.WriteLine("while (reader.Read())");
-                    CodeBuilder.OpenBrace();
-                    if (MethodDef.CustomSqlOrNull != null)
-                    {
-                        AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
-                    }
-                    else
-                    {
-                        AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), MethodDef.Properties, null);
-                    }
+                    CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
+                }
+            }
+        }
 
-                    if (isEnumerable)
-                    {
-                        CodeBuilder.WriteLine("yield return newObj;");
-                    }
-                    else
-                    {
-                        CodeBuilder.WriteLine("result.Add(newObj);");
-                    }
-                    CodeBuilder.CloseBrace();
-
-                    if (!isEnumerable)
-                    {
-                        string toArray = "";
-                        if (MethodDef.ReturnType.IsArray)
-                        {
-                            toArray = ".ToArray()";
-                        }
-                        CodeBuilder.WriteLine("return result{0};", toArray);
-                    }
+        private void WriteMultiRowResultRead(PropertyDef[] columnsToGet, int queryIdx)
+        {
+            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
+            {
+                CodeBuilder.WriteLine("if (!_query{0}_columnIndexesAssigned)", queryIdx);
+                CodeBuilder.OpenBrace();
+                CodeBuilder.WriteLine("Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);");
+                foreach (var columnToGet in columnsToGet)
+                {
+                    CodeBuilder.WriteLine("_query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{1}\");", queryIdx, columnToGet.PropertyName);
                 }
                 CodeBuilder.CloseBrace();
+            }
+            bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(EntityDef.Type);
+            if (!isEnumerable)
+            {
+                CodeBuilder.WriteLine("var result = new System.Collections.Generic.List<{0}>();", EntityDef.Type.ToCSharp());
+            }
+            CodeBuilder.WriteLine("while (reader.Read())");
+            CodeBuilder.OpenBrace();
+            if (MethodDef.CustomSqlOrNull != null)
+            {
+                AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
+            }
+            else
+            {
+                AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), MethodDef.Properties, null);
+            }
+
+            if (isEnumerable)
+            {
+                CodeBuilder.WriteLine("yield return newObj;");
+            }
+            else
+            {
+                CodeBuilder.WriteLine("result.Add(newObj);");
+            }
+            CodeBuilder.CloseBrace();
+
+            if (!isEnumerable)
+            {
+                string toArray = "";
+                if (MethodDef.ReturnType.IsArray)
+                {
+                    toArray = ".ToArray()";
+                }
+                CodeBuilder.WriteLine("return result{0};", toArray);
             }
         }
 
