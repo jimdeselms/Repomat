@@ -21,19 +21,19 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"create table {0} (", EntityDef.TableName);
+            CodeBuilder.Write("cmd.CommandText = @\"create table [{0}] (", EntityDef.TableName);
 
             List<string> columns = new List<string>();
             foreach (var property in EntityDef.Properties)
             {
                 bool isIdentity = EntityDef.HasIdentity && EntityDef.PrimaryKey[0].ColumnName == property.ColumnName;
-                columns.Add(string.Format("{0} {1}", property.ColumnName, _sqlPropertyMapFunc(property, isIdentity)));
+                columns.Add(string.Format("[{0}] {1}", property.ColumnName, _sqlPropertyMapFunc(property, isIdentity)));
             }
             CodeBuilder.Write(string.Join(", ", columns));
 
             if (EntityDef.PrimaryKey.Count > 0)
             {
-                CodeBuilder.Write(", CONSTRAINT pk_{0} PRIMARY KEY ({1})", EntityDef.TableName, string.Join(", ", EntityDef.PrimaryKey.Select(pk => pk.ColumnName)));
+                CodeBuilder.Write(", CONSTRAINT [pk_{0}] PRIMARY KEY ({1})", EntityDef.TableName, string.Join(", ", EntityDef.PrimaryKey.Select(pk => string.Format("[{0}]", pk.ColumnName))));
             }
 
             CodeBuilder.WriteLine(")\";");

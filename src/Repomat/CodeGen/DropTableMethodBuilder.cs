@@ -16,7 +16,7 @@ namespace Repomat.CodeGen
 
         public override void GenerateCode()
         {
-            GenerateCodeForSql(string.Format("drop table {0}", EntityDef.TableName));
+            GenerateCodeForSql(string.Format("drop table [{0}]", EntityDef.TableName));
         }
     }
 }

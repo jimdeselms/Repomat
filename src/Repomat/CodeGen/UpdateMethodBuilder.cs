@@ -18,17 +18,17 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"update {0} set ", EntityDef.TableName);
+            CodeBuilder.Write("cmd.CommandText = @\"update [{0}] set ", EntityDef.TableName);
 
             var whereColumns = EntityDef.PrimaryKey.ToArray();
             var columnsToSet = EntityDef.Properties.Where(c => whereColumns.All(p => p.ColumnName != c.ColumnName)).ToArray();
 
-            var setEquations = columnsToSet.Select(c => string.Format("{0} = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
+            var setEquations = columnsToSet.Select(c => string.Format("[{0}] = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
             CodeBuilder.Write(string.Join(", ", setEquations));
 
             CodeBuilder.Write(" WHERE ");
 
-            var whereEquations = whereColumns.Select(c => string.Format("{0} = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
+            var whereEquations = whereColumns.Select(c => string.Format("[{0}] = @{1}", c.ColumnName, c.PropertyName.Capitalize()));
             CodeBuilder.Write(string.Join(" AND ", whereEquations));
             CodeBuilder.WriteLine("\";");
 

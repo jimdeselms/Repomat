@@ -96,7 +96,7 @@ namespace Repomat.CodeGen
                 columnsToGet = EntityDef.Properties.Where(c => !MethodDef.Properties.Select(p => p.Name.Capitalize()).Contains(c.ColumnName)).ToArray();
                 CodeBuilder.Write("cmd.CommandText = \"select ");
 
-                CodeBuilder.Write(string.Join(", ", columnsToGet.Select(c => c.ColumnName.Capitalize())));
+                CodeBuilder.Write(string.Join(", ", columnsToGet.Select(c => string.Format("[{0}]", c.ColumnName.Capitalize()))));
 
                 CodeBuilder.Write(" from {0} ", EntityDef.TableName);
 
@@ -105,7 +105,7 @@ namespace Repomat.CodeGen
                     .Where(p => p != null)
                     .ToArray();
 
-                var equations = argumentProperties.Select(p => string.Format("{0} = @{1}", p.ColumnName, p.PropertyName.Uncapitalize())).ToArray();
+                var equations = argumentProperties.Select(p => string.Format("[{0}] = @{1}", p.ColumnName, p.PropertyName.Uncapitalize())).ToArray();
                 if (equations.Length > 0)
                 {
                     CodeBuilder.Write(" where " + string.Join(" AND ", equations));

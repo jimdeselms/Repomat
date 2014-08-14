@@ -25,7 +25,7 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"insert into {0} (", EntityDef.TableName);
+            CodeBuilder.Write("cmd.CommandText = @\"insert into [{0}] (", EntityDef.TableName);
             CodeBuilder.Write(string.Join(", ", EntityDef.NonPrimaryKeyColumns.Select(c => c.ColumnName)));
             CodeBuilder.Write(") values (");
             CodeBuilder.Write(string.Join(", ", EntityDef.NonPrimaryKeyColumns.Select(c => "@" + c.PropertyName)));

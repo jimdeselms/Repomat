@@ -18,8 +18,8 @@ namespace Repomat.CodeGen
         {
             GenerateConnectionAndStatementHeader();
 
-            CodeBuilder.Write("cmd.CommandText = @\"insert into {0} (", EntityDef.TableName);
-            CodeBuilder.Write(string.Join(", ", EntityDef.Properties.Select(c => c.ColumnName)));
+            CodeBuilder.Write("cmd.CommandText = @\"insert into [{0}] (", EntityDef.TableName);
+            CodeBuilder.Write(string.Join(", ", EntityDef.Properties.Select(c => string.Format("[{0}]", c.ColumnName))));
             CodeBuilder.Write(") values (");
             CodeBuilder.Write(string.Join(", ", EntityDef.Properties.Select(c => "@" + c.PropertyName)));
             CodeBuilder.WriteLine(")\";");
