@@ -55,6 +55,18 @@ namespace Repomat.UnitTests
         int CreateReturningInt(Person person);
     }
 
+    public interface IPersonRepositoryWithPkOverride
+    {
+        void CreateTable();
+        void DropTable();
+        bool TableExists();
+
+        Person Get(int personId);
+        bool TryGet(int personId, out Person person);
+
+        void Insert(Person p);
+    }
+
     public interface IRepositoryWithBogusMethodName
     {
         string DoSomeStuff();

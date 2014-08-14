@@ -20,5 +20,23 @@ namespace Repomat
         {
             return new PropertyBuilder(_entityDef.Properties.First(p => p.PropertyName == propertyName));
         }
+
+        public EntityBuilder HasTableName(string tableName)
+        {
+            _entityDef.TableName = tableName;
+
+            return this;
+        }
+
+        public EntityBuilder HasPrimaryKey(params string[] primaryKeyProperties)
+        {
+            var properties = primaryKeyProperties
+                .Select(pk => _entityDef.Properties.Where(p => p.PropertyName == pk).First())
+                .ToList();
+
+            _entityDef.PrimaryKey = properties;
+
+            return this;
+        }
     }
 }

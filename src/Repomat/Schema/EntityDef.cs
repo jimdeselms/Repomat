@@ -11,11 +11,12 @@ namespace Repomat.Schema
         private string _tableName;
         private readonly Type _type;
         private readonly IReadOnlyList<PropertyDef> _columns;
-        private readonly IReadOnlyList<PropertyDef> _primaryKey;
         private readonly IReadOnlyList<PropertyDef> _nonPkColumns;
         private readonly bool _hasIdentity;
         private readonly bool _createClassThroughConstructor;
 
+        private IReadOnlyList<PropertyDef> _primaryKey;
+        
         public EntityDef(Type type, string tableName, IEnumerable<PropertyDef> columns, IEnumerable<PropertyDef> primaryKey, bool hasIdentity, bool createClassThroughConstructor)
         {
             _type = type;
@@ -47,8 +48,13 @@ namespace Repomat.Schema
             return Properties.First(c => c.PropertyName.Uncapitalize() == parameterName);
         }
 
+        public IReadOnlyList<PropertyDef> PrimaryKey 
+        { 
+            get { return _primaryKey; }
+            set { _primaryKey = value; }
+        }
+
         public IReadOnlyList<PropertyDef> Properties { get { return _columns; } }
-        public IReadOnlyList<PropertyDef> PrimaryKey { get { return _primaryKey; } }
         public IReadOnlyList<PropertyDef> NonPrimaryKeyColumns { get { return _nonPkColumns; } }
         public bool CreateClassThroughConstructor { get { return _createClassThroughConstructor; } }
         public bool HasIdentity { get { return _hasIdentity; } }

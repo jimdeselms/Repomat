@@ -28,13 +28,6 @@ namespace Repomat
             return this;
         }
 
-        public MethodBuilder SetTableName(string tableName)
-        {
-            _method.TableName = tableName;
-
-            return this;
-        }
-
         public MethodBuilder SetEntityType(Type type)
         {
             _method.EntityDef = _repositoryDef.GetEntityDef(type);

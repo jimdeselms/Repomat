@@ -268,34 +268,49 @@ namespace Repomat.UnitTests.CodeGen
             Assert.Throws<RepomatException>(() => repo.TryGetByName("Jim", out person));
         }
 
-        // TODO need to make this work when I create a way to define a singleton method as not being
-        // based on the primary key
         [Test]
-        [Ignore]
         public void GetSingletonBy_TooManyFound_Throws()
         {
-            var repo = CreateRepoWithJimAndSusan();
+            var repo = CreateRepoWithNameAsPrimaryKey(SingletonGetMethodBehavior.Strict);
 
-            var jimTwo = new Person { PersonId = 3, Name = "Jim", Birthday = new DateTime(2000, 1, 1) };
-            repo.Insert(jimTwo);
+            try
+            {
+                var person1 = new Person { PersonId = 3, Name = "Jim", Birthday = new DateTime(2000, 1, 1) };
+                repo.Insert(person1);
 
-            Assert.Throws<RepomatException>(() => repo.Get(3));
+                var person2 = new Person { PersonId = 3, Name = "Frank", Birthday = new DateTime(2000, 1, 2) };
+                repo.Insert(person2);
+
+                // Too many rows returned by singleton query.
+                Assert.Throws<RepomatException>(() => repo.Get(3));
+            }
+            finally
+            {
+                repo.DropTable();
+            }
         }
 
-        // TODO - this also doesn't make sense if there's no way to say that a singleton query does not
-        // cause a primary key to be created.
         [Test]
-        [Ignore]
         public void GetSingletonBy_TooManyFoundWithLooseBehavior_ReturnsFirst()
         {
-            var repo = CreateRepoWithJimAndSusan(getMethodBehavior: SingletonGetMethodBehavior.Loose);
+            var repo = CreateRepoWithNameAsPrimaryKey(SingletonGetMethodBehavior.Loose);
 
-            var jimTwo = new Person { PersonId = 3, Name = "Jim", Birthday = new DateTime(2000, 1, 1) };
-            repo.Insert(jimTwo);
+            try
+            {
+                var person1 = new Person { PersonId = 3, Name = "Jim", Birthday = new DateTime(2000, 1, 1) };
+                repo.Insert(person1);
 
-            // The first row is returned, and it should match the row that was already in the database
-            var first = repo.Get(3);
-            Assert.AreEqual(1, first.PersonId);
+                var person2 = new Person { PersonId = 3, Name = "Frank", Birthday = new DateTime(2000, 1, 2) };
+                repo.Insert(person2);
+
+                // More than one row found, a row is returned arbitrarily.
+                var result = repo.Get(3);
+                Assert.AreEqual(3, result.PersonId);
+            }
+            finally
+            {
+                repo.DropTable();
+            }
         }
 
         [Test]
@@ -307,19 +322,29 @@ namespace Repomat.UnitTests.CodeGen
         }
 
         // TODO - currently, no way to make this query return too many rows
-        [Ignore]
         [Test]
         public void TryGetBy_TooManyFoundWithLooseBehavior_ReturnsFirst()
         {
-            var repo = CreateRepoWithJimAndSusan(getMethodBehavior: SingletonGetMethodBehavior.Loose);
+            var repo = CreateRepoWithNameAsPrimaryKey(SingletonGetMethodBehavior.Loose);
 
-            Person dupe = new Person { PersonId = 9, Name = "Jim", Birthday = new DateTime(2011, 1, 1) };
-            repo.Insert(dupe);
+            try
+            {
+                var person1 = new Person { PersonId = 3, Name = "Jim", Birthday = new DateTime(2000, 1, 1) };
+                repo.Insert(person1);
 
-            // The first row is returned, and it should match the row that was already in the database
-            Person person;
-            Assert.IsTrue(repo.TryGetByName("Jim", out person));
-            Assert.AreEqual(1, person.PersonId);
+                var person2 = new Person { PersonId = 3, Name = "Frank", Birthday = new DateTime(2000, 1, 2) };
+                repo.Insert(person2);
+
+                // TryGet, where more than one row is returned by the query. Loose behavior
+                // means we just get a single row, arbitrarily.
+                Person result;
+                Assert.IsTrue(repo.TryGet(3, out result));
+                Assert.AreEqual(3, result.PersonId);
+            }
+            finally
+            {
+                repo.DropTable();
+            }
         }
 
         [Test]
@@ -503,6 +528,7 @@ namespace Repomat.UnitTests.CodeGen
                 builder.SetupMethod("TryGetByName").SetSingletonGetMethodBehavior(getBehavior.Value);
                 builder.SetupMethod("Get").SetSingletonGetMethodBehavior(getBehavior.Value);
             }
+
             var repo = builder.CreateRepo();
 
             if (repo.TableExists())
@@ -533,6 +559,32 @@ namespace Repomat.UnitTests.CodeGen
                 .SetupRepo<IPersonRepositoryWithCreate>()
                 .CreateRepo();
 
+            if (repo.TableExists())
+            {
+                repo.DropTable();
+            }
+            repo.CreateTable();
+
+            return repo;
+        }
+
+        private IPersonRepositoryWithPkOverride CreateRepoWithNameAsPrimaryKey(SingletonGetMethodBehavior getMethodBehavior)
+        {
+            // This repo has Name as its primary key instead of PersonId.
+            // This allows us to create a situation where a singleton query
+            // returns more than one row.
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            var repoBuilder = dlBuilder.SetupRepo<IPersonRepositoryWithPkOverride>();
+            repoBuilder.SetupEntity<Person>()
+                .HasPrimaryKey("Name")
+                .SetupProperty("Name")
+                .SetWidth(100);
+            repoBuilder.SetupMethod("Get")
+                .SetSingletonGetMethodBehavior(getMethodBehavior);
+            repoBuilder.SetupMethod("TryGet")
+                .SetSingletonGetMethodBehavior(getMethodBehavior);
+
+            var repo = dlBuilder.CreateRepo<IPersonRepositoryWithPkOverride>();
             if (repo.TableExists())
             {
                 repo.DropTable();

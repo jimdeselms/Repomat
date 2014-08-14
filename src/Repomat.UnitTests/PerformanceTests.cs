@@ -183,7 +183,7 @@ namespace Repomat.UnitTests
 
             builder
               .SetupMethod("InsertStuffIntoTable")
-              .SetTableName("PerfTestTable")
+//              .SetTableName("PerfTestTable")
               .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
             for (int i = 0; i < count; i++)
@@ -226,9 +226,10 @@ namespace Repomat.UnitTests
         {
             SqlServerDataLayerBuilder db = new SqlServerDataLayerBuilder(conn);
             var builder = db.SetupRepo<IDiscountProvider>();
+            builder.SetupEntity<Discount>()
+                .HasTableName("PerfTestTable");
 
             builder.SetupMethod("InsertStuffIntoTable")
-              .SetTableName("PerfTestTable")
               .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
             return builder.CreateRepo();
