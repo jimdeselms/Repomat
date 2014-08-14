@@ -242,7 +242,12 @@ namespace Repomat.CodeGen
 
                     if (!isEnumerable)
                     {
-                        CodeBuilder.WriteLine("return result;");
+                        string toArray = "";
+                        if (MethodDef.ReturnType.IsArray)
+                        {
+                            toArray = ".ToArray()";
+                        }
+                        CodeBuilder.WriteLine("return result{0};", toArray);
                     }
                 }
                 CodeBuilder.CloseBrace();

@@ -27,7 +27,7 @@ namespace Repomat.UnitTests
 
         IEnumerable<Person> GetByName(string name);
 
-        IEnumerable<Person> FindByBirthday(DateTime birthday);
+        Person[] FindByBirthday(DateTime birthday);
 
         Person Get(int personId);
 

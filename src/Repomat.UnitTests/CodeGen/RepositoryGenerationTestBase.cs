@@ -91,11 +91,12 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateRepoWithJimAndSusan();
 
-            Person person = repo.FindByBirthday(new DateTime(1969, 3, 9)).First();
+            Person[] people = repo.FindByBirthday(new DateTime(1969, 3, 9));
 
-            Assert.AreEqual(1, person.PersonId);
-            Assert.AreEqual("Jim", person.Name);
-            Assert.AreEqual(new DateTime(1969, 3, 9), person.Birthday);
+            Assert.AreEqual(1, people.Length);
+            Assert.AreEqual(1, people[0].PersonId);
+            Assert.AreEqual("Jim", people[0].Name);
+            Assert.AreEqual(new DateTime(1969, 3, 9), people[0].Birthday);
         }
 
         [Test]
