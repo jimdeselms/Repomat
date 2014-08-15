@@ -51,6 +51,13 @@ namespace Repomat
             return this;
         }
 
+        public MethodBuilder SetMethodType(MethodType methodType)
+        {
+            _method.MethodType = methodType;
+
+            return this;
+        }
+
         public MethodBuilder SetSingletonGetMethodBehavior(SingletonGetMethodBehavior behavior)
         {
             // TODO: fail if the method is not actually a singleton get method.

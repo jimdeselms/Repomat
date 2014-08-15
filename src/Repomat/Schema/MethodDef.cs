@@ -26,6 +26,8 @@ namespace Repomat.Schema
         private SingletonGetMethodBehavior _singletonGetMethodBehavior;
         private EntityDef _entityDefOrUndefined;
 
+        private MethodType? _methodTypeOverrideOrNull = null;
+
         public MethodDef(MethodInfo methodInfo, EntityDef entityDef) : this(methodInfo, entityDef, methodInfo.Name, null)
         {
         }
@@ -38,8 +40,8 @@ namespace Repomat.Schema
             _parameters = GetParameters(methodInfo).ToList();
             _properties = GetProperties();
             _returnType = methodInfo.ReturnType;
-            _isTryGet = _methodName.StartsWith("TryGet");
             _outParameterOrNull = _parameters.FirstOrDefault(p => p.IsOut);
+            _isTryGet = methodInfo.ReturnType == typeof (bool) && _outParameterOrNull != null;
             _connectionOrTransactionOrNull = _parameters.FirstOrDefault(p => p.IsTransaction || p.IsConnection);
             _dtoParameterOrNull = _parameters.FirstOrDefault(p => p.IsSimpleArgument && !p.IsPrimitiveType && !p.IsTransaction && !p.IsConnection);
             _isSingleton = _isTryGet || ReturnType.GetInterfaces().All(i => !i.Name.StartsWith("IEnumerable"));
@@ -230,6 +232,11 @@ namespace Repomat.Schema
         {
             get
             {
+                if (_methodTypeOverrideOrNull != null)
+                {
+                    return _methodTypeOverrideOrNull.Value;
+                }
+
                 if (_customSqlOrNull != null)
                 {
                     return MethodType.Custom;
@@ -238,6 +245,10 @@ namespace Repomat.Schema
                 {
                     return GetMethodTypeFromName(_methodName);
                 }
+            }
+            internal set
+            {
+                _methodTypeOverrideOrNull = value;
             }
         }
     }
