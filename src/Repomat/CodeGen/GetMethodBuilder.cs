@@ -87,6 +87,10 @@ namespace Repomat.CodeGen
                 {
                     WriteSingletonResultRead(columnsToGet, queryIdx);
                 }
+                else if (MethodDef.ReturnType.GetCoreType().IsDatabaseType())
+                {
+                    WriteMultiRowSimpleTypeRead();
+                }
                 else
                 {
                     WriteMultiRowResultRead(columnsToGet, queryIdx);
@@ -270,6 +274,39 @@ namespace Repomat.CodeGen
             {
                 CodeBuilder.WriteLine("result.Add(newObj);");
             }
+            CodeBuilder.CloseBrace();
+
+            if (!isEnumerable)
+            {
+                string toArray = "";
+                if (MethodDef.ReturnType.IsArray)
+                {
+                    toArray = ".ToArray()";
+                }
+                CodeBuilder.WriteLine("return result{0};", toArray);
+            }
+        }
+
+        private void WriteMultiRowSimpleTypeRead()
+        {
+            var rowType = MethodDef.ReturnType.GetCoreType();
+            bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(rowType);
+            if (!isEnumerable)
+            {
+                CodeBuilder.WriteLine("var result = new System.Collections.Generic.List<{0}>();", rowType.ToCSharp());
+            }
+            CodeBuilder.WriteLine("while (reader.Read())");
+            CodeBuilder.OpenBrace();
+
+            if (isEnumerable)
+            {
+                CodeBuilder.WriteLine("yield return {0};", GetReaderGetExpression(rowType, "0"));
+            }
+            else
+            {
+                CodeBuilder.WriteLine("result.Add({0});", GetReaderGetExpression(rowType, "0"));
+            }
+
             CodeBuilder.CloseBrace();
 
             if (!isEnumerable)

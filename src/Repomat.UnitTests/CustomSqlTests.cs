@@ -22,7 +22,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ExecuteCustomNonQuerySql()
         {
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(500);
             var foo = repo.Get(500);
@@ -34,7 +34,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ExecuteSingletonQuerySql()
         {
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(25);
             var foo = repo.DingleSomething("DingleDoodle");
@@ -50,7 +50,7 @@ namespace Repomat.UnitTests
         {
             // Handles the case where the columns in the result set are not
             // in the same order as the parameters of the query.
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(25);
             var foo = repo.QueryWithDifferentOrder("DingleDoodle");
@@ -64,7 +64,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ExecuteMultiRowQuery()
         {
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(25);
             repo.MethodThatWritesARow(100);
@@ -81,7 +81,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ExecuteScalarQuery()
         {
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(2);
             Assert.AreEqual(3M, repo.GetMoneyMoney(2));
@@ -90,7 +90,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ExecuteScalarQueryThatReturnsNull()
         {
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(2);
             Assert.IsNull(repo.GetMoneyMoney(999));
@@ -99,7 +99,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ExecuteCountScalarQuery()
         {
-            var repo = CreateRepo();
+            var repo = CreateFooRepo();
             repo.CreateTheTable();
             repo.MethodThatWritesARow(2);
             repo.MethodThatWritesARow(3);
@@ -160,7 +160,26 @@ namespace Repomat.UnitTests
             }
         }
 
-        private IFooRepo CreateRepo()
+        [Test]
+        public void RepoThatReturnsListOfStrings()
+        {
+            var repo = CreateStringRepo();
+            repo.CreateTheTable();
+
+            repo.InsertString("Hello");
+            repo.InsertString("World");
+
+            var strings = repo.GetStrings();
+            CollectionAssert.AreEqual(new[] { "Hello", "World" }, strings);
+
+            var stringsAsList = repo.GetStringsAsList();
+            CollectionAssert.AreEqual(new[] { "Hello", "World" }, stringsAsList);
+
+            var stringsAsArray = repo.GetStringsAsArray();
+            CollectionAssert.AreEqual(new[] { "Hello", "World" }, stringsAsArray);
+        }
+
+        private IFooRepo CreateFooRepo()
         {
             var columnNamingConvention = NamingConvention.NoOp
                 .AddOverride("ColumnNameDifferentFromPropertyName", "Dingle");
@@ -190,6 +209,28 @@ namespace Repomat.UnitTests
             return repoBuilder.CreateRepo();
         }
 
+        private IStringRepo CreateStringRepo()
+        {
+            var db = DataLayerBuilder.DefineInMemoryDatabase();
+            var repoBuilder = db.SetupRepo<IStringRepo>();
+            repoBuilder.SetupMethod("CreateTheTable")
+                .ExecutesSql("create table stringTable (s varchar(100))");
+
+            repoBuilder.SetupMethod("InsertString")
+                .ExecutesSql("insert into stringTable values (@value)");
+
+            repoBuilder.SetupMethod("GetStrings")
+                .ExecutesSql("select s from stringTable");
+
+            repoBuilder.SetupMethod("GetStringsAsList")
+                .ExecutesSql("select s from stringTable");
+
+            repoBuilder.SetupMethod("GetStringsAsArray")
+                .ExecutesSql("select s from stringTable");
+
+            return db.CreateRepo<IStringRepo>();
+        }
+
         public class Foo
         {
             public int Id { get; set; }
@@ -217,6 +258,18 @@ namespace Repomat.UnitTests
             int GetRowCount();
         }
 
+        public interface IStringRepo
+        {
+            void CreateTheTable();
+            IEnumerable<string> GetStrings();
+
+            string[] GetStringsAsArray();
+
+            List<string> GetStringsAsList();
+
+            void InsertString(string value);
+        }
+
         public interface IStoredProcedureRepo
         {
             void CreateProc();
@@ -226,10 +279,6 @@ namespace Repomat.UnitTests
             string Greet(string name, string greeting);
 
             void SameThingButNonQuery(string name, string greeting);
-        }
-
-        public interface ISingleMethodStoredProcedureRepo
-        {
         }
     }
 }
