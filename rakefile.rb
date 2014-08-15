@@ -31,8 +31,15 @@ namespace :build do
     sh "#{NUNIT_EXE} #{tests} /nologo /xml=#{OUTPUT_PATH}/TestResults.xml"
   end
 
+  
+  desc "Restore NuGet packages"
   task :restore do
     sh "#{NUGET_EXE} restore"
+  end
+
+  desc "Pack NuGet package"
+  task :pack do
+    sh "PackNuget.bat"
   end
 
 end

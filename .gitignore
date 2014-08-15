@@ -1,5 +1,6 @@
 bin
 Debug
+lib
 obj
 *.suo
 TestResults

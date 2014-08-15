@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Repomat</id>
+    <version>0.0.2</version>
+    <authors>Jim DeSelms</authors>
+    <owners>Jim DeSelms</owners>
+    <licenseUrl>http://www.gnu.org/copyleft/gpl.html</licenseUrl>
+    <projectUrl>https://github.com/jimdeselms/repomat</projectUrl>
+<!--    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>An API for creating interface-based repositories automatically, at runtime</description>
+    <releaseNotes>Not ready for prime time yet</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>ORM SqlServer SQLite SQL</tags>
+    <dependencies>
+    </dependencies>
+  </metadata>
+</package>
