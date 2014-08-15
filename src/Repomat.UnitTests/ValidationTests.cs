@@ -22,14 +22,8 @@ namespace Repomat.UnitTests
         public void Validate_TryGetWithoutBoolReturn()
         {
             Validate<Person, ITryGetWithoutBoolReturn>(
+                Error("MultiGetReturningWrongType", "expected enumerable return type Repomat.UnitTests.Person, returns string instead"),
                 Error("TryGetReturnWrongType", "expected return type bool, returns string instead"));
-        }
-
-        [Test]
-        public void Validate_TryGetWithoutOutParam()
-        {
-            Validate<Person, ITryGetWithoutOutParam>(
-                Error("TryGetNoOut", "missing out parameter of type Repomat.UnitTests.Person"));
         }
 
         [Test]
@@ -79,26 +73,9 @@ namespace Repomat.UnitTests
 
         }
 
-        private interface IGetReturnsSomethingOtherThanDto
-        {
-            ColorThing Get(int personId);
-        }
-
-        private interface IGetReturnsCollectionOtherThanDto
-        {
-            IEnumerable<ColorThing> GetByPersonIdReturnsEnumerable(int personId);
-            List<ColorThing> GetByPersonIdReturnsList(int personId);
-            ColorThing[] GetByPersonIdReturnsArray(int personId);
-        }
-
         private interface ITryGetWithoutBoolReturn
         {
             string TryGet(int personId, out Person p);
-        }
-
-        private interface ITryGetWithWrongOutParam
-        {
-            bool TryGet(int personId, out string s);
         }
 
         private interface ITryGetWithoutOutParam

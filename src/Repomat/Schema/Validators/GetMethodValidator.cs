@@ -40,7 +40,7 @@ namespace Repomat.Schema.Validators
 
         private void TryGetValidations()
         {
-            if (MethodDef.IsTryGet)
+            if (MethodDef.MethodType == MethodType.Get && MethodDef.OutParameterOrNull != null)
             {
                 if (MethodDef.ReturnType != typeof(bool))
                 {
@@ -56,11 +56,6 @@ namespace Repomat.Schema.Validators
                             MethodDef.EntityDef.Type.ToCSharp(),
                             MethodDef.OutParameterOrNull.Type.GetElementType().ToCSharp());
                     }
-                }
-                else
-                {
-                    AddError("TryGetNoOut", "missing out parameter of type {0}",
-                        MethodDef.EntityDef.Type.ToCSharp());
                 }
             }
         }
