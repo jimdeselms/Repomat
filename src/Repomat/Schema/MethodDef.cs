@@ -103,6 +103,8 @@ namespace Repomat.Schema
             }
         }
 
+        internal MethodInfo MethodInfo { get { return _methodInfo; } }
+
         public string TableName
         {
             get { return _entityDefOrUndefined.TableName; }

@@ -6,18 +6,19 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using Repomat.Schema;
 
 namespace Repomat.IlGen
 {
-    internal class RepoIlBuilder
+    internal class RepoSqlBuilder
     {
         private static int _nextRepoSuffix = 1;
 
         private static readonly ModuleBuilder _moduleBuilder;
 
-        static RepoIlBuilder()
+        static RepoSqlBuilder()
         {
-            var asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new System.Reflection.AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.Run);
+            var asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.Run);
             _moduleBuilder = asmBuilder.DefineDynamicModule("Repos");
         }
 
@@ -25,10 +26,10 @@ namespace Repomat.IlGen
 
         private FieldBuilder _connectionField;
 
-        public RepoIlBuilder(Type interfaceType, RepoConnectionType repoConnectionType)
+        public RepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, RepoConnectionType repoConnectionType)
         {
-            _typeBuilder = _moduleBuilder.DefineType(interfaceType.FullName + "_" + _nextRepoSuffix++);
-            _typeBuilder.AddInterfaceImplementation(interfaceType);
+            _typeBuilder = _moduleBuilder.DefineType(repoDef.RepositoryType.FullName + "_" + _nextRepoSuffix++);
+            _typeBuilder.AddInterfaceImplementation(repoDef.RepositoryType);
 
             switch (repoConnectionType)
             {
@@ -40,6 +41,41 @@ namespace Repomat.IlGen
                     break;
                 default:
                     throw new NotImplementedException();
+            }
+
+            var factory = CreateMethodBuilderFactory(repoDef, newConnectionEveryTime);
+
+            foreach (var method in repoDef.Methods)
+            {
+                GenerateIlForMethod(method, factory);
+            }
+        }
+
+        private SqlMethodBuilderFactory CreateMethodBuilderFactory(RepositoryDef repoDef, bool newConnectionEveryTime)
+        {
+            return new SqlMethodBuilderFactory(_typeBuilder, _connectionField, repoDef, newConnectionEveryTime);
+        }
+
+        private void GenerateIlForMethod(MethodDef method, SqlMethodBuilderFactory factory)
+        {
+            var methodBuilder = factory.Create(method);
+            methodBuilder.GenerateIl();
+
+            switch (method.MethodType)
+            {
+                case MethodType.Delete:
+                case MethodType.CreateTable:
+                case MethodType.DropTable:
+                case MethodType.Insert:
+                case MethodType.Update:
+                case MethodType.TableExists:
+                case MethodType.Get:
+                case MethodType.Custom:
+                case MethodType.GetCount:
+                case MethodType.Exists:
+                case MethodType.Create:
+                    break;
+                default: throw new RepomatException("Unrecognized method pattern " + method.MethodName);
             }
         }
 
