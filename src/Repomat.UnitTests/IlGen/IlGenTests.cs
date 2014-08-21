@@ -10,6 +10,7 @@ using Repomat.IlGen;
 using System.Data;
 using System.Data.SqlClient;
 using Repomat.Schema;
+using Dapper;
 
 namespace Repomat.UnitTests.IlGen
 {
@@ -80,24 +81,37 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void Another()
         {
+            var personEntityDef = new EntityDef(
+                typeof(Person),
+                "Person",
+                new [] { new PropertyDef("Name", "Name", typeof(string)) },
+                new PropertyDef[0],
+                false,
+                false);
+
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<ICreatesATable>(NamingConvention.NoOp, NamingConvention.NoOp);
+            repoDef.Methods.First(m => m.MethodName == "CreateTable").EntityDef = personEntityDef;
+            repoDef.Methods.First(m => m.MethodName == "DropTable").EntityDef = personEntityDef;
 
             RepoSqlBuilder b = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
             Type t = b.CreateType();
 
             var ctor = t.GetConstructor(new[] { typeof(IDbConnection) });
 
-            IDbConnection conn = new SqlConnection();
+            IDbConnection conn = Connections.NewSqlConnection();
             var repo = (ICreatesATable)(ctor.Invoke(new object[] { conn }));
 
             Assert.AreSame(conn, repo.GetType().GetField("_connection", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(repo));
 
+            try { repo.DropTable(); } catch { }
             repo.CreateTable();
+            repo.DropTable();
         }
 
         public interface INothing { }
         public interface ICreatesATable
         {
+            void DropTable();
             void CreateTable();
         }
     }

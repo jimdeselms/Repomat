@@ -40,6 +40,6 @@ namespace Repomat.CodeGen
             CodeBuilder.WriteLine("cmd.ExecuteNonQuery();");
 
             GenerateMethodFooter();
-        }
+            }
     }
 }

@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using Repomat.Schema;
+using Repomat.CodeGen;
 
 namespace Repomat.IlGen
 {
@@ -29,11 +30,20 @@ namespace Repomat.IlGen
         {
             switch (method.MethodType)
             {
-                case MethodType.CreateTable: 
-                    return new CreateTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
+                case MethodType.CreateTable:
+                    return new CreateTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, (p, b) => MapPropertyToSqlDatatype(p, b));
+                case MethodType.DropTable:
+                    return new DropTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        protected virtual string MapPropertyToSqlDatatype(PropertyDef p, bool isIdentity)
+        {
+            string width = p.StringWidthOrNull == null ? "MAX" : p.StringWidthOrNull.ToString();
+
+            return PrimitiveTypeInfo.Get(p.Type).GetSqlDatatype(isIdentity, width);
         }
     }
 }

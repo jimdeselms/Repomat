@@ -6,25 +6,43 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using Repomat.Schema;
+using System.Data;
 
 namespace Repomat.IlGen
 {
     internal class CreateTableMethodBuilder : MethodBuilderBase
     {
-        public CreateTableMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime)
+        private readonly Func<PropertyDef, bool, string> _sqlPropertyMapFunc;
+
+        public CreateTableMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, Func<PropertyDef, bool, string> sqlPropertyMapFunc)
             : base(typeBuilder, connectionField, repoDef, methodDef, newConnectionEveryTime)
         {
-            
+            _sqlPropertyMapFunc = sqlPropertyMapFunc;
         }
 
         protected override void GenerateMethodIl(LocalBuilder cmdLocal)
         {
-            SetCommandText("select 1");
+            StringBuilder sql = new StringBuilder();
+            sql.AppendFormat("create table [{0}] (", MethodDef.EntityDef.TableName);
 
-            WriteCommandText();
+            List<string> columns = new List<string>();
+            foreach (var property in MethodDef.EntityDef.Properties)
+            {
+                bool isIdentity = MethodDef.EntityDef.HasIdentity && MethodDef.EntityDef.PrimaryKey[0].ColumnName == property.ColumnName;
+                columns.Add(string.Format("[{0}] {1}", property.ColumnName, _sqlPropertyMapFunc(property, isIdentity)));
+            }
+            sql.AppendFormat(string.Join(", ", columns));
 
-            IlGenerator.EmitWriteLine("This is a test.");
-            IlGenerator.Emit(OpCodes.Ret);
+            if (MethodDef.EntityDef.PrimaryKey.Count > 0)
+            {
+                sql.AppendFormat(", CONSTRAINT [pk_{0}] PRIMARY KEY ({1})", MethodDef.EntityDef.TableName, string.Join(", ", MethodDef.EntityDef.PrimaryKey.Select(pk => string.Format("[{0}]", pk.ColumnName))));
+            }
+
+            sql.AppendFormat(")");
+
+            SetCommandText(sql.ToString());
+
+            ExecuteNonQuery();
         }
     }
 }

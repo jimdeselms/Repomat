@@ -8,6 +8,7 @@ using Emit = System.Reflection.Emit;
 using Repomat.Schema;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace Repomat.IlGen
 {
@@ -26,6 +27,12 @@ namespace Repomat.IlGen
         private static readonly MethodInfo _createCommandMethod;
         private static readonly MethodInfo _commandTextSetMethod;
         private static readonly MethodInfo _commandTextGetMethod;
+        private static readonly MethodInfo _createParameterMethod;
+        private static readonly MethodInfo _parameterNameSetMethod;
+        private static readonly MethodInfo _valueSetMethod;
+        private static readonly MethodInfo _parametersGetMethod;
+        private static readonly MethodInfo _parametersAddMethod;
+        private static readonly MethodInfo _executeNonQueryMethod;
 
         protected MethodInfo CommandTextSetMethod { get { return _commandTextSetMethod; } }
 
@@ -34,6 +41,12 @@ namespace Repomat.IlGen
             _createCommandMethod = typeof(IDbConnection).GetMethod("CreateCommand");
             _commandTextSetMethod = typeof (IDbCommand).GetProperty("CommandText").GetSetMethod();
             _commandTextGetMethod = typeof (IDbCommand).GetProperty("CommandText").GetGetMethod();
+            _createParameterMethod = typeof(IDbCommand).GetMethod("CreateParameter");
+            _parameterNameSetMethod = typeof(IDataParameter).GetProperty("ParameterName").GetSetMethod();
+            _valueSetMethod = typeof(IDataParameter).GetProperty("Value").GetSetMethod();
+            _parametersGetMethod = typeof(IDbCommand).GetProperty("Parameters").GetGetMethod();
+            _parametersAddMethod = typeof(IList).GetMethod("Add");
+            _executeNonQueryMethod = typeof(IDbCommand).GetMethod("ExecuteNonQuery");
         }
 
         protected MethodBuilderBase(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime)
@@ -53,6 +66,7 @@ namespace Repomat.IlGen
 
         protected void SetCommandText(string commandText)
         {
+            // cmd.CommandText = commandText
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Ldstr, commandText);
             IlGenerator.Emit(OpCodes.Callvirt, _commandTextSetMethod);
@@ -65,6 +79,39 @@ namespace Repomat.IlGen
 
             IlGenerator.Emit(OpCodes.Stloc, 1);
             IlGenerator.EmitWriteLine(_testLocal);
+        }
+
+        protected void AddSqlParameter(LocalBuilder sqlParameter, string name, int argumentIndex)
+        {
+            // parm = cmd.CreateParameter();
+            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+            IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
+            IlGenerator.Emit(OpCodes.Stloc, sqlParameter);
+
+            // parm.ParameterName = name
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Ldstr, name);
+            IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
+
+            // parm.Value = argX;
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Ldarg, argumentIndex);
+            IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
+
+            // cmd.Paramters.Add(parm);
+            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+            IlGenerator.Emit(OpCodes.Callvirt, _parametersGetMethod);
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Callvirt, _parametersAddMethod);
+            IlGenerator.Emit(OpCodes.Pop);
+        }
+
+        protected void ExecuteNonQuery()
+        {
+            // cmd.ExecuteNonQuery();
+            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+            IlGenerator.Emit(OpCodes.Callvirt, _executeNonQueryMethod);
+            IlGenerator.Emit(OpCodes.Pop);
         }
 
         public void GenerateIl()
