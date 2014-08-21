@@ -15,7 +15,7 @@ namespace Repomat.IlGen
         private static int _nextRepoSuffix = 1;
 
         private static readonly ModuleBuilder _moduleBuilder;
-
+        
         static RepoSqlBuilder()
         {
             var asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.Run);
@@ -23,6 +23,8 @@ namespace Repomat.IlGen
         }
 
         private readonly TypeBuilder _typeBuilder;
+        private readonly ILGenerator _ctorIlBuilder;
+        private Type _type = null;
 
         private FieldBuilder _connectionField;
 
@@ -34,10 +36,10 @@ namespace Repomat.IlGen
             switch (repoConnectionType)
             {
                 case RepoConnectionType.SingleConnection:
-                    DefineSingleConnectionCtor();
+                    _ctorIlBuilder = DefineSingleConnectionCtor();
                     break;
                 case RepoConnectionType.ConnectionFactory:
-                    DefineConnectionFactoryCtor();
+                    _ctorIlBuilder = DefineConnectionFactoryCtor();
                     break;
                 default:
                     throw new NotImplementedException();
@@ -53,7 +55,7 @@ namespace Repomat.IlGen
 
         private SqlMethodBuilderFactory CreateMethodBuilderFactory(RepositoryDef repoDef, bool newConnectionEveryTime)
         {
-            return new SqlMethodBuilderFactory(_typeBuilder, _connectionField, repoDef, newConnectionEveryTime);
+            return new SqlMethodBuilderFactory(_typeBuilder, _connectionField, _ctorIlBuilder, repoDef, newConnectionEveryTime);
         }
 
         private void GenerateIlForMethod(MethodDef method, SqlMethodBuilderFactory factory)
@@ -81,20 +83,27 @@ namespace Repomat.IlGen
 
         public Type CreateType()
         {
-            return _typeBuilder.CreateType();
+            if (_type == null)
+            {
+                // Finish off the constructor.
+                _ctorIlBuilder.Emit(OpCodes.Ret);
+
+                _type = _typeBuilder.CreateType();
+            }
+            return _type;
         }
 
-        private void DefineSingleConnectionCtor()
+        private ILGenerator DefineSingleConnectionCtor()
         {
-            DefineConstructor("_connection", typeof(IDbConnection));
+            return DefineConstructor("_connection", typeof(IDbConnection));
         }
 
-        private void DefineConnectionFactoryCtor()
+        private ILGenerator DefineConnectionFactoryCtor()
         {
-            DefineConstructor("_connectionFactory", typeof(Func<IDbConnection>));
+            return DefineConstructor("_connectionFactory", typeof(Func<IDbConnection>));
         }
 
-        private void DefineConstructor(string fieldName, Type fieldType)
+        private ILGenerator DefineConstructor(string fieldName, Type fieldType)
         {
             _connectionField = _typeBuilder.DefineField(fieldName, fieldType, FieldAttributes.Private);
 
@@ -103,7 +112,8 @@ namespace Repomat.IlGen
             ilBuilder.Emit(OpCodes.Ldarg_0);
             ilBuilder.Emit(OpCodes.Ldarg_1);
             ilBuilder.Emit(OpCodes.Stfld, _connectionField);
-            ilBuilder.Emit(OpCodes.Ret);
+
+            return ilBuilder;
         }
     }
 

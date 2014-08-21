@@ -13,15 +13,17 @@ namespace Repomat.IlGen
     internal class SqlMethodBuilderFactory
     {
         private readonly TypeBuilder _typeBuilder;
+        private readonly ILGenerator _ctorBuilder;
         private readonly FieldInfo _connectionField;
 
         private readonly RepositoryDef _repoDef;
         private readonly bool _newConnectionEveryTime;
 
-        public SqlMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, bool newConnectionEveryTime)
+        public SqlMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, ILGenerator ctorIlBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
         {
             _typeBuilder = typeBuilder;
             _connectionField = connectionField;
+            _ctorBuilder = ctorIlBuilder;
             _repoDef = repoDef;
             _newConnectionEveryTime = newConnectionEveryTime;
         }
