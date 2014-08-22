@@ -122,15 +122,9 @@ namespace Repomat.UnitTests.IlGen
 
     class FooBar
     {
-        private static bool _i;
-        public static object DoSomeStuff()
+        public static int? DoSomeStuff(object o)
         {
-            return 1234;
-        }
-
-        public static DateTimeOffset DoSomeStuff2(object o)
-        {
-            return (DateTimeOffset)o;
+            return o == null ? (int?)null : Convert.ToInt32(o);
         }
     }
 }

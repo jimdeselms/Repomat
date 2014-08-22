@@ -115,11 +115,11 @@ namespace Repomat.CodeGen
             CreateType(typeof(decimal), "reader.GetDecimal({0})", "System.Convert.ToDecimal({0})", "MONEY {0} NOT NULL", SimpleConversion("ToDecimal"));
             CreateType(typeof(DateTime), "reader.GetDateTime({0})", "System.Convert.ToDateTime({0})", "DATETIME {0} NOT NULL", SimpleConversion("ToDateTime"));
             CreateType(typeof(DateTimeOffset), "reader.GetDateTimeOffset({0})", "(System.DateTimeOffset){0}", "DATETIMEOFFSET(7) {0} NOT NULL", CastConversion<DateTimeOffset>());
-            CreateType(typeof(uint), "(uint)reader.GetInt32({0})", "System.Convert.ToUInt32({0})", "INT {0} NOT NULL");
-            CreateType(typeof(ushort), "(ushort)reader.GetInt16({0})", "System.Convert.ToUInt16({0})", "SMALLINT {0} NOT NULL");
-            CreateType(typeof(ulong), "(ulong)reader.GetInt64({0})", "System.Convert.ToUInt64({0})", "BIGINT");
-            CreateType(typeof(char), "(char)reader.GetString({0})[0]", "System.Convert.ToString({0})[0]", "VARCHAR(1)");
-            CreateType(typeof(int?), "reader.IsDBNull({0}) ? null : (int?)reader.GetInt32({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (int?)System.Convert.ToInt32({0})", "INT");
+            CreateType(typeof(uint), "(uint)reader.GetInt32({0})", "System.Convert.ToUInt32({0})", "INT {0} NOT NULL", SimpleConversion("ToUInt32"));
+            CreateType(typeof(ushort), "(ushort)reader.GetInt16({0})", "System.Convert.ToUInt16({0})", "SMALLINT {0} NOT NULL", SimpleConversion("ToUInt16"));
+            CreateType(typeof(ulong), "(ulong)reader.GetInt64({0})", "System.Convert.ToUInt64({0})", "BIGINT", SimpleConversion("ToUInt64"));
+            CreateType(typeof(char), "(char)reader.GetString({0})[0]", "System.Convert.ToString({0})[0]", "VARCHAR(1)", CharConversion());
+            CreateType(typeof(int?), "reader.IsDBNull({0}) ? null : (int?)reader.GetInt32({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (int?)System.Convert.ToInt32({0})", "INT", NullableConversion<int>("ToInt32"));
             CreateType(typeof(short?), "reader.IsDBNull({0}) ? null : (short?)reader.GetInt16({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (short?)System.Convert.ToInt16({0})", "SMALLINT");
             CreateType(typeof(long?), "reader.IsDBNull({0}) ? null : (long?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (long?)System.Convert.ToInt64({0})", "BIGINT");
             CreateType(typeof(byte?), "reader.IsDBNull({0}) ? null : (byte?)reader.GetByte({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte?)System.Convert.ToByte({0})", "TINYINT");
@@ -131,7 +131,7 @@ namespace Repomat.CodeGen
             CreateType(typeof(ushort?), "reader.IsDBNull({0}) ? null : (ushort?)reader.GetInt16({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ushort?)System.Convert.ToUInt16({0})", "SMALLINT");
             CreateType(typeof(ulong?), "reader.IsDBNull({0}) ? null : (ulong?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ulong?)System.Convert.ToUInt64({0})", "BIGINT");
             CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)");
-            CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})");
+            CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})", SimpleConversion("ToString"));
             CreateType(typeof(byte[]), "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})");
         }
 
@@ -148,6 +148,33 @@ namespace Repomat.CodeGen
             };
         }
 
+        private static Action<ILGenerator> NullableConversion<T>(string convertMethodName) where T : struct
+        {
+            var nullableCtor = typeof(T?).GetType().GetConstructor(new Type[] { typeof(T) });
+
+            return il => {
+                var label1 = il.DefineLabel();
+                var end = il.DefineLabel();
+
+                var inputLocal = il.DeclareLocal(typeof(object));
+                var resultLocal = il.DeclareLocal(typeof(T));
+
+                il.Emit(OpCodes.Stloc, inputLocal);
+                il.Emit(OpCodes.Ldloc, inputLocal);
+                il.Emit(OpCodes.Brfalse_S, label1);
+
+                il.Emit(OpCodes.Ldloc, inputLocal);
+                SimpleConversion(convertMethodName);
+                il.Emit(OpCodes.Newobj, nullableCtor);
+                il.Emit(OpCodes.Br, end);
+
+                il.MarkLabel(label1);
+                il.Emit(OpCodes.Ldloca_S, resultLocal);
+                il.Emit(OpCodes.Initobj, typeof(T?));
+                il.MarkLabel(end);
+            };
+        }
+
         private static Action<ILGenerator> CastConversion<T>()
         {
             bool needsUnboxing = typeof(T).IsValueType;
@@ -157,6 +184,21 @@ namespace Repomat.CodeGen
                 {
                     il.Emit(OpCodes.Unbox_Any, typeof(T));
                 }
+            };
+        }
+
+        private static Action<ILGenerator> CharConversion()
+        {
+            return il =>
+            {
+                var loc = il.DeclareLocal(typeof(string));
+                SimpleConversion("ToString")(il);
+                il.Emit(OpCodes.Stloc, loc);
+                il.Emit(OpCodes.Ldloc, loc);
+
+                var getChars = typeof(string).GetMethod("get_Chars");
+                il.Emit(OpCodes.Ldc_I4_0);
+                il.Emit(OpCodes.Callvirt, getChars);
             };
         }
     }

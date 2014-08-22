@@ -62,5 +62,54 @@ namespace Repomat.UnitTests.IlGen
             var result = t.Invoke(offset);
             Assert.AreEqual(offset, result);
         }
+
+        [Test]
+        public void StringConversion()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(string));
+
+            var t = new IlTester<string>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldstr, "Hello world");
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+            Assert.AreEqual("Hello world", result);
+        }
+
+        [Test]
+        public void CharConversion()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(char));
+
+            var t = new IlTester<char>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldstr, "Hello");
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+            Assert.AreEqual('H', result);
+        }
+
+        [Test]
+        public void NullableIntConversion_Null()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(int?));
+
+            var t = new IlTester<int?>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldnull);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
     }
 }
