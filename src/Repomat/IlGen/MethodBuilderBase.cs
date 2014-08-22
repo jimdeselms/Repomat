@@ -33,6 +33,7 @@ namespace Repomat.IlGen
         private static readonly MethodInfo _parametersGetMethod;
         private static readonly MethodInfo _parametersAddMethod;
         private static readonly MethodInfo _executeNonQueryMethod;
+        private static readonly MethodInfo _executeScalarMethod;
 
         protected MethodInfo CommandTextSetMethod { get { return _commandTextSetMethod; } }
 
@@ -47,6 +48,7 @@ namespace Repomat.IlGen
             _parametersGetMethod = typeof(IDbCommand).GetProperty("Parameters").GetGetMethod();
             _parametersAddMethod = typeof(IList).GetMethod("Add");
             _executeNonQueryMethod = typeof(IDbCommand).GetMethod("ExecuteNonQuery");
+            _executeScalarMethod = typeof(IDbCommand).GetMethod("ExecuteScalar");
         }
 
         protected MethodBuilderBase(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime)
@@ -111,7 +113,14 @@ namespace Repomat.IlGen
             // cmd.ExecuteNonQuery();
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Callvirt, _executeNonQueryMethod);
-            IlGenerator.Emit(OpCodes.Pop);
+            IlGenerator.Emit(OpCodes.Pop); // Pop the unused result
+        }
+
+        protected void ExecuteScalar()
+        {
+            // cmd.ExecuteScalar();
+            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+            IlGenerator.Emit(OpCodes.Callvirt, _executeScalarMethod);
         }
 
         public void GenerateIl()
@@ -134,6 +143,11 @@ namespace Repomat.IlGen
             IlGenerator.EndExceptionBlock();
 
             IlGenerator.Emit(OpCodes.Ret);
+        }
+
+        protected FieldBuilder DefineField<T>(string name)
+        {
+            return TypeBuilder.DefineField(name, typeof(T), FieldAttributes.Private);
         }
 
         protected abstract void GenerateMethodIl(LocalBuilder cmdVariable);

@@ -18,6 +18,8 @@ namespace Repomat.IlGen
 
         private readonly RepositoryDef _repoDef;
         private readonly bool _newConnectionEveryTime;
+        private bool _useStrictTypes = false;
+        private int _customQueryIdx = 0;
 
         public SqlMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, ILGenerator ctorIlBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
         {
@@ -36,6 +38,8 @@ namespace Repomat.IlGen
                     return new CreateTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, (p, b) => MapPropertyToSqlDatatype(p, b));
                 case MethodType.DropTable:
                     return new DropTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
+                case MethodType.Get:
+                    return new GetMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, _customQueryIdx++, this, _useStrictTypes, _ctorBuilder);
                 default:
                     throw new NotImplementedException();
             }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,13 +14,15 @@ namespace Repomat.CodeGen
         private readonly string _readerGetExpr;
         private readonly string _scalarConvertExpr;
         private readonly string _sqlDatatype;
+        private readonly Action<ILGenerator> _emitConversion;
 
-        public PrimitiveTypeInfo(Type type, string readerGetExpr, string scalarConvertExpr, string sqlDatatype)
+        public PrimitiveTypeInfo(Type type, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion)
         {
             _type = type;
             _readerGetExpr = readerGetExpr;
             _scalarConvertExpr = scalarConvertExpr;
             _sqlDatatype = sqlDatatype;
+            _emitConversion = emitConversion;
         }
 
         public Type Type { get { return _type; } }
@@ -96,16 +100,21 @@ namespace Repomat.CodeGen
             return _primitiveTypes[t]; 
         }
 
+        public void EmitConversion(ILGenerator ilGenerator)
+        {
+            _emitConversion(ilGenerator);
+        }
+
         static PrimitiveTypeInfo()
         {
-            CreateType(typeof(int), "reader.GetInt32({0})", "System.Convert.ToInt32({0})", "INT {0} NOT NULL");
-            CreateType(typeof(short), "reader.GetInt16({0})", "System.Convert.ToInt16({0})", "SMALLINT {0} NOT NULL");
-            CreateType(typeof(long), "reader.GetInt64({0})", "System.Convert.ToInt64({0})", "BIGINT {0} NOT NULL");
-            CreateType(typeof(byte), "reader.GetByte({0})", "System.Convert.ToByte({0})", "TINYINT {0} NOT NULL");
-            CreateType(typeof(bool), "reader.GetBoolean({0})", "System.Convert.ToBoolean({0})", "BIT {0} NOT NULL");
-            CreateType(typeof(decimal), "reader.GetDecimal({0})", "System.Convert.ToDecimal({0})", "MONEY {0} NOT NULL");
-            CreateType(typeof(DateTime), "reader.GetDateTime({0})", "System.Convert.ToDateTime({0})", "DATETIME {0} NOT NULL");
-            CreateType(typeof(DateTimeOffset), "reader.GetDateTimeOffset({0})", "(System.DateTimeOffset){0}", "DATETIMEOFFSET(7) {0} NOT NULL");
+            CreateType(typeof(int), "reader.GetInt32({0})", "System.Convert.ToInt32({0})", "INT {0} NOT NULL", SimpleConversion("ToInt32"));
+            CreateType(typeof(short), "reader.GetInt16({0})", "System.Convert.ToInt16({0})", "SMALLINT {0} NOT NULL", SimpleConversion("ToInt16"));
+            CreateType(typeof(long), "reader.GetInt64({0})", "System.Convert.ToInt64({0})", "BIGINT {0} NOT NULL", SimpleConversion("ToInt64"));
+            CreateType(typeof(byte), "reader.GetByte({0})", "System.Convert.ToByte({0})", "TINYINT {0} NOT NULL", SimpleConversion("ToByte"));
+            CreateType(typeof(bool), "reader.GetBoolean({0})", "System.Convert.ToBoolean({0})", "BIT {0} NOT NULL", SimpleConversion("ToBoolean"));
+            CreateType(typeof(decimal), "reader.GetDecimal({0})", "System.Convert.ToDecimal({0})", "MONEY {0} NOT NULL", SimpleConversion("ToDecimal"));
+            CreateType(typeof(DateTime), "reader.GetDateTime({0})", "System.Convert.ToDateTime({0})", "DATETIME {0} NOT NULL", SimpleConversion("ToDateTime"));
+            CreateType(typeof(DateTimeOffset), "reader.GetDateTimeOffset({0})", "(System.DateTimeOffset){0}", "DATETIMEOFFSET(7) {0} NOT NULL", CastConversion<DateTimeOffset>());
             CreateType(typeof(uint), "(uint)reader.GetInt32({0})", "System.Convert.ToUInt32({0})", "INT {0} NOT NULL");
             CreateType(typeof(ushort), "(ushort)reader.GetInt16({0})", "System.Convert.ToUInt16({0})", "SMALLINT {0} NOT NULL");
             CreateType(typeof(ulong), "(ulong)reader.GetInt64({0})", "System.Convert.ToUInt64({0})", "BIGINT");
@@ -126,9 +135,29 @@ namespace Repomat.CodeGen
             CreateType(typeof(byte[]), "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})");
         }
 
-        private static void CreateType(Type t, string readerGetExpr, string scalarConvertExpr, string sqlDatatype)
+        private static void CreateType(Type t, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion=null)
         {
-            _primitiveTypes[t] = new PrimitiveTypeInfo(t, readerGetExpr, scalarConvertExpr, sqlDatatype);
+            _primitiveTypes[t] = new PrimitiveTypeInfo(t, readerGetExpr, scalarConvertExpr, sqlDatatype, emitConversion);
+        }
+
+        private static Action<ILGenerator> SimpleConversion(string convertMethodName)
+        {
+            MethodInfo convertMethod = typeof(Convert).GetMethod(convertMethodName, new Type[] { typeof(object) });
+            return il => {
+                il.EmitCall(OpCodes.Call, convertMethod, new Type[] { typeof(int) });
+            };
+        }
+
+        private static Action<ILGenerator> CastConversion<T>()
+        {
+            bool needsUnboxing = typeof(T).IsValueType;
+
+            return il => {
+                if (needsUnboxing)
+                {
+                    il.Emit(OpCodes.Unbox_Any, typeof(T));
+                }
+            };
         }
     }
 }

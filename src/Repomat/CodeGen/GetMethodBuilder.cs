@@ -22,7 +22,7 @@ namespace Repomat.CodeGen
 
         public override void GenerateCode()
         {
-             if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsSimpleQuery)
+            if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsSimpleQuery)
             {
                 CodeBuilder.WriteLine("private bool _query{0}_columnIndexesAssigned = false;", _customQueryIdx);
                 foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))

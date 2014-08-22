@@ -90,8 +90,8 @@ namespace Repomat.UnitTests.IlGen
                 false);
 
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<ICreatesATable>(NamingConvention.NoOp, NamingConvention.NoOp);
-            repoDef.Methods.First(m => m.MethodName == "CreateTable").EntityDef = personEntityDef;
-            repoDef.Methods.First(m => m.MethodName == "DropTable").EntityDef = personEntityDef;
+//            repoDef.Methods.First(m => m.MethodName == "CreateTable").EntityDef = personEntityDef;
+//            repoDef.Methods.First(m => m.MethodName == "DropTable").EntityDef = personEntityDef;
 
             RepoSqlBuilder b = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
             Type t = b.CreateType();
@@ -105,6 +105,9 @@ namespace Repomat.UnitTests.IlGen
 
             try { repo.DropTable(); } catch { }
             repo.CreateTable();
+
+            var blah = repo.Get(1);
+
             repo.DropTable();
         }
 
@@ -113,15 +116,21 @@ namespace Repomat.UnitTests.IlGen
         {
             void DropTable();
             void CreateTable();
+            Person Get(int personId);
         }
     }
 
     class FooBar
     {
-        public static FooBar DoSomeStuff()
+        private static bool _i;
+        public static object DoSomeStuff()
         {
-            var f = new FooBar();
-            return f;
+            return 1234;
+        }
+
+        public static DateTimeOffset DoSomeStuff2(object o)
+        {
+            return (DateTimeOffset)o;
         }
     }
 }
