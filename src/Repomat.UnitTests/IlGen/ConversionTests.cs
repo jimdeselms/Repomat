@@ -138,7 +138,59 @@ namespace Repomat.UnitTests.IlGen
             var t = new IlTester<int?>();
             var il = t.IL;
 
-            var dbNullValueProp = typeof (DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
+
+        [Test]
+        public void NullableDateTimeConversion_Null()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
+
+            var t = new IlTester<DateTime?>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldnull);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
+
+        [Test]
+        public void NullableDateTimeConversion_NotNull_ReturnsValue()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
+
+            var t = new IlTester<DateTime?>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldstr, "4/5/2012");
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(new DateTime(2012, 4, 5), result);
+        }
+
+        [Test]
+        public void NullableDateTimeConversion_DbNull_ReturnsNull()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
+
+            var t = new IlTester<DateTime?>();
+            var il = t.IL;
+
+            var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
             il.Emit(OpCodes.Ldsfld, dbNullValueProp);
             info.EmitConversion(il);
             il.Emit(OpCodes.Ret);
