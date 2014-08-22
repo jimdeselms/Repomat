@@ -124,7 +124,7 @@ namespace Repomat.UnitTests.IlGen
     {
         public static int? DoSomeStuff(object o)
         {
-            return o == null ? (int?)null : Convert.ToInt32(o);
+            return (o == null || o == DBNull.Value) ? (int?)null : Convert.ToInt32(o);
         }
     }
 }

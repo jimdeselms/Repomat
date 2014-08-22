@@ -150,27 +150,33 @@ namespace Repomat.CodeGen
 
         private static Action<ILGenerator> NullableConversion<T>(string convertMethodName) where T : struct
         {
-            var nullableCtor = typeof(T?).GetType().GetConstructor(new Type[] { typeof(T) });
+            var nullableCtor = typeof(T?).GetConstructor(new [] { typeof(T) });
+            var dbNullValue = typeof (DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
             return il => {
                 var label1 = il.DefineLabel();
                 var end = il.DefineLabel();
 
-                var inputLocal = il.DeclareLocal(typeof(object));
-                var resultLocal = il.DeclareLocal(typeof(T));
+                var nullableValueLabel = il.DeclareLocal(typeof(object));
+                var resultLocal = il.DeclareLocal(typeof(T?));
 
-                il.Emit(OpCodes.Stloc, inputLocal);
-                il.Emit(OpCodes.Ldloc, inputLocal);
+                il.Emit(OpCodes.Stloc, nullableValueLabel);
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
                 il.Emit(OpCodes.Brfalse_S, label1);
 
-                il.Emit(OpCodes.Ldloc, inputLocal);
-                SimpleConversion(convertMethodName);
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                il.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Emit(OpCodes.Beq_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                SimpleConversion(convertMethodName)(il);
                 il.Emit(OpCodes.Newobj, nullableCtor);
                 il.Emit(OpCodes.Br, end);
 
                 il.MarkLabel(label1);
                 il.Emit(OpCodes.Ldloca_S, resultLocal);
                 il.Emit(OpCodes.Initobj, typeof(T?));
+                il.Emit(OpCodes.Ldloc, resultLocal);
                 il.MarkLabel(end);
             };
         }

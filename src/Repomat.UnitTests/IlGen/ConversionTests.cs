@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Reflection;
+using NUnit.Framework;
 using Repomat.CodeGen;
 using System;
 using System.Collections.Generic;
@@ -104,6 +105,41 @@ namespace Repomat.UnitTests.IlGen
             var il = t.IL;
 
             il.Emit(OpCodes.Ldnull);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
+
+        [Test]
+        public void NullableIntConversion_NotNull_ReturnsValue()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(int?));
+
+            var t = new IlTester<int?>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldstr, "123");
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(123, result);
+        }
+
+        [Test]
+        public void NullableIntConversion_DbNull_ReturnsNull()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(int?));
+
+            var t = new IlTester<int?>();
+            var il = t.IL;
+
+            var dbNullValueProp = typeof (DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
             info.EmitConversion(il);
             il.Emit(OpCodes.Ret);
 

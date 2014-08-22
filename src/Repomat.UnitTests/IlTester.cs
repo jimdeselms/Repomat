@@ -13,6 +13,7 @@ namespace Repomat.UnitTests
     public class IlTester<T> 
     {
         private static int _typeIdx = 1;
+        private static bool _hasBeenSaved = false;
 
         private static readonly AssemblyBuilder _assemblyBuilder;
         private static readonly ModuleBuilder _moduleBuilder;
@@ -40,7 +41,13 @@ namespace Repomat.UnitTests
         public T Invoke(params object[] arguments) 
         {
             var type = _typeBuilder.CreateType();
-            _assemblyBuilder.Save("temp.dll");
+
+            if (!_hasBeenSaved)
+            {
+                _hasBeenSaved = true;
+                _assemblyBuilder.Save("temp.dll");
+            }
+
             var method = type.GetMethod("IlTestMethod");
 
             return (T)method.Invoke(null, arguments);
