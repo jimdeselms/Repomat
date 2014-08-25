@@ -77,14 +77,14 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void Another()
         {
-            var dlBuilder = DataLayerBuilder.DefineInMemoryDatabase();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
             var repoBuilder = dlBuilder.SetupRepo<ICreatesATable>();
-            var repo = dlBuilder.CreateRepo<ICreatesATable>();
+            var repo = dlBuilder.CreateIlRepo<ICreatesATable>();
 
             try { repo.DropTable(); } catch { }
             repo.CreateTable();
 
-            var blah = repo.Get(1);
+            Assert.AreEqual(0, repo.GetAll().Length);
 
             repo.DropTable();
         }
@@ -95,6 +95,8 @@ namespace Repomat.UnitTests.IlGen
             void DropTable();
             void CreateTable();
             Person Get(int personId);
+
+            Person[] GetAll();
         }
     }
 

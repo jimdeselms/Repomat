@@ -212,7 +212,7 @@ namespace Repomat
 
             var type = builder.CreateType();
 
-            return (TRepo)CreateRepoInstance(typeof(TRepo), repoDef);
+            return (TRepo)CreateRepoInstance(type, repoDef);
         }
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
