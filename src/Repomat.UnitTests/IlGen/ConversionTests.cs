@@ -15,7 +15,7 @@ namespace Repomat.UnitTests.IlGen
     public class ConversionTests
     {
         [Test]
-        public void IntConversion()
+        public void StringToIntConversion()
         {
             var info = PrimitiveTypeInfo.Get(typeof(int));
 
@@ -23,6 +23,24 @@ namespace Repomat.UnitTests.IlGen
             var il = t.IL;
 
             il.Emit(OpCodes.Ldstr, "1234");
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(1234, result);
+        }
+
+        [Test]
+        public void IntConversion()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(int));
+
+            var t = new IlTester<int>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldc_I4, 1234);
+            il.Emit(OpCodes.Box, typeof(int));
             info.EmitConversion(il);
             il.Emit(OpCodes.Ret);
 
@@ -73,12 +91,13 @@ namespace Repomat.UnitTests.IlGen
             var t = new IlTester<string>();
             var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "Hello world");
+            il.Emit(OpCodes.Ldc_I4, 9876);
+            il.Emit(OpCodes.Box, typeof(int));
             info.EmitConversion(il);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke();
-            Assert.AreEqual("Hello world", result);
+            Assert.AreEqual("9876", result);
         }
 
         [Test]

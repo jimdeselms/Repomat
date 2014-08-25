@@ -124,7 +124,7 @@ namespace Repomat.UnitTests.IlGen
     {
         public static int DoSomeStuff()
         {
-            return 123;
+            return Convert.ToInt32((object)2345);
         }
     }
 }
