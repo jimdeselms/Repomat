@@ -150,13 +150,20 @@ namespace Repomat.IlGen
             return TypeBuilder.DefineField(name, typeof(T), FieldAttributes.Private);
         }
 
+        protected EntityDef EntityDef
+        {
+            get { return _methodDef.EntityDef; }
+        }
+
         protected abstract void GenerateMethodIl(LocalBuilder cmdVariable);
 
         protected TypeBuilder TypeBuilder { get { return _typeBuilder; } }
-        protected RepositoryDef RepositoryDef { get { return _repoDef; } }
+        protected RepositoryDef RepoDef { get { return _repoDef; } }
         protected MethodDef MethodDef { get { return _methodDef; } }
         protected bool NewConnectionEveryTime { get { return _newConnectionEveryTime; } }
         protected ILGenerator IlGenerator { get { return _ilGenerator; } }
+
+        protected LocalBuilder CommandLocal { get { return _commandLocal; } }
 
         private Emit.MethodBuilder CreateMethod()
         {

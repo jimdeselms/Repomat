@@ -49,15 +49,11 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void BuildConnectionBasedRepo()
         {
-            var repoDef = RepositoryDefBuilder.BuildRepositoryDef<INothing>(NamingConvention.NoOp, NamingConvention.NoOp);
-
-            RepoSqlBuilder b = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
-            Type t = b.CreateType();
-
-            var ctor = t.GetConstructor(new [] { typeof(IDbConnection) });
-
             var conn = new SqlConnection();
-            var repo = ctor.Invoke(new object[] { conn });
+
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(conn);
+            var repoBuilder = dlBuilder.SetupRepo<INothing>();
+            var repo = dlBuilder.CreateRepo<INothing>();
 
             Assert.AreSame(conn, repo.GetType().GetField("_connection", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(repo));
         }
@@ -81,27 +77,9 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void Another()
         {
-            var personEntityDef = new EntityDef(
-                typeof(Person),
-                "Person",
-                new [] { new PropertyDef("Name", "Name", typeof(string)) },
-                new PropertyDef[0],
-                false,
-                false);
-
-            var repoDef = RepositoryDefBuilder.BuildRepositoryDef<ICreatesATable>(NamingConvention.NoOp, NamingConvention.NoOp);
-//            repoDef.Methods.First(m => m.MethodName == "CreateTable").EntityDef = personEntityDef;
-//            repoDef.Methods.First(m => m.MethodName == "DropTable").EntityDef = personEntityDef;
-
-            RepoSqlBuilder b = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
-            Type t = b.CreateType();
-
-            var ctor = t.GetConstructor(new[] { typeof(IDbConnection) });
-
-            IDbConnection conn = Connections.NewSqlConnection();
-            var repo = (ICreatesATable)(ctor.Invoke(new object[] { conn }));
-
-            Assert.AreSame(conn, repo.GetType().GetField("_connection", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(repo));
+            var dlBuilder = DataLayerBuilder.DefineInMemoryDatabase();
+            var repoBuilder = dlBuilder.SetupRepo<ICreatesATable>();
+            var repo = dlBuilder.CreateRepo<ICreatesATable>();
 
             try { repo.DropTable(); } catch { }
             repo.CreateTable();

@@ -14,6 +14,7 @@ using System.Data.SQLite;
 using Repomat.Schema.Validators;
 using Repomat.Databases;
 using System.IO;
+using Repomat.IlGen;
 
 namespace Repomat
 {
@@ -202,6 +203,16 @@ namespace Repomat
 
                 return (TRepo)_repoInstances[typeof(TRepo)];
             }
+        }
+
+        public TRepo CreateIlRepo<TRepo>()
+        {
+            var repoDef = _repoDefs[typeof(TRepo)];
+            RepoSqlBuilder builder = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
+
+            var type = builder.CreateType();
+
+            return (TRepo)CreateRepoInstance(typeof(TRepo), repoDef);
         }
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);

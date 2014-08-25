@@ -2,6 +2,7 @@
 using Repomat.Schema;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -27,6 +28,8 @@ namespace Repomat.IlGen
             _methodBuilderFactory = methodBuilderFactory;
         }
 
+        private static readonly MethodInfo _executeReaderMethod = typeof(IDbCommand).GetMethod("ExecuteReader", Type.EmptyTypes);
+
         protected override void GenerateMethodIl(LocalBuilder cmdVariable)
         {
             if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsSimpleQuery)
@@ -37,7 +40,7 @@ namespace Repomat.IlGen
                 _ctorIlBuilder.Emit(OpCodes.Stfld, indexesAssignedField);
 
                 Dictionary<string, FieldBuilder> columnIndexFields = new Dictionary<string, FieldBuilder>();
-                foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepositoryDef.ColumnNamingConvention, MethodDef.ReturnType))
+                foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
                 {
                     // private _queryX_columnYIdx = 0;
                     var field = DefineField<int>(string.Format("_query{0}_column{1}Idx", _customQueryIdx, col.PropertyName));
@@ -65,9 +68,9 @@ namespace Repomat.IlGen
         private void GenerateGetMethodBody(int queryIdx)
         {
             Type typeToGet = MethodDef.ReturnType.GetCoreType();
-//            PropertyDef[] columnsToGet = DetermineColumnsToGet(typeToGet);
+            PropertyDef[] columnsToGet = DetermineColumnsToGet(typeToGet);
 
-//            WriteSqlStatement(columnsToGet);
+            WriteSqlStatement(columnsToGet);
 
 //            WriteParameterAssignments();
 
@@ -81,6 +84,19 @@ namespace Repomat.IlGen
             }
             else
             {
+                var readerLocal = IlGenerator.DeclareLocal(typeof(IDataReader));
+
+                IlGenerator.BeginExceptionBlock();
+
+                IlGenerator.Emit(OpCodes.Ldloc, CommandLocal);
+                IlGenerator.Emit(OpCodes.Call, _executeReaderMethod);
+                IlGenerator.Emit(OpCodes.Stloc, readerLocal);
+
+                IlGenerator.Emit(OpCodes.Ldnull);
+                IlGenerator.Emit(OpCodes.Ret);
+
+                IlGenerator.BeginFinallyBlock();
+                IlGenerator.EndExceptionBlock();
                 //CodeBuilder.WriteLine("using (var reader = cmd.ExecuteReader())");
 
                 //CodeBuilder.OpenBrace();
@@ -99,6 +115,94 @@ namespace Repomat.IlGen
                 //}
                 //CodeBuilder.CloseBrace();
             }
+        }
+
+        private void WriteSqlStatement(PropertyDef[] columnsToGet)
+        {
+            if (MethodDef.CustomSqlOrNull != null)
+            {
+                SetCommandText(MethodDef.CustomSqlOrNull);
+                if (MethodDef.CustomSqlIsStoredProcedure)
+                {
+                    throw new NotImplementedException();
+//                    CodeBuilder.WriteLine("cmd.CommandType = System.Data.CommandType.StoredProcedure;");
+                }
+            }
+            else
+            {
+                StringBuilder commandText = new StringBuilder();
+                commandText.Append("select ");
+
+                commandText.Append(string.Join(", ", columnsToGet.Select(c => string.Format("[{0}]", c.ColumnName.Capitalize()))));
+
+                commandText.AppendFormat(" from {0} ", EntityDef.TableName);
+
+                var argumentProperties = MethodDef.Parameters
+                    .Select(p => EntityDef.Properties.FirstOrDefault(c => c.PropertyName == p.Name.Capitalize()))
+                    .Where(p => p != null)
+                    .ToArray();
+
+                var equations = argumentProperties.Select(p => string.Format("[{0}] = @{1}", p.ColumnName, p.PropertyName.Uncapitalize())).ToArray();
+                if (equations.Length > 0)
+                {
+                    commandText.Append(" where " + string.Join(" AND ", equations));
+                }
+
+                SetCommandText(commandText.ToString());
+            }
+        }
+
+        private void WriteParameterAssignments()
+        {
+            for (int argIndex = 0; argIndex < MethodDef.Parameters.Count; argIndex++)
+            {
+                ParameterDetails arg = MethodDef.Parameters[argIndex];
+
+                var column = EntityDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
+                if (column == null)
+                {
+                    if (MethodDef.CustomSqlOrNull != null)
+                    {
+                        column = new PropertyDef(arg.Name, arg.Name, typeof(void));
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                IlGenerator.BeginScope();
+
+                var parmLocal = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+
+                // Add one to the argument index; the first one is "this"
+                base.AddSqlParameter(parmLocal, arg.Name, argIndex+1);
+
+                IlGenerator.EndScope();
+            }
+        }
+        private PropertyDef[] DetermineColumnsToGet(Type typeToGet)
+        {
+            PropertyDef[] columnsToGet;
+
+            if (MethodDef.CustomSqlOrNull != null)
+            {
+                // TODO: Get this naming convention from the database instead of using noop.
+                if (MethodDef.IsSimpleQuery)
+                {
+                    columnsToGet = new PropertyDef[0];
+                }
+                else
+                {
+                    columnsToGet = RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, typeToGet).ToArray();
+                }
+            }
+            else
+            {
+                columnsToGet = EntityDef.Properties.Where(c => !MethodDef.Properties.Select(p => p.Name.Capitalize()).Contains(c.ColumnName)).ToArray();
+            }
+
+            return columnsToGet;
         }
 
         private void EmitScalarConversion(Type convertToType)
