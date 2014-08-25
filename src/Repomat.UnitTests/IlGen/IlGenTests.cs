@@ -29,13 +29,8 @@ namespace Repomat.UnitTests.IlGen
                         
             var ilGen = ctorBuilder.GetILGenerator();
             
-//            ilGen.Emit(OpCodes.Ldarg_0);
-//            var objectCtor = typeof(object).GetConstructor(new Type[0]);
-//            ilGen.Emit(OpCodes.Call, objectCtor);
-
             ilGen.Emit(OpCodes.Ldarg_0);
             ilGen.Emit(OpCodes.Ldc_I4_S, (byte)25);
-//            ilGen.Emit(OpCodes.Pop);
             ilGen.Emit(OpCodes.Stfld, myField);
             ilGen.Emit(OpCodes.Ret);
 
@@ -103,18 +98,14 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(15, repo.ReturnsXMinusY(50, 35));
         }
 
-        //[Test]
-        //public void SimpleStatementTest()
-        //{
-        //    var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-        //    var repoBuilder = dlBuilder.SetupRepo<ISimpleQuery>();
-        //    repoBuilder.SetupMethod("Returns45")
-        //        .ExecutesSql("select 45");
+        [Test]
+        public void SimpleStatementTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+            repo.InsertARow();
 
-        //    var repo = dlBuilder.CreateIlRepo<ISimpleQuery>();
-
-        //    Assert.AreEqual(45, repo.Returns45());
-        //}
+            Assert.AreEqual(1, repo.GetPersonCount());
+        }
 
         public interface INothing { }
         public interface ICreatesATable
@@ -136,6 +127,7 @@ namespace Repomat.UnitTests.IlGen
             int Returns45();
             int ReturnsXMinusY(int x, int y);
             void InsertARow();
+            int GetPersonCount();
         }
 
         private ISimpleQuery CreateSimpleQueryInterface()
@@ -147,8 +139,10 @@ namespace Repomat.UnitTests.IlGen
             repoBuilder.SetupMethod("ReturnsXMinusY")
                 .ExecutesSql("select @x - @y");
             repoBuilder.SetupMethod("InsertARow")
-                .ExecutesSql("insert into Person values (1, 'Jim', '2014-01-01')");
-
+                .ExecutesSql("insert into Person values (1, 'Jim', '2014-01-01', null)");
+            repoBuilder.SetupMethod("GetPersonCount")
+                .ExecutesSql("select count(*) from Person");
+            
             var repo = dlBuilder.CreateIlRepo<ISimpleQuery>();
 
 
