@@ -287,5 +287,57 @@ namespace Repomat.UnitTests.IlGen
 
             Assert.AreEqual(null, result);
         }
+        [Test]
+        public void ByteArrayConversion_Null()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(byte[]));
+
+            var t = new IlTester<byte[]>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldnull);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
+
+        [Test]
+        public void ByteArrayConversion_NotNull_ReturnsValue()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(byte[]));
+
+            var t = new IlTester<byte[]>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldc_I4, 3);
+            il.Emit(OpCodes.Newarr, typeof(byte));
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            CollectionAssert.AreEqual(new byte[3], result);
+        }
+
+        [Test]
+        public void ByteArrayConversion_DbNull_ReturnsNull()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(byte[]));
+
+            var t = new IlTester<byte[]>();
+            var il = t.IL;
+
+            var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
     }
 }

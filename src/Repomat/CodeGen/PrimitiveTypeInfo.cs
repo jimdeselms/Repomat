@@ -16,6 +16,9 @@ namespace Repomat.CodeGen
         private readonly string _sqlDatatype;
         private readonly Action<ILGenerator> _emitConversion;
 
+        private static readonly FieldInfo DBNULL_VALUE = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+
+
         public PrimitiveTypeInfo(Type type, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion)
         {
             _type = type;
@@ -132,7 +135,7 @@ namespace Repomat.CodeGen
             CreateType(typeof(ulong?), "reader.IsDBNull({0}) ? null : (ulong?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ulong?)System.Convert.ToUInt64({0})", "BIGINT", NullableConversion<ulong>("ToInt64"));
             CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)", NullableCharConversion());
             CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})", StringConversion());
-            CreateType(typeof(byte[]), "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})");
+            CreateType(typeof(byte[]), "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})", ByteArrayConversion());
         }
 
         private static void CreateType(Type t, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion=null)
@@ -203,6 +206,35 @@ namespace Repomat.CodeGen
 
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
                 SimpleConversion("ToString")(il);
+                il.Emit(OpCodes.Br, end);
+
+                il.MarkLabel(label1);
+                il.Emit(OpCodes.Ldnull);
+                il.MarkLabel(end);
+            };
+        }
+
+        private static Action<ILGenerator> ByteArrayConversion()
+        {
+            var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+
+            return il =>
+            {
+                var label1 = il.DefineLabel();
+                var end = il.DefineLabel();
+
+                var nullableValueLabel = il.DeclareLocal(typeof(string));
+
+                il.Emit(OpCodes.Stloc, nullableValueLabel);
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                il.Emit(OpCodes.Brfalse_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                il.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Emit(OpCodes.Beq_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                CastConversion<byte[]>()(il);
                 il.Emit(OpCodes.Br, end);
 
                 il.MarkLabel(label1);
