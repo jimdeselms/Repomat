@@ -231,11 +231,7 @@ namespace Repomat.CodeGen
                 il.Emit(OpCodes.Beq_S, label1);
 
                 il.Emit(OpCodes.Ldloc, nullableValueLocal);
-                SimpleConversion("ToString")(il);
-                il.Emit(OpCodes.Stloc, nullableValueLocal);
-                il.Emit(OpCodes.Ldloc, nullableValueLocal);
-                il.Emit(OpCodes.Ldc_I4_0);
-                il.Emit(OpCodes.Callvirt, getChars);
+                CharConversion()(il);
                 il.Emit(OpCodes.Newobj, nullableCtor);
                 il.Emit(OpCodes.Br, end);
 
