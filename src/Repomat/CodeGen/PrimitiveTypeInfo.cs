@@ -131,7 +131,7 @@ namespace Repomat.CodeGen
             CreateType(typeof(ushort?), "reader.IsDBNull({0}) ? null : (ushort?)reader.GetInt16({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ushort?)System.Convert.ToUInt16({0})", "SMALLINT", NullableConversion<ushort>("ToInt16"));
             CreateType(typeof(ulong?), "reader.IsDBNull({0}) ? null : (ulong?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ulong?)System.Convert.ToUInt64({0})", "BIGINT", NullableConversion<ulong>("ToInt64"));
             CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)", NullableCharConversion());
-            CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})", SimpleConversion("ToString"));
+            CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})", StringConversion());
             CreateType(typeof(byte[]), "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})");
         }
 
@@ -150,10 +150,11 @@ namespace Repomat.CodeGen
 
         private static Action<ILGenerator> NullableConversion<T>(string convertMethodName) where T : struct
         {
-            var nullableCtor = typeof(T?).GetConstructor(new [] { typeof(T) });
-            var dbNullValue = typeof (DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            var nullableCtor = typeof(T?).GetConstructor(new[] { typeof(T) });
+            var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
-            return il => {
+            return il =>
+            {
                 var label1 = il.DefineLabel();
                 var end = il.DefineLabel();
 
@@ -177,6 +178,35 @@ namespace Repomat.CodeGen
                 il.Emit(OpCodes.Ldloca_S, resultLocal);
                 il.Emit(OpCodes.Initobj, typeof(T?));
                 il.Emit(OpCodes.Ldloc, resultLocal);
+                il.MarkLabel(end);
+            };
+        }
+
+        private static Action<ILGenerator> StringConversion()
+        {
+            var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+
+            return il =>
+            {
+                var label1 = il.DefineLabel();
+                var end = il.DefineLabel();
+
+                var nullableValueLabel = il.DeclareLocal(typeof(string));
+
+                il.Emit(OpCodes.Stloc, nullableValueLabel);
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                il.Emit(OpCodes.Brfalse_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                il.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Emit(OpCodes.Beq_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLabel);
+                SimpleConversion("ToString")(il);
+                il.Emit(OpCodes.Br, end);
+
+                il.MarkLabel(label1);
+                il.Emit(OpCodes.Ldnull);
                 il.MarkLabel(end);
             };
         }

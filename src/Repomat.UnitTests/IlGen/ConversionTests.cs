@@ -82,6 +82,22 @@ namespace Repomat.UnitTests.IlGen
         }
 
         [Test]
+        public void NullStringConversion()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(string));
+
+            var t = new IlTester<string>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldnull);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+            Assert.IsNull(result);
+        }
+
+        [Test]
         public void CharConversion()
         {
             var info = PrimitiveTypeInfo.Get(typeof(char));
