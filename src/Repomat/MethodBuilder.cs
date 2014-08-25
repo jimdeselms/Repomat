@@ -39,6 +39,7 @@ namespace Repomat
         {
             if (!_databaseType.SupportsStoredProcedures)
             {
+                throw new RepomatException("Stored procedures not supported in {0}", _databaseType.Name);
             }
             if (procName == null)
             {

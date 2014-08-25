@@ -18,12 +18,9 @@ namespace Repomat.IlGen
 
         protected override void GenerateMethodIl(LocalBuilder localBuilder)
         {
-            if (MethodDef.Parameters.Count > 0)
-            {
-                throw new NotImplementedException();
-            }
-
             SetCommandText(MethodDef.CustomSqlOrNull);
+            WriteParameterAssignments();
+
             ExecuteNonQuery();
         }
     }

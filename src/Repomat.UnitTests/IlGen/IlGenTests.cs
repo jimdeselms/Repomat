@@ -99,12 +99,22 @@ namespace Repomat.UnitTests.IlGen
         }
 
         [Test]
-        public void SimpleStatementTest()
+        public void CustomStatementTest()
         {
             var repo = CreateSimpleQueryInterface();
             repo.InsertARow();
 
             Assert.AreEqual(1, repo.GetPersonCount());
+        }
+
+        [Test]
+        public void CustomStatementWithParametersTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+            repo.InsertARowWithId(2);
+            repo.InsertARowWithId(4);
+
+            Assert.AreEqual(2, repo.GetPersonCount());
         }
 
         public interface INothing { }
@@ -127,6 +137,7 @@ namespace Repomat.UnitTests.IlGen
             int Returns45();
             int ReturnsXMinusY(int x, int y);
             void InsertARow();
+            void InsertARowWithId(int personId);
             int GetPersonCount();
         }
 
@@ -140,6 +151,8 @@ namespace Repomat.UnitTests.IlGen
                 .ExecutesSql("select @x - @y");
             repoBuilder.SetupMethod("InsertARow")
                 .ExecutesSql("insert into Person values (1, 'Jim', '2014-01-01', null)");
+            repoBuilder.SetupMethod("InsertARowWithId")
+                .ExecutesSql("insert into Person values (@personId, 'Jim', '2014-01-01', null)");
             repoBuilder.SetupMethod("GetPersonCount")
                 .ExecutesSql("select count(*) from Person");
             

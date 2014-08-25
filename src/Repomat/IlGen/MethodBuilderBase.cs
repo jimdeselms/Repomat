@@ -150,6 +150,36 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ret);
         }
 
+        protected void WriteParameterAssignments()
+        {
+            for (int argIndex = 0; argIndex < MethodDef.Parameters.Count; argIndex++)
+            {
+                ParameterDetails arg = MethodDef.Parameters[argIndex];
+
+                var column = EntityDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
+                if (column == null)
+                {
+                    if (MethodDef.CustomSqlOrNull != null)
+                    {
+                        column = new PropertyDef(arg.Name, arg.Name, typeof(void));
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                IlGenerator.BeginScope();
+
+                var parmLocal = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+
+                // Add one to the argument index; the first one is "this"
+                AddSqlParameter(parmLocal, arg.Name, argIndex + 1, arg.Type);
+
+                IlGenerator.EndScope();
+            }
+        }
+
         protected FieldBuilder DefineField<T>(string name)
         {
             return TypeBuilder.DefineField(name, typeof(T), FieldAttributes.Private);
