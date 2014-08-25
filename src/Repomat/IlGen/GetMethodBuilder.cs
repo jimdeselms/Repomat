@@ -1,4 +1,5 @@
 ﻿using Repomat.CodeGen;
+using Repomat.Runtime;
 using Repomat.Schema;
 using System;
 using System.Collections.Generic;
@@ -32,14 +33,16 @@ namespace Repomat.IlGen
 
         protected override void GenerateMethodIl(LocalBuilder cmdVariable)
         {
+            FieldBuilder indexesAssignedField = null;
+            Dictionary<string, FieldBuilder> columnIndexFields = new Dictionary<string, FieldBuilder>();
+
             if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsSimpleQuery)
             {
                 // private _queryX_columnIndexesAssigned = false;
-                var indexesAssignedField = DefineField<bool>(string.Format("_query{0}_columnIndexesAssigned", _customQueryIdx));
+                indexesAssignedField = DefineField<bool>(string.Format("_query{0}_columnIndexesAssigned", _customQueryIdx));
                 _ctorIlBuilder.Emit(OpCodes.Ldc_I4, 0);
                 _ctorIlBuilder.Emit(OpCodes.Stfld, indexesAssignedField);
 
-                Dictionary<string, FieldBuilder> columnIndexFields = new Dictionary<string, FieldBuilder>();
                 foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
                 {
                     // private _queryX_columnYIdx = 0;
@@ -56,16 +59,14 @@ namespace Repomat.IlGen
             }
             else
             {
-                //GenerateConnectionAndStatementHeader();
-                GenerateGetMethodBody(_customQueryIdx);
-                //GenerateMethodFooter();
+                GenerateGetMethodBody(_customQueryIdx, indexesAssignedField, columnIndexFields);
             }
 
             IlGenerator.Emit(OpCodes.Ldnull);
             IlGenerator.Emit(OpCodes.Ret);
         }
 
-        private void GenerateGetMethodBody(int queryIdx)
+        private void GenerateGetMethodBody(int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
             Type typeToGet = MethodDef.ReturnType.GetCoreType();
             PropertyDef[] columnsToGet = DetermineColumnsToGet(typeToGet);
@@ -86,6 +87,7 @@ namespace Repomat.IlGen
             {
                 var readerLocal = IlGenerator.DeclareLocal(typeof(IDataReader));
 
+                // using (var reader = cmd.ExecuteReader())
                 IlGenerator.BeginExceptionBlock();
 
                 IlGenerator.Emit(OpCodes.Ldloc, CommandLocal);
@@ -97,14 +99,15 @@ namespace Repomat.IlGen
 
                 IlGenerator.BeginFinallyBlock();
                 IlGenerator.EndExceptionBlock();
-                //CodeBuilder.WriteLine("using (var reader = cmd.ExecuteReader())");
 
-                //CodeBuilder.OpenBrace();
-
-                //if (MethodDef.IsSingleton)
-                //{
-                //    WriteSingletonResultRead(columnsToGet, queryIdx);
-                //}
+                if (MethodDef.IsSingleton)
+                {
+                    WriteSingletonResultRead(readerLocal, columnsToGet, queryIdx, indexesAssignedField, columnIndexFields);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
                 //else if (MethodDef.ReturnType.GetCoreType().IsDatabaseType())
                 //{
                 //    WriteMultiRowSimpleTypeRead();
@@ -116,6 +119,79 @@ namespace Repomat.IlGen
                 //CodeBuilder.CloseBrace();
             }
         }
+
+        private static readonly MethodInfo verifyFieldsAreUniqueMethod = typeof(ReaderHelper).GetMethod("VerifyFieldsAreUnique");
+        private static readonly MethodInfo getIndexForColumn = typeof(ReaderHelper).GetMethod("GetIndexForColumn");
+
+        private void WriteSingletonResultRead(LocalBuilder readerLocal, PropertyDef[] columnsToGet, int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
+        {
+            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
+            {
+                var afterIndexAssignment = IlGenerator.DefineLabel();
+
+                // if (!_query{0}_columnIndexesAssigned)
+                IlGenerator.Emit(OpCodes.Ldfld, indexesAssignedField);
+                IlGenerator.Emit(OpCodes.Brtrue_S, afterIndexAssignment);
+
+                // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
+                IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+                IlGenerator.Emit(OpCodes.Call, verifyFieldsAreUniqueMethod);
+
+                foreach (var columnToGet in columnsToGet)
+                {
+                    // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
+                    IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+                    IlGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
+                    IlGenerator.Emit(OpCodes.Call, getIndexForColumn);
+                    IlGenerator.Emit(OpCodes.Stfld, columnIndexFields[columnToGet.PropertyName]);
+                }
+
+                IlGenerator.MarkLabel(afterIndexAssignment);
+            }
+            //CodeBuilder.WriteLine("if (reader.Read())");
+            //CodeBuilder.OpenBrace();
+            //if (MethodDef.CustomSqlOrNull != null)
+            //{
+            //    AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
+            //}
+            //else
+            //{
+            //    AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), MethodDef.Properties, null);
+            //}
+            //if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
+            //{
+            //    CodeBuilder.WriteLine("if (reader.Read())");
+            //    CodeBuilder.OpenBrace();
+            //    CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"More than one row returned from singleton query\");");
+            //    CodeBuilder.CloseBrace();
+            //}
+
+            //if (MethodDef.IsTryGet)
+            //{
+            //    var tryGetOutColumn = MethodDef.OutParameterOrNull;
+            //    CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
+            //    CodeBuilder.WriteLine("return true;");
+            //    CodeBuilder.CloseBrace();
+            //    CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
+            //    CodeBuilder.WriteLine("return false;");
+            //}
+            //else
+            //{
+            //    CodeBuilder.WriteLine("return newObj;");
+            //    CodeBuilder.CloseBrace();
+
+            //    if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
+            //    {
+            //        CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"No rows returned from singleton query\");");
+            //    }
+            //    else
+            //    {
+            //        CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
+            //    }
+            //}
+        }
+
+
 
         private void WriteSqlStatement(PropertyDef[] columnsToGet)
         {

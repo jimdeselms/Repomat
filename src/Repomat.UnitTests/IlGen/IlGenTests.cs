@@ -70,16 +70,14 @@ namespace Repomat.UnitTests.IlGen
         }
 
         [Test]
-        public void Another()
+        public void SingletonGetTest()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            var repoBuilder = dlBuilder.SetupRepo<ICreatesATable>();
-            var repo = dlBuilder.CreateIlRepo<ICreatesATable>();
+            var repoBuilder = dlBuilder.SetupRepo<IPersonRepo>();
+            var repo = dlBuilder.CreateIlRepo<IPersonRepo>();
 
             try { repo.DropTable(); } catch { }
             repo.CreateTable();
-
-            Assert.AreEqual(0, repo.GetAll().Length);
 
             repo.DropTable();
         }
@@ -117,15 +115,27 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(2, repo.GetPersonCount());
         }
 
+        private IPersonRepo CreatePersonRepo()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            var repoBuilder = dlBuilder.SetupRepo<IPersonRepo>();
+            var repo = dlBuilder.CreateIlRepo<IPersonRepo>();
+
+            try { repo.DropTable(); }
+            catch { }
+            repo.CreateTable();
+
+            repo.Get(1);
+
+            return repo;
+        }
+
         public interface INothing { }
-        public interface ICreatesATable
+        public interface IPersonRepo
         {
             void DropTable();
             void CreateTable();
             Person Get(int personId);
-
-            void InsertRow();
-            Person[] GetAll();
         }
 
         public interface ISimpleQuery
