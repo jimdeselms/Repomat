@@ -130,7 +130,7 @@ namespace Repomat.CodeGen
             CreateType(typeof(uint?), "reader.IsDBNull({0}) ? null : (uint?)reader.GetInt32({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (uint?)System.Convert.ToUInt32({0})", "INT", NullableConversion<uint>("ToUInt32"));
             CreateType(typeof(ushort?), "reader.IsDBNull({0}) ? null : (ushort?)reader.GetInt16({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ushort?)System.Convert.ToUInt16({0})", "SMALLINT", NullableConversion<ushort>("ToInt16"));
             CreateType(typeof(ulong?), "reader.IsDBNull({0}) ? null : (ulong?)reader.GetInt64({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (ulong?)System.Convert.ToUInt64({0})", "BIGINT", NullableConversion<ulong>("ToInt64"));
-            CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)");
+            CreateType(typeof(char?), "reader.IsDBNull({0}) ? null : (char)reader.GetString({0})[0]", "({0} == null || {0} == System.DBNull.Value) ? null : (char?)System.Convert.ToString({0})[0]", "VARCHAR(1)", NullableCharConversion());
             CreateType(typeof(string), "reader.IsDBNull({0}) ? null : reader.GetString({0})", "System.Convert.ToString({0})", "VARCHAR({1})", SimpleConversion("ToString"));
             CreateType(typeof(byte[]), "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})");
         }
@@ -205,6 +205,45 @@ namespace Repomat.CodeGen
                 var getChars = typeof(string).GetMethod("get_Chars");
                 il.Emit(OpCodes.Ldc_I4_0);
                 il.Emit(OpCodes.Callvirt, getChars);
+            };
+        }
+
+        private static Action<ILGenerator> NullableCharConversion()
+        {
+            var nullableCtor = typeof(char?).GetConstructor(new[] { typeof(char) });
+            var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            var getChars = typeof(string).GetMethod("get_Chars");
+
+            return il =>
+            {
+                var label1 = il.DefineLabel();
+                var end = il.DefineLabel();
+
+                var nullableValueLocal = il.DeclareLocal(typeof(object));
+                var resultLocal = il.DeclareLocal(typeof(char?));
+
+                il.Emit(OpCodes.Stloc, nullableValueLocal);
+                il.Emit(OpCodes.Ldloc, nullableValueLocal);
+                il.Emit(OpCodes.Brfalse_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLocal);
+                il.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Emit(OpCodes.Beq_S, label1);
+
+                il.Emit(OpCodes.Ldloc, nullableValueLocal);
+                SimpleConversion("ToString")(il);
+                il.Emit(OpCodes.Stloc, nullableValueLocal);
+                il.Emit(OpCodes.Ldloc, nullableValueLocal);
+                il.Emit(OpCodes.Ldc_I4_0);
+                il.Emit(OpCodes.Callvirt, getChars);
+                il.Emit(OpCodes.Newobj, nullableCtor);
+                il.Emit(OpCodes.Br, end);
+
+                il.MarkLabel(label1);
+                il.Emit(OpCodes.Ldloca_S, resultLocal);
+                il.Emit(OpCodes.Initobj, typeof(char?));
+                il.Emit(OpCodes.Ldloc, resultLocal);
+                il.MarkLabel(end);
             };
         }
     }

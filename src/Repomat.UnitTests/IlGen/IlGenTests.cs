@@ -122,9 +122,9 @@ namespace Repomat.UnitTests.IlGen
 
     class FooBar
     {
-        public static DateTime? DoSomeStuff(object o)
+        public static int DoSomeStuff()
         {
-            return (o == null || o == DBNull.Value) ? (DateTime?)null : Convert.ToDateTime(o);
+            return 123;
         }
     }
 }

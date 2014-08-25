@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using Repomat.IlGen;
 
 namespace Repomat.UnitTests.IlGen
 {
@@ -188,6 +189,58 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
 
             var t = new IlTester<DateTime?>();
+            var il = t.IL;
+
+            var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
+
+        [Test]
+        public void NullableCharConversion_Null()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(char?));
+
+            var t = new IlTester<char?>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldnull);
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual(null, result);
+        }
+
+        [Test]
+        public void NullableCharConversion_NotNull_ReturnsValue()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(char?));
+
+            var t = new IlTester<char?>();
+            var il = t.IL;
+
+            il.Emit(OpCodes.Ldstr, "hi there");
+            info.EmitConversion(il);
+            il.Emit(OpCodes.Ret);
+
+            var result = t.Invoke();
+
+            Assert.AreEqual('h', result);
+        }
+
+        [Test]
+        public void NullableCharConversion_DbNull_ReturnsNull()
+        {
+            var info = PrimitiveTypeInfo.Get(typeof(char?));
+
+            var t = new IlTester<char?>();
             var il = t.IL;
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
