@@ -83,24 +83,29 @@ namespace Repomat.IlGen
             IlGenerator.EmitWriteLine(_testLocal);
         }
 
-        protected void AddSqlParameter(LocalBuilder sqlParameter, string name, int argumentIndex)
+        protected void AddSqlParameter(LocalBuilder sqlParameter, string name, int argumentIndex, Type parmCSharpType)
         {
             // parm = cmd.CreateParameter();
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
             IlGenerator.Emit(OpCodes.Stloc, sqlParameter);
 
-            // parm.ParameterName = name
+            //// parm.ParameterName = name
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlGenerator.Emit(OpCodes.Ldstr, name);
             IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
 
-            // parm.Value = argX;
+            //// parm.Value = argX;
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlGenerator.Emit(OpCodes.Ldarg, argumentIndex);
+            if (parmCSharpType.IsValueType)
+            {
+                IlGenerator.Emit(OpCodes.Box, parmCSharpType);
+            }
+
             IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
 
-            // cmd.Paramters.Add(parm);
+            //// cmd.Paramters.Add(parm);
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Callvirt, _parametersGetMethod);
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);

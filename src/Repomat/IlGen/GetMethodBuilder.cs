@@ -72,7 +72,7 @@ namespace Repomat.IlGen
 
             WriteSqlStatement(columnsToGet);
 
-//            WriteParameterAssignments();
+            WriteParameterAssignments();
 
             if (MethodDef.IsSimpleQuery)
             {
@@ -176,7 +176,7 @@ namespace Repomat.IlGen
                 var parmLocal = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
 
                 // Add one to the argument index; the first one is "this"
-                base.AddSqlParameter(parmLocal, arg.Name, argIndex+1);
+                base.AddSqlParameter(parmLocal, arg.Name, argIndex+1, arg.Type);
 
                 IlGenerator.EndScope();
             }
