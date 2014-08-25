@@ -89,6 +89,33 @@ namespace Repomat.UnitTests.IlGen
             repo.DropTable();
         }
 
+        [Test]
+        public void SimpleQueryTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+            Assert.AreEqual(45, repo.Returns45());
+        }
+
+        [Test]
+        public void CustomQueryWithArguments()
+        {
+            var repo = CreateSimpleQueryInterface();
+            Assert.AreEqual(15, repo.ReturnsXMinusY(50, 35));
+        }
+
+        //[Test]
+        //public void SimpleStatementTest()
+        //{
+        //    var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+        //    var repoBuilder = dlBuilder.SetupRepo<ISimpleQuery>();
+        //    repoBuilder.SetupMethod("Returns45")
+        //        .ExecutesSql("select 45");
+
+        //    var repo = dlBuilder.CreateIlRepo<ISimpleQuery>();
+
+        //    Assert.AreEqual(45, repo.Returns45());
+        //}
+
         public interface INothing { }
         public interface ICreatesATable
         {
@@ -96,7 +123,41 @@ namespace Repomat.UnitTests.IlGen
             void CreateTable();
             Person Get(int personId);
 
+            void InsertRow();
             Person[] GetAll();
+        }
+
+        public interface ISimpleQuery
+        {
+            Person Get(int personId);
+            void DropTable();
+            void CreateTable();
+
+            int Returns45();
+            int ReturnsXMinusY(int x, int y);
+            void InsertARow();
+        }
+
+        private ISimpleQuery CreateSimpleQueryInterface()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            var repoBuilder = dlBuilder.SetupRepo<ISimpleQuery>();
+            repoBuilder.SetupMethod("Returns45")
+                .ExecutesSql("select 45");
+            repoBuilder.SetupMethod("ReturnsXMinusY")
+                .ExecutesSql("select @x - @y");
+            repoBuilder.SetupMethod("InsertARow")
+                .ExecutesSql("insert into Person values (1, 'Jim', '2014-01-01')");
+
+            var repo = dlBuilder.CreateIlRepo<ISimpleQuery>();
+
+
+            try { repo.DropTable(); }
+            catch { }
+
+            repo.CreateTable();
+
+            return repo;
         }
     }
 
@@ -107,4 +168,5 @@ namespace Repomat.UnitTests.IlGen
             return Convert.ToInt32((object)2345);
         }
     }
+
 }

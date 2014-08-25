@@ -40,6 +40,17 @@ namespace Repomat.IlGen
                     return new DropTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
                 case MethodType.Get:
                     return new GetMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, _customQueryIdx++, this, _useStrictTypes, _ctorBuilder);
+                case MethodType.Custom:
+                    {
+                        if (method.ReturnType == typeof(void))
+                        {
+                            return new CustomMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
+                        }
+                        else
+                        {
+                            return new GetMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, _customQueryIdx++, this, _useStrictTypes, _ctorBuilder);
+                        }
+                    }
                 default:
                     throw new NotImplementedException();
             }
