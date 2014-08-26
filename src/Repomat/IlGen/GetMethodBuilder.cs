@@ -122,6 +122,7 @@ namespace Repomat.IlGen
 
         private static readonly MethodInfo verifyFieldsAreUniqueMethod = typeof(ReaderHelper).GetMethod("VerifyFieldsAreUnique");
         private static readonly MethodInfo getIndexForColumn = typeof(ReaderHelper).GetMethod("GetIndexForColumn");
+        private static readonly MethodInfo readMethod = typeof(IDataReader).GetMethod("Read", Type.EmptyTypes);
 
         private void WriteSingletonResultRead(LocalBuilder readerLocal, PropertyDef[] columnsToGet, int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
@@ -148,16 +149,22 @@ namespace Repomat.IlGen
 
                 IlGenerator.MarkLabel(afterIndexAssignment);
             }
-            //CodeBuilder.WriteLine("if (reader.Read())");
-            //CodeBuilder.OpenBrace();
-            //if (MethodDef.CustomSqlOrNull != null)
-            //{
-            //    AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
-            //}
-            //else
-            //{
-            //    AppendObjectSerialization(CodeBuilder, columnsToGet.ToList(), MethodDef.Properties, null);
-            //}
+
+            var afterRead = IlGenerator.DefineLabel();
+
+            // if (reader.Read())
+            IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+            IlGenerator.Emit(OpCodes.Call, readMethod);
+            IlGenerator.Emit(OpCodes.Brfalse_S, afterRead);
+
+            if (MethodDef.CustomSqlOrNull != null)
+            {
+                AppendObjectSerialization(readerBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
+            }
+            else
+            {
+                AppendObjectSerialization(columnsToGet.ToList(), MethodDef.Properties, null);
+            }
             //if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
             //{
             //    CodeBuilder.WriteLine("if (reader.Read())");
@@ -189,6 +196,73 @@ namespace Repomat.IlGen
             //        CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
             //    }
             //}
+        }
+
+        private void AppendObjectSerialization(LocalBuilder readerLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, Dictionary<string, FieldInfo> readerIndexes)
+        {
+            if (EntityDef.CreateClassThroughConstructor)
+            {
+                //body.WriteLine("var newObj = new {0}(", EntityDef.Type.ToCSharp());
+
+                //var argToExprMap = new Dictionary<string, string>();
+                //for (int i = 0; i < selectColumns.Count; i++)
+                //{
+                //    var col = selectColumns[i];
+                //    string indexExpr = GetIndexExpr(i, col.PropertyName, queryIndexOrNull);
+                //    argToExprMap[col.PropertyName.Uncapitalize()] = GetReaderGetExpression(col.Type, indexExpr);
+                //}
+                //foreach (var arg in argColumns)
+                //{
+                //    argToExprMap[arg.Name] = arg.Name;
+                //}
+
+                //var arguments = new List<string>();
+                //foreach (var prop in EntityDef.Properties)
+                //{
+                //    arguments.Add(argToExprMap[prop.PropertyName.Uncapitalize()]);
+                //}
+
+                //body.Write(string.Join(", ", arguments));
+
+                //body.WriteLine(");");
+            }
+            else
+            {
+                // body.WriteLine("var newObj = new {0}();", EntityDef.Type.ToCSharp());
+                var newObj = IlGenerator.DeclareLocal(typeof(EntityDef.Type));
+                var ctor = EntityDef.Type.GetConstructor(Type.EmptyTypes);
+                IlGenerator.Emit(OpCodes.Newobj, ctor);
+                IlGenerator.Emit(OpCodes.Stloc, newObj);
+
+                for (int i = 0; i < selectColumns.Count; i++)
+                {
+                    // body.WriteLine("newObj.{0} = {1};", selectColumns[i].PropertyName, GetReaderGetExpression(selectColumns[i].Type, indexExpr));
+                    EmitReaderGetExpression(LocalBuilder, i, selectColumns[i].PropertyName, queryIndexOrNull, readerIndexes);
+                }
+                foreach (var arg in argColumns)
+                {
+                    // body.WriteLine("newObj.{0} = {1};", arg.Name.Capitalize(), arg.Name);
+                }
+            }
+        }
+
+        private string EmitReaderGetExpression(LocalBuilder readerLocal, int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldInfo> readerIndexes)
+        {
+            // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
+            IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+            EmitIndexExpr(index, propertyName, queryIndexOrNull, readerIndexes);
+        }
+
+        private void EmitIndexExpr(int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldInfo> readerIndexes)
+        {
+            if (queryIndexOrNull.HasValue)
+            {
+                IlGenerator.Emit(OpCodes.Ldloc, readerIndexes[propertyName]);
+            }
+            else
+            {
+                IlGenerator.Emit(OpCodes.Ldc_I4, index);
+            }
         }
 
 
