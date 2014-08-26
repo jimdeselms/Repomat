@@ -128,24 +128,27 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Callvirt, _executeScalarMethod);
         }
 
-        public void GenerateIl()
+        public virtual void GenerateIl()
         {
             // var cmd = _connection.CreateCommand();
             // try
             // finally
             // cmd.Disose();
 
-            IlGenerator.Emit(OpCodes.Ldarg_0);
-            IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
-            IlGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
-            IlGenerator.Emit(OpCodes.Stloc, _commandLocal.LocalIndex);
+            //IlGenerator.Emit(OpCodes.Ldarg_0);
+            //IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
+            //IlGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
+            //IlGenerator.Emit(OpCodes.Stloc, _commandLocal.LocalIndex);
 
-            IlGenerator.BeginExceptionBlock();
+            //IlGenerator.BeginExceptionBlock();
 
             GenerateMethodIl(_commandLocal);
 
-            IlGenerator.BeginFinallyBlock();
-            IlGenerator.EndExceptionBlock();
+            //IlGenerator.BeginFinallyBlock();
+
+            //IlGenerator.Emit(OpCodes.Nop);
+
+            //IlGenerator.EndExceptionBlock();
 
             IlGenerator.Emit(OpCodes.Ret);
         }

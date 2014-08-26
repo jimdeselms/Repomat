@@ -89,31 +89,31 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(45, repo.Returns45());
         }
 
-        [Test]
-        public void CustomQueryWithArguments()
-        {
-            var repo = CreateSimpleQueryInterface();
-            Assert.AreEqual(15, repo.ReturnsXMinusY(50, 35));
-        }
+        //[Test]
+        //public void CustomQueryWithArguments()
+        //{
+        //    var repo = CreateSimpleQueryInterface();
+        //    Assert.AreEqual(15, repo.ReturnsXMinusY(50, 35));
+        //}
 
-        [Test]
-        public void CustomStatementTest()
-        {
-            var repo = CreateSimpleQueryInterface();
-            repo.InsertARow();
+        //[Test]
+        //public void CustomStatementTest()
+        //{
+        //    var repo = CreateSimpleQueryInterface();
+        //    repo.InsertARow();
 
-            Assert.AreEqual(1, repo.GetPersonCount());
-        }
+        //    Assert.AreEqual(1, repo.GetPersonCount());
+        //}
 
-        [Test]
-        public void CustomStatementWithParametersTest()
-        {
-            var repo = CreateSimpleQueryInterface();
-            repo.InsertARowWithId(2);
-            repo.InsertARowWithId(4);
+        //[Test]
+        //public void CustomStatementWithParametersTest()
+        //{
+        //    var repo = CreateSimpleQueryInterface();
+        //    repo.InsertARowWithId(2);
+        //    repo.InsertARowWithId(4);
 
-            Assert.AreEqual(2, repo.GetPersonCount());
-        }
+        //    Assert.AreEqual(2, repo.GetPersonCount());
+        //}
 
         private IPersonRepo CreatePersonRepo()
         {
@@ -140,15 +140,15 @@ namespace Repomat.UnitTests.IlGen
 
         public interface ISimpleQuery
         {
-            Person Get(int personId);
-            void DropTable();
-            void CreateTable();
+            //Person Get(int personId);
+            //void DropTable();
+            //void CreateTable();
 
             int Returns45();
-            int ReturnsXMinusY(int x, int y);
-            void InsertARow();
-            void InsertARowWithId(int personId);
-            int GetPersonCount();
+            //int ReturnsXMinusY(int x, int y);
+            //void InsertARow();
+            //void InsertARowWithId(int personId);
+            //int GetPersonCount();
         }
 
         private ISimpleQuery CreateSimpleQueryInterface()
@@ -157,22 +157,22 @@ namespace Repomat.UnitTests.IlGen
             var repoBuilder = dlBuilder.SetupRepo<ISimpleQuery>();
             repoBuilder.SetupMethod("Returns45")
                 .ExecutesSql("select 45");
-            repoBuilder.SetupMethod("ReturnsXMinusY")
-                .ExecutesSql("select @x - @y");
-            repoBuilder.SetupMethod("InsertARow")
-                .ExecutesSql("insert into Person values (1, 'Jim', '2014-01-01', null)");
-            repoBuilder.SetupMethod("InsertARowWithId")
-                .ExecutesSql("insert into Person values (@personId, 'Jim', '2014-01-01', null)");
-            repoBuilder.SetupMethod("GetPersonCount")
-                .ExecutesSql("select count(*) from Person");
+            //repoBuilder.SetupMethod("ReturnsXMinusY")
+            //    .ExecutesSql("select @x - @y");
+            //repoBuilder.SetupMethod("InsertARow")
+            //    .ExecutesSql("insert into Person values (1, 'Jim', '2014-01-01', null)");
+            //repoBuilder.SetupMethod("InsertARowWithId")
+            //    .ExecutesSql("insert into Person values (@personId, 'Jim', '2014-01-01', null)");
+            //repoBuilder.SetupMethod("GetPersonCount")
+            //    .ExecutesSql("select count(*) from Person");
             
             var repo = dlBuilder.CreateIlRepo<ISimpleQuery>();
 
 
-            try { repo.DropTable(); }
-            catch { }
+//            try { repo.DropTable(); }
+//            catch { }
 
-            repo.CreateTable();
+//            repo.CreateTable();
 
             return repo;
         }
