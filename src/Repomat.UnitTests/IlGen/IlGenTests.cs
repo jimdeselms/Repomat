@@ -75,7 +75,7 @@ namespace Repomat.UnitTests.IlGen
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
             var repoBuilder = dlBuilder.SetupRepo<IFooRepo>();
             repoBuilder.SetupMethod("InsertARow")
-                .ExecutesSql("insert into Foo values (1, 'Jim')");
+                .ExecutesSql("insert into Foo values (1, 'Jim', '2014-01-01')");
             var repo = dlBuilder.CreateIlRepo<IFooRepo>();
 
             try { repo.DropTable(); } catch { }
@@ -87,6 +87,7 @@ namespace Repomat.UnitTests.IlGen
 
             Assert.AreEqual("Jim", person.Name);
             Assert.AreEqual(1, person.PersonId);
+            Assert.AreEqual(new DateTime(2014, 1, 1), person.Birthday);
 
             repo.DropTable();
         }
@@ -153,6 +154,7 @@ namespace Repomat.UnitTests.IlGen
         {
             public int PersonId { get; set; }
             public string Name { get; set; }
+            public DateTime Birthday { get; set; }
         }
 
 

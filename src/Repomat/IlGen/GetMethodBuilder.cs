@@ -210,6 +210,8 @@ namespace Repomat.IlGen
 
         private void AppendObjectSerialization(LocalBuilder readerLocal, LocalBuilder resultLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
+            var args = argColumns.ToArray();
+
             if (EntityDef.CreateClassThroughConstructor)
             {
                 //body.WriteLine("var newObj = new {0}(", EntityDef.Type.ToCSharp());
@@ -253,8 +255,16 @@ namespace Repomat.IlGen
 //                    IlGenerator.Emit(OpCodes.Ldnull);
                     IlGenerator.Emit(OpCodes.Call, setter);
                 }
-                foreach (var arg in argColumns)
+                for (int i = 0; i < args.Length; i++)
                 {
+                    var arg = args[i];
+                    var index = i + 1;
+
+                    var setter = EntityDef.Type.GetProperty(arg.Name.Capitalize()).GetSetMethod();
+                    IlGenerator.Emit(OpCodes.Ldloc, newObj);
+                    IlGenerator.Emit(OpCodes.Ldarg, index);
+                    IlGenerator.Emit(OpCodes.Call, setter);
+
                     // body.WriteLine("newObj.{0} = {1};", arg.Name.Capitalize(), arg.Name);
                 }
 
