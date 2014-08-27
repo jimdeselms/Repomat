@@ -96,9 +96,11 @@ namespace Repomat.IlGen
                 IlGenerator.Emit(OpCodes.Call, _executeReaderMethod);
                 IlGenerator.Emit(OpCodes.Stloc, readerLocal);
 
+                var resultLocal = IlGenerator.DeclareLocal(MethodDef.ReturnType);
+
                 if (MethodDef.IsSingleton)
                 {
-                    WriteSingletonResultRead(readerLocal, columnsToGet, queryIdx, indexesAssignedField, columnIndexFields);
+                    WriteSingletonResultRead(readerLocal, resultLocal, columnsToGet, queryIdx, indexesAssignedField, columnIndexFields);
                 }
                 else
                 {
@@ -121,7 +123,7 @@ namespace Repomat.IlGen
 
                 IlGenerator.EndExceptionBlock();
 
-                IlGenerator.Emit(OpCodes.Ldnull);
+                IlGenerator.Emit(OpCodes.Ldloc, resultLocal);
                 IlGenerator.Emit(OpCodes.Ret);
             }
         }
@@ -130,7 +132,7 @@ namespace Repomat.IlGen
         private static readonly MethodInfo getIndexForColumn = typeof(ReaderHelper).GetMethod("GetIndexForColumn");
         private static readonly MethodInfo readMethod = typeof(IDataReader).GetMethod("Read", Type.EmptyTypes);
 
-        private void WriteSingletonResultRead(LocalBuilder readerLocal, PropertyDef[] columnsToGet, int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
+        private void WriteSingletonResultRead(LocalBuilder readerLocal, LocalBuilder resultLocal, PropertyDef[] columnsToGet, int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
             if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
             {
@@ -165,11 +167,11 @@ namespace Repomat.IlGen
 
             if (MethodDef.CustomSqlOrNull != null)
             {
-                AppendObjectSerialization(readerLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
+                AppendObjectSerialization(readerLocal, resultLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
             }
             else
             {
-//                AppendObjectSerialization(columnsToGet.ToList(), MethodDef.Properties, null);
+                AppendObjectSerialization(readerLocal, resultLocal, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
             }
             //if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
             //{
@@ -206,7 +208,7 @@ namespace Repomat.IlGen
             IlGenerator.MarkLabel(afterRead);
         }
 
-        private void AppendObjectSerialization(LocalBuilder readerLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
+        private void AppendObjectSerialization(LocalBuilder readerLocal, LocalBuilder resultLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
             if (EntityDef.CreateClassThroughConstructor)
             {
@@ -245,20 +247,31 @@ namespace Repomat.IlGen
                 for (int i = 0; i < selectColumns.Count; i++)
                 {
                     // body.WriteLine("newObj.{0} = {1};", selectColumns[i].PropertyName, GetReaderGetExpression(selectColumns[i].Type, indexExpr));
-                    EmitReaderGetExpression(readerLocal, i, selectColumns[i].PropertyName, queryIndexOrNull, readerIndexes);
+                    var setter = EntityDef.Type.GetProperty(selectColumns[i].PropertyName).GetSetMethod();
+                    IlGenerator.Emit(OpCodes.Ldloc, newObj);
+                    EmitReaderGetExpression(readerLocal, i, selectColumns[i], queryIndexOrNull, readerIndexes);
+//                    IlGenerator.Emit(OpCodes.Ldnull);
+                    IlGenerator.Emit(OpCodes.Call, setter);
                 }
                 foreach (var arg in argColumns)
                 {
                     // body.WriteLine("newObj.{0} = {1};", arg.Name.Capitalize(), arg.Name);
                 }
+
+                IlGenerator.Emit(OpCodes.Ldloc, newObj);
+                IlGenerator.Emit(OpCodes.Stloc, resultLocal);
             }
         }
 
-        private void EmitReaderGetExpression(LocalBuilder readerLocal, int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
+        private static readonly MethodInfo _getValueMethod = typeof(IDataRecord).GetMethod("GetValue");
+
+        private void EmitReaderGetExpression(LocalBuilder readerLocal, int index, PropertyDef property, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
             // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
             IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
-            EmitIndexExpr(index, propertyName, queryIndexOrNull, readerIndexes);
+            EmitIndexExpr(index, property.PropertyName, queryIndexOrNull, readerIndexes);
+            IlGenerator.Emit(OpCodes.Call, _getValueMethod);
+            PrimitiveTypeInfo.Get(property.Type).EmitConversion(IlGenerator);
         }
 
         private void EmitIndexExpr(int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)

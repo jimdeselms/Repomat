@@ -73,10 +73,10 @@ namespace Repomat.UnitTests.IlGen
         public void SingletonGetTest()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            var repoBuilder = dlBuilder.SetupRepo<IPersonRepo>();
+            var repoBuilder = dlBuilder.SetupRepo<IFooRepo>();
             repoBuilder.SetupMethod("InsertARow")
-                .ExecutesSql("insert into Person values (1, 'jim', '2014-01-01', null)");
-            var repo = dlBuilder.CreateIlRepo<IPersonRepo>();
+                .ExecutesSql("insert into Foo values (1, 'Jim')");
+            var repo = dlBuilder.CreateIlRepo<IFooRepo>();
 
             try { repo.DropTable(); } catch { }
             repo.CreateTable();
@@ -84,7 +84,9 @@ namespace Repomat.UnitTests.IlGen
             repo.InsertARow();
 
             var person = repo.Get(1);
-            Assert.IsNull(person);
+
+            Assert.AreEqual("Jim", person.Name);
+            Assert.AreEqual(1, person.PersonId);
 
             repo.DropTable();
         }
@@ -122,11 +124,11 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(2, repo.GetPersonCount());
         }
 
-        private IPersonRepo CreatePersonRepo()
+        private IFooRepo CreatePersonRepo()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            var repoBuilder = dlBuilder.SetupRepo<IPersonRepo>();
-            var repo = dlBuilder.CreateIlRepo<IPersonRepo>();
+            var repoBuilder = dlBuilder.SetupRepo<IFooRepo>();
+            var repo = dlBuilder.CreateIlRepo<IFooRepo>();
 
             try { repo.DropTable(); }
             catch { }
@@ -138,14 +140,21 @@ namespace Repomat.UnitTests.IlGen
         }
 
         public interface INothing { }
-        public interface IPersonRepo
+        public interface IFooRepo
         {
             void DropTable();
             void CreateTable();
-            Person Get(int personId);
+            Foo Get(int personId);
 
             void InsertARow();
         }
+
+        public class Foo
+        {
+            public int PersonId { get; set; }
+            public string Name { get; set; }
+        }
+
 
         public interface ISimpleQuery
         {

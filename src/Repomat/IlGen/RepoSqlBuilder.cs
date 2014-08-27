@@ -14,12 +14,24 @@ namespace Repomat.IlGen
     {
         private static int _nextRepoSuffix = 1;
 
+        private static readonly AssemblyBuilder _assemblyBuilder;
         private static readonly ModuleBuilder _moduleBuilder;
-        
+
+        private const bool OUTPUT_ASSEMBLY = true;
+        private static bool _outputAssemblyHasBeenSaved = false;
+
         static RepoSqlBuilder()
         {
-            var asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.Run);
-            _moduleBuilder = asmBuilder.DefineDynamicModule("Repos");
+            if (OUTPUT_ASSEMBLY)
+            {
+                _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.RunAndSave);
+                _moduleBuilder = _assemblyBuilder.DefineDynamicModule("Repos", "temp.dll");
+            }
+            else
+            {
+                _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.Run);
+                _moduleBuilder = _assemblyBuilder.DefineDynamicModule("Repos");
+            }
         }
 
         private readonly TypeBuilder _typeBuilder;
@@ -89,6 +101,12 @@ namespace Repomat.IlGen
                 _ctorIlBuilder.Emit(OpCodes.Ret);
 
                 _type = _typeBuilder.CreateType();
+
+                if (OUTPUT_ASSEMBLY && !_outputAssemblyHasBeenSaved)
+                {
+                    _assemblyBuilder.Save("temp.dll");
+                    _outputAssemblyHasBeenSaved = true;
+                }
             }
             return _type;
         }
