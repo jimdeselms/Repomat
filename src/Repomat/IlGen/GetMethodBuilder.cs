@@ -140,7 +140,7 @@ namespace Repomat.IlGen
 
                 // if (!_query{0}_columnIndexesAssigned)
                 IlGenerator.Emit(OpCodes.Ldfld, indexesAssignedField);
-                IlGenerator.Emit(OpCodes.Brtrue_S, afterIndexAssignment);
+                IlGenerator.Emit(OpCodes.Brtrue, afterIndexAssignment);
 
                 // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
                 IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
@@ -163,7 +163,7 @@ namespace Repomat.IlGen
             // if (reader.Read())
             IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
             IlGenerator.Emit(OpCodes.Call, readMethod);
-            IlGenerator.Emit(OpCodes.Brfalse_S, afterRead);
+            IlGenerator.Emit(OpCodes.Brfalse, afterRead);
 
             if (MethodDef.CustomSqlOrNull != null)
             {

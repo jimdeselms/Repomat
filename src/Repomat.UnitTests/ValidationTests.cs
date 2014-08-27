@@ -57,18 +57,19 @@ namespace Repomat.UnitTests
         [Test]
         public void Validate_StoredProcInDbThatDoesntSupportIt()
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
-            var repoBuilder = dlBuilder.SetupRepo<IProcRepo>();
-            repoBuilder.SetupMethod("Foo").ExecutesStoredProcedure();
 
             try 
             {
+                var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+                var repoBuilder = dlBuilder.SetupRepo<IProcRepo>();
+                repoBuilder.SetupMethod("Foo").ExecutesStoredProcedure();
+
                 dlBuilder.CreateRepo<IProcRepo>();
                 Assert.Fail();
             }
             catch (RepomatException e) 
             {
-                StringAssert.Contains("Database type SQLite does not support stored procedures", e.Message);
+                StringAssert.Contains("Stored procedures not supported in SQLite", e.Message);
             }
 
         }

@@ -166,11 +166,11 @@ namespace Repomat.CodeGen
 
                 il.Emit(OpCodes.Stloc, nullableValueLabel);
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Brfalse_S, label1);
+                il.Emit(OpCodes.Brfalse, label1);
 
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
                 il.Emit(OpCodes.Ldsfld, dbNullValue);
-                il.Emit(OpCodes.Beq_S, label1);
+                il.Emit(OpCodes.Beq, label1);
 
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
                 SimpleConversion(convertMethodName)(il);
@@ -198,11 +198,11 @@ namespace Repomat.CodeGen
 
                 il.Emit(OpCodes.Stloc, nullableValueLabel);
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Brfalse_S, label1);
-
+                il.Emit(OpCodes.Brfalse, label1);
+                
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
                 il.Emit(OpCodes.Ldsfld, dbNullValue);
-                il.Emit(OpCodes.Beq_S, label1);
+                il.Emit(OpCodes.Beq, label1);
 
                 il.Emit(OpCodes.Ldloc, nullableValueLabel);
                 SimpleConversion("ToString")(il);
