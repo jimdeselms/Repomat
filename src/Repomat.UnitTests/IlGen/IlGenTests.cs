@@ -96,8 +96,13 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void SimpleQueryTest()
         {
-            var repo = CreateSimpleQueryInterface();
-            Assert.AreEqual(45, repo.Returns45());
+//            var repo = CreateSimplerQueryInterface();
+  //          Assert.AreEqual(45, repo.Returns45());
+
+            TestImpl i = new TestImpl(Connections.NewSqlConnection());
+            Assert.AreEqual(45, i.Returns45());
+
+            Assert.Fail("Figure out why the hand-coded implementation works but the generated one doesn't. The IL is not exactly the same.");
         }
 
         [Test]
@@ -187,6 +192,11 @@ namespace Repomat.UnitTests.IlGen
             void Insert(Person person);
         }
 
+        public interface ISimplerQuery
+        {
+            int Returns45();
+        }
+
         private ISimpleQuery CreateSimpleQueryInterface()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
@@ -202,7 +212,7 @@ namespace Repomat.UnitTests.IlGen
                 .ExecutesSql("insert into Person values (@personId, 'Jim', '2014-01-01', null)");
             repoBuilder.SetupMethod("GetPersonCount")
                 .ExecutesSql("select count(*) from Person");
-            
+
             var repo = dlBuilder.CreateRepo<ISimpleQuery>();
 
 
@@ -213,13 +223,42 @@ namespace Repomat.UnitTests.IlGen
 
             return repo;
         }
+
+        private ISimplerQuery CreateSimplerQueryInterface()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            dlBuilder.UseIlGeneration();
+            var repoBuilder = dlBuilder.SetupRepo<ISimplerQuery>();
+            repoBuilder.SetupMethod("Returns45")
+                .ExecutesSql("select 45");
+
+            var repo = dlBuilder.CreateRepo<ISimplerQuery>();
+
+            return repo;
+        }
     }
 
-    class FooBar
+    public class TestImpl : IlGenTests.ISimplerQuery
     {
-        public static int DoSomeStuff()
+        private readonly IDbConnection _connection;
+
+        public TestImpl(IDbConnection connection)
         {
-            return Convert.ToInt32((object)2345);
+            _connection = connection;
+        }
+
+        public int Returns45()
+        {
+            IDbCommand dbCommand = this._connection.CreateCommand();
+            try
+            {
+                dbCommand.CommandText = "select 45";
+                return Convert.ToInt32(dbCommand.ExecuteScalar());
+            }
+            finally
+            {
+                dbCommand.Dispose();
+            }
         }
     }
 

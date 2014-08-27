@@ -239,10 +239,22 @@ namespace Repomat.IlGen
 
         private Emit.MethodBuilder CreateMethod()
         {
+            MethodAttributes attrs = 
+                MethodAttributes.Public | 
+                MethodAttributes.NewSlot |
+                MethodAttributes.HideBySig | 
+                MethodAttributes.Final |
+//                MethodAttributes.SpecialName | 
+                MethodAttributes.Virtual;
+
+            CallingConventions conventions =
+                CallingConventions.Standard |
+                CallingConventions.HasThis;
+
             return TypeBuilder.DefineMethod(
                 MethodDef.MethodName,
-                MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual,
-                CallingConventions.Standard | CallingConventions.HasThis,
+                attrs,
+                conventions,
                 MethodDef.ReturnType,
                 MethodDef.Parameters.Select(p => p.Type).ToArray());
         }
