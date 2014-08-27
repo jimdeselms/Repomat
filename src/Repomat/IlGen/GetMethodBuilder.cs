@@ -66,6 +66,8 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ret);
         }
 
+        private static readonly MethodInfo _disposeMethod = typeof(IDisposable).GetMethod("Dispose", Type.EmptyTypes);
+        
         private void GenerateGetMethodBody(int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
             Type typeToGet = MethodDef.ReturnType.GetCoreType();
@@ -94,12 +96,6 @@ namespace Repomat.IlGen
                 IlGenerator.Emit(OpCodes.Call, _executeReaderMethod);
                 IlGenerator.Emit(OpCodes.Stloc, readerLocal);
 
-                IlGenerator.Emit(OpCodes.Ldnull);
-                IlGenerator.Emit(OpCodes.Ret);
-
-                IlGenerator.BeginFinallyBlock();
-                IlGenerator.EndExceptionBlock();
-
                 if (MethodDef.IsSingleton)
                 {
                     WriteSingletonResultRead(readerLocal, columnsToGet, queryIdx, indexesAssignedField, columnIndexFields);
@@ -117,6 +113,16 @@ namespace Repomat.IlGen
                 //    WriteMultiRowResultRead(columnsToGet, queryIdx);
                 //}
                 //CodeBuilder.CloseBrace();
+
+                IlGenerator.BeginFinallyBlock();
+
+                IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+                IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+
+                IlGenerator.EndExceptionBlock();
+
+                IlGenerator.Emit(OpCodes.Ldnull);
+                IlGenerator.Emit(OpCodes.Ret);
             }
         }
 
@@ -159,11 +165,11 @@ namespace Repomat.IlGen
 
             if (MethodDef.CustomSqlOrNull != null)
             {
-                AppendObjectSerialization(readerBuilder, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx);
+                AppendObjectSerialization(readerLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
             }
             else
             {
-                AppendObjectSerialization(columnsToGet.ToList(), MethodDef.Properties, null);
+//                AppendObjectSerialization(columnsToGet.ToList(), MethodDef.Properties, null);
             }
             //if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
             //{
@@ -196,9 +202,11 @@ namespace Repomat.IlGen
             //        CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
             //    }
             //}
+
+            IlGenerator.MarkLabel(afterRead);
         }
 
-        private void AppendObjectSerialization(LocalBuilder readerLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, Dictionary<string, FieldInfo> readerIndexes)
+        private void AppendObjectSerialization(LocalBuilder readerLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
             if (EntityDef.CreateClassThroughConstructor)
             {
@@ -229,7 +237,7 @@ namespace Repomat.IlGen
             else
             {
                 // body.WriteLine("var newObj = new {0}();", EntityDef.Type.ToCSharp());
-                var newObj = IlGenerator.DeclareLocal(typeof(EntityDef.Type));
+                var newObj = IlGenerator.DeclareLocal(EntityDef.Type);
                 var ctor = EntityDef.Type.GetConstructor(Type.EmptyTypes);
                 IlGenerator.Emit(OpCodes.Newobj, ctor);
                 IlGenerator.Emit(OpCodes.Stloc, newObj);
@@ -237,7 +245,7 @@ namespace Repomat.IlGen
                 for (int i = 0; i < selectColumns.Count; i++)
                 {
                     // body.WriteLine("newObj.{0} = {1};", selectColumns[i].PropertyName, GetReaderGetExpression(selectColumns[i].Type, indexExpr));
-                    EmitReaderGetExpression(LocalBuilder, i, selectColumns[i].PropertyName, queryIndexOrNull, readerIndexes);
+                    EmitReaderGetExpression(readerLocal, i, selectColumns[i].PropertyName, queryIndexOrNull, readerIndexes);
                 }
                 foreach (var arg in argColumns)
                 {
@@ -246,14 +254,14 @@ namespace Repomat.IlGen
             }
         }
 
-        private string EmitReaderGetExpression(LocalBuilder readerLocal, int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldInfo> readerIndexes)
+        private void EmitReaderGetExpression(LocalBuilder readerLocal, int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
             // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
             IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
             EmitIndexExpr(index, propertyName, queryIndexOrNull, readerIndexes);
         }
 
-        private void EmitIndexExpr(int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldInfo> readerIndexes)
+        private void EmitIndexExpr(int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
             if (queryIndexOrNull.HasValue)
             {

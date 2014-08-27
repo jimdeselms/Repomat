@@ -74,10 +74,17 @@ namespace Repomat.UnitTests.IlGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
             var repoBuilder = dlBuilder.SetupRepo<IPersonRepo>();
+            repoBuilder.SetupMethod("InsertARow")
+                .ExecutesSql("insert into Person values (1, 'jim', '2014-01-01', null)");
             var repo = dlBuilder.CreateIlRepo<IPersonRepo>();
 
             try { repo.DropTable(); } catch { }
             repo.CreateTable();
+
+            repo.InsertARow();
+
+            var person = repo.Get(1);
+            Assert.IsNull(person);
 
             repo.DropTable();
         }
@@ -136,6 +143,8 @@ namespace Repomat.UnitTests.IlGen
             void DropTable();
             void CreateTable();
             Person Get(int personId);
+
+            void InsertARow();
         }
 
         public interface ISimpleQuery
