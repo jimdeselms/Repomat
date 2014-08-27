@@ -55,6 +55,7 @@ namespace Repomat
 
         private NamingConvention _tableNamingConvention;
         private NamingConvention _columnNamingConvention;
+        private bool _useIlGeneration = false;
 
         // This is where all of the repository definitions live
         private readonly Dictionary<Type, RepositoryDef> _repoDefs = new Dictionary<Type, RepositoryDef>();
@@ -184,35 +185,44 @@ namespace Repomat
             return new RepositoryBuilder<TRepo>(this, tableDef);
         }
 
+        public DataLayerBuilder UseIlGeneration()
+        {
+            _useIlGeneration = true;
+
+            return this;
+        }
+
         public TRepo CreateRepo<TRepo>()
         {
-            var repoDef = _repoDefs[typeof(TRepo)];
-
-            object repo;
-            if (_repoInstances.TryGetValue(typeof(TRepo), out repo))
+            if (_useIlGeneration)
             {
-                return (TRepo)repo;
+                var repoDef = _repoDefs[typeof(TRepo)];
+                RepoSqlBuilder builder = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
+
+                var type = builder.CreateType();
+
+                return (TRepo)CreateRepoInstance(type, repoDef);
             }
             else
             {
-                EnsureRepoIsValid(repoDef);
+                var repoDef = _repoDefs[typeof(TRepo)];
 
-                var reposThatNeedToBeBuilt = _repoDefs.Values.Where(rd => !_repoInstances.Keys.Contains(rd.RepositoryType));
+                object repo;
+                if (_repoInstances.TryGetValue(typeof(TRepo), out repo))
+                {
+                    return (TRepo)repo;
+                }
+                else
+                {
+                    EnsureRepoIsValid(repoDef);
 
-                CreateReposFromTableDefs(reposThatNeedToBeBuilt);
+                    var reposThatNeedToBeBuilt = _repoDefs.Values.Where(rd => !_repoInstances.Keys.Contains(rd.RepositoryType));
 
-                return (TRepo)_repoInstances[typeof(TRepo)];
+                    CreateReposFromTableDefs(reposThatNeedToBeBuilt);
+
+                    return (TRepo)_repoInstances[typeof(TRepo)];
+                }
             }
-        }
-
-        public TRepo CreateIlRepo<TRepo>()
-        {
-            var repoDef = _repoDefs[typeof(TRepo)];
-            RepoSqlBuilder builder = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
-
-            var type = builder.CreateType();
-
-            return (TRepo)CreateRepoInstance(type, repoDef);
         }
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);

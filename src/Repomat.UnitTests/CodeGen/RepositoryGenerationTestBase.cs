@@ -412,7 +412,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void CreateRepository_ConstructorInjectedClass()
         {
-            var repo = CreateFactory(_connection)
+            var repo = CreateDataLayerBuilder(_connection)
                 .SetupRepo<IConstructorInjectedRepository>()
                 .CreateRepo();
             if (repo.TableExists())
@@ -433,7 +433,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void ClassWithEnum_InsertAndGet_WorkCorrectly()
         {
-            var repo = CreateFactory(_connection)
+            var repo = CreateDataLayerBuilder(_connection)
                 .SetupRepo<IColorThingRepo>()
                 .CreateRepo();
 
@@ -493,7 +493,7 @@ namespace Repomat.UnitTests.CodeGen
 
         protected abstract IDbConnection CreateConnection(bool open=true);
 
-        protected virtual DataLayerBuilder CreateFactory(IDbConnection conn)
+        protected virtual DataLayerBuilder CreateDataLayerBuilder(IDbConnection conn)
         {
             return DataLayerBuilder.DefineSqlDatabase(conn);
         }
@@ -520,7 +520,7 @@ namespace Repomat.UnitTests.CodeGen
             }
             else
             {
-                factory = CreateFactory(_connection);
+                factory = CreateDataLayerBuilder(_connection);
             }
 
             var builder = factory.SetupRepo<IPersonRepository>();
@@ -556,7 +556,7 @@ namespace Repomat.UnitTests.CodeGen
 
         private IPersonRepositoryWithCreate CreateRepoWithCreateMethod()
         {
-            var repo = CreateFactory(_connection)
+            var repo = CreateDataLayerBuilder(_connection)
                 .SetupRepo<IPersonRepositoryWithCreate>()
                 .CreateRepo();
 

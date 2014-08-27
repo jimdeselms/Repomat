@@ -17,7 +17,9 @@ namespace Repomat.IlGen
         private static readonly AssemblyBuilder _assemblyBuilder;
         private static readonly ModuleBuilder _moduleBuilder;
 
-        private const bool OUTPUT_ASSEMBLY = true;
+        // Turn this on if you want to generate the assembly so that you can look at the generated IL
+        // and decompile it.
+        private const bool OUTPUT_ASSEMBLY = false;
         private static bool _outputAssemblyHasBeenSaved = false;
 
         static RepoSqlBuilder()
