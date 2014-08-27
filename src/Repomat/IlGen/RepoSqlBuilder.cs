@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Turn this on if you want to generate the assembly so that you can look at the generated IL
+// and decompile it.
+//#define OUTPUT_ASSEMBLY
+
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -17,23 +22,17 @@ namespace Repomat.IlGen
         private static readonly AssemblyBuilder _assemblyBuilder;
         private static readonly ModuleBuilder _moduleBuilder;
 
-        // Turn this on if you want to generate the assembly so that you can look at the generated IL
-        // and decompile it.
-        private const bool OUTPUT_ASSEMBLY = false;
         private static bool _outputAssemblyHasBeenSaved = false;
 
         static RepoSqlBuilder()
         {
-            if (OUTPUT_ASSEMBLY)
-            {
+#if OUTPUT_ASSEMBLY
                 _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.RunAndSave);
                 _moduleBuilder = _assemblyBuilder.DefineDynamicModule("Repos", "temp.dll");
-            }
-            else
-            {
+#else
                 _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RepomatDynamicRepos"), AssemblyBuilderAccess.Run);
                 _moduleBuilder = _assemblyBuilder.DefineDynamicModule("Repos");
-            }
+#endif
         }
 
         private readonly TypeBuilder _typeBuilder;
@@ -103,12 +102,14 @@ namespace Repomat.IlGen
                 _ctorIlBuilder.Emit(OpCodes.Ret);
 
                 _type = _typeBuilder.CreateType();
-
-                if (OUTPUT_ASSEMBLY && !_outputAssemblyHasBeenSaved)
+                
+#if OUTPUT_ASSEMBLY
+                if (!_outputAssemblyHasBeenSaved)
                 {
                     _assemblyBuilder.Save("temp.dll");
                     _outputAssemblyHasBeenSaved = true;
                 }
+#endif
             }
             return _type;
         }

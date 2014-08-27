@@ -85,7 +85,7 @@ namespace Repomat.IlGen
             IlGenerator.EmitWriteLine(_testLocal);
         }
 
-        protected void AddSqlParameter(LocalBuilder sqlParameter, string name, int argumentIndex, Type parmCSharpType)
+        protected void AddSqlParameterFromArgument(LocalBuilder sqlParameter, string name, int argumentIndex, Type parmCSharpType)
         {
             // parm = cmd.CreateParameter();
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
@@ -105,6 +105,37 @@ namespace Repomat.IlGen
                 IlGenerator.Emit(OpCodes.Box, parmCSharpType);
             }
 
+            IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
+
+            //// cmd.Paramters.Add(parm);
+            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+            IlGenerator.Emit(OpCodes.Callvirt, _parametersGetMethod);
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Callvirt, _parametersAddMethod);
+            IlGenerator.Emit(OpCodes.Pop);
+        }
+
+        protected void AddSqlParameterFromProperty(LocalBuilder sqlParameter, string name, int entityArgumentIndex, PropertyDef property)
+        {
+            // parm = cmd.CreateParameter();
+            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+            IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
+            IlGenerator.Emit(OpCodes.Stloc, sqlParameter);
+
+            //// parm.ParameterName = name
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Ldstr, name);
+            IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
+
+            //// parm.Value = argX;
+            var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
+            IlGenerator.Emit(OpCodes.Call, propGet);
+            if (property.Type.IsValueType)
+            {
+                IlGenerator.Emit(OpCodes.Box, property.Type);
+            }
             IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
 
             //// cmd.Paramters.Add(parm);
@@ -156,7 +187,7 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ret);
         }
 
-        protected void WriteParameterAssignments()
+        protected void WriteParameterAssignmentsFromArgList()
         {
             for (int argIndex = 0; argIndex < MethodDef.Parameters.Count; argIndex++)
             {
@@ -180,7 +211,7 @@ namespace Repomat.IlGen
                 var parmLocal = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
 
                 // Add one to the argument index; the first one is "this"
-                AddSqlParameter(parmLocal, arg.Name, argIndex + 1, arg.Type);
+                AddSqlParameterFromArgument(parmLocal, arg.Name, argIndex + 1, arg.Type);
 
                 IlGenerator.EndScope();
             }

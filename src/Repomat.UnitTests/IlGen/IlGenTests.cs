@@ -126,6 +126,18 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(2, repo.GetPersonCount());
         }
 
+        [Test]
+        public void InsertTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = null };
+
+//            repo.Insert(person1);
+
+            Assert.AreEqual(1, repo.GetPersonCount());
+        }
+
         private IFooRepo CreatePersonRepo()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
@@ -171,6 +183,8 @@ namespace Repomat.UnitTests.IlGen
             void InsertARow();
             void InsertARowWithId(int personId);
             int GetPersonCount();
+
+            void Insert(Person person);
         }
 
         private ISimpleQuery CreateSimpleQueryInterface()

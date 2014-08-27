@@ -75,7 +75,7 @@ namespace Repomat.IlGen
 
             WriteSqlStatement(columnsToGet);
 
-            WriteParameterAssignments();
+            WriteParameterAssignmentsFromArgList();
 
             if (MethodDef.IsSimpleQuery)
             {
