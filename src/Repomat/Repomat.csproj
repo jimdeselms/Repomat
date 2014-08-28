@@ -76,8 +76,12 @@
     <Compile Include="IlGen\InsertMethodBuilder.cs" />
     <Compile Include="IlGen\MethodBuilderBase.cs" />
     <Compile Include="IlGen\Person.cs" />
+    <Compile Include="IlGen\SQLiteRepoSqlBuilder.cs" />
+    <Compile Include="IlGen\SQLiteMethodBuilderFactory.cs" />
     <Compile Include="IlGen\SqlMethodBuilderFactory.cs" />
     <Compile Include="IlGen\RepoSqlBuilder.cs" />
+    <Compile Include="IlGen\SqlServerMethodBuilderFactory.cs" />
+    <Compile Include="IlGen\SqlServerRepoSqlBuilder.cs" />
     <Compile Include="IlGen\UpdateMethodBuilder.cs" />
     <Compile Include="ReadOnlyCollection.cs" />
     <Compile Include="RepomatExecption.cs" />

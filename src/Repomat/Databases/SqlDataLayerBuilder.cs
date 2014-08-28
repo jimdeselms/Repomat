@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Repomat.Databases
 {
-    internal class SqlDataLayerBuilder : DataLayerBuilder
+    internal abstract class SqlDataLayerBuilder : DataLayerBuilder
     {
         private readonly IDbConnection _connectionOrNull;
         private readonly Func<IDbConnection> _connectionFuncOrNull;

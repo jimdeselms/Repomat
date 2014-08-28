@@ -15,7 +15,7 @@ using Repomat.Schema;
 
 namespace Repomat.IlGen
 {
-    internal class RepoSqlBuilder
+    internal abstract class RepoSqlBuilder
     {
         private static int _nextRepoSuffix = 1;
 
@@ -66,10 +66,11 @@ namespace Repomat.IlGen
             }
         }
 
-        private SqlMethodBuilderFactory CreateMethodBuilderFactory(RepositoryDef repoDef, bool newConnectionEveryTime)
-        {
-            return new SqlMethodBuilderFactory(_typeBuilder, _connectionField, _ctorIlBuilder, repoDef, newConnectionEveryTime);
-        }
+        protected TypeBuilder TypeBuilder { get { return _typeBuilder; } }
+        protected ILGenerator CtorIlBuilder { get { return _ctorIlBuilder; } }
+        protected FieldBuilder ConnectionField { get { return _connectionField; } }
+
+        protected abstract SqlMethodBuilderFactory CreateMethodBuilderFactory(RepositoryDef repoDef, bool newConnectionEveryTime);
 
         private void GenerateIlForMethod(MethodDef method, SqlMethodBuilderFactory factory)
         {

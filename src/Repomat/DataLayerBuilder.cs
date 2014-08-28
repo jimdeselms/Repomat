@@ -197,7 +197,7 @@ namespace Repomat
             if (_useIlGeneration)
             {
                 var repoDef = _repoDefs[typeof(TRepo)];
-                RepoSqlBuilder builder = new RepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
+                RepoSqlBuilder builder = CreateRepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
 
                 var type = builder.CreateType();
 
@@ -224,6 +224,8 @@ namespace Repomat
                 }
             }
         }
+
+        internal abstract RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, RepoConnectionType repoConnectionType);
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
 

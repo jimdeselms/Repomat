@@ -58,7 +58,7 @@ namespace Repomat.UnitTests.IlGen
         {
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<INothing>(NamingConvention.NoOp, NamingConvention.NoOp);
 
-            RepoSqlBuilder b = new RepoSqlBuilder(repoDef, false, RepoConnectionType.ConnectionFactory);
+            RepoSqlBuilder b = new SqlServerRepoSqlBuilder(repoDef, false, RepoConnectionType.ConnectionFactory);
             Type t = b.CreateType();
 
             var ctor = t.GetConstructor(new[] { typeof(Func<IDbConnection>) });

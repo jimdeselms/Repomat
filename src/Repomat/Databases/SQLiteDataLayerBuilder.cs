@@ -7,6 +7,7 @@ using System.Data.SQLite;
 using System.Data;
 using Repomat.CodeGen;
 using Repomat.Schema;
+using Repomat.IlGen;
 
 namespace Repomat.Databases
 {
@@ -24,6 +25,11 @@ namespace Repomat.Databases
         internal override RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef)
         {
             return new SQLiteRepositoryClassBuilder(tableDef, NewConnectionEveryTime);
+        }
+
+        internal override RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, IlGen.RepoConnectionType repoConnectionType)
+        {
+            return new SQLiteRepoSqlBuilder(repoDef, newConnectionEveryTime, repoConnectionType);
         }
     }
 }

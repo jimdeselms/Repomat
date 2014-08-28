@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Repomat.CodeGen;
 using Repomat.Schema;
+using Repomat.IlGen;
 
 namespace Repomat.Databases
 {
@@ -23,6 +24,11 @@ namespace Repomat.Databases
         internal override RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef)
         {
             return new SqlServerRepositoryClassBuilder(tableDef, NewConnectionEveryTime);
+        }
+
+        internal override RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, IlGen.RepoConnectionType repoConnectionType)
+        {
+            return new SqlServerRepoSqlBuilder(repoDef, newConnectionEveryTime, repoConnectionType);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Repomat.IlGen
             _newConnectionEveryTime = newConnectionEveryTime;
         }
 
-        public MethodBuilderBase Create(MethodDef method)
+        public virtual MethodBuilderBase Create(MethodDef method)
         {
             switch (method.MethodType)
             {
