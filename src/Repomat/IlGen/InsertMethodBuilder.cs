@@ -22,7 +22,7 @@ namespace Repomat.IlGen
         {
             StringBuilder sql = new StringBuilder();
 
-            sql.AppendFormat("cmd.CommandText = @\"insert into [{0}] (", EntityDef.TableName);
+            sql.AppendFormat("insert into [{0}] (", EntityDef.TableName);
             sql.AppendFormat(string.Join(", ", EntityDef.Properties.Select(c => string.Format("[{0}]", c.ColumnName))));
             sql.AppendFormat(") values (");
             sql.AppendFormat(string.Join(", ", EntityDef.Properties.Select(c => "@" + c.PropertyName)));
@@ -35,7 +35,8 @@ namespace Repomat.IlGen
             {
                 if (MethodDef.Parameters[i].Type == EntityDef.Type)
                 {
-                    propIndex = i;
+                    // Add 1, since the first entry is "this".
+                    propIndex = i+1;
                 }
             }
 

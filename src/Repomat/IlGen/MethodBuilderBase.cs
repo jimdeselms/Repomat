@@ -122,12 +122,12 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
             IlGenerator.Emit(OpCodes.Stloc, sqlParameter);
 
-            //// parm.ParameterName = name
+            // parm.ParameterName = name
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlGenerator.Emit(OpCodes.Ldstr, name);
             IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
 
-            //// parm.Value = argX;
+            //// parm.Value = arg.Property;
             var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
