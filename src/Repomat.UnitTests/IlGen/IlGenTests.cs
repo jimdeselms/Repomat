@@ -168,6 +168,20 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(new byte[0], person.Image);
         }
 
+        [Test]
+        public void DeleteTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
+
+            repo.Insert(person1);
+
+            repo.Delete(person1);
+
+            Assert.AreEqual(0, repo.GetPersonCount());
+        }
+
         private IFooRepo CreatePersonRepo()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
@@ -216,6 +230,7 @@ namespace Repomat.UnitTests.IlGen
 
             void Insert(Person person);
             void Update(Person person);
+            void Delete(Person person);
         }
 
         public interface ISimplerQuery
