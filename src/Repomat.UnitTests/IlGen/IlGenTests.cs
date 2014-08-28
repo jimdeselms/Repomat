@@ -136,7 +136,7 @@ namespace Repomat.UnitTests.IlGen
         {
             var repo = CreateSimpleQueryInterface();
 
-            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = null };
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[] {99, 100} };
 
             repo.Insert(person1);
 
@@ -144,6 +144,21 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(5, person.PersonId);
             Assert.AreEqual(new DateTime(2012, 2, 2), person.Birthday);
             Assert.AreEqual("Fred", person.Name);
+            CollectionAssert.AreEqual(new byte[] { 99, 100}, person.Image);
+
+            Assert.AreEqual(1, repo.GetPersonCount());
+        }
+
+        [Test]
+        public void InsertingANullValue()
+        {
+            var repo = CreateSimpleQueryInterface();
+
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = null };
+
+            repo.Insert(person1);
+
+            var person = repo.Get(5);
             Assert.IsNull(person.Image);
 
             Assert.AreEqual(1, repo.GetPersonCount());
