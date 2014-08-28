@@ -9,6 +9,7 @@ using Repomat.Schema;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+using Repomat.CodeGen;
 
 namespace Repomat.IlGen
 {
@@ -29,6 +30,7 @@ namespace Repomat.IlGen
         private static readonly MethodInfo _commandTextGetMethod;
         private static readonly MethodInfo _createParameterMethod;
         private static readonly MethodInfo _parameterNameSetMethod;
+        private static readonly MethodInfo _dbTypeSetMethod;
         private static readonly MethodInfo _valueSetMethod;
         private static readonly MethodInfo _parametersGetMethod;
         private static readonly MethodInfo _parametersAddMethod;
@@ -48,6 +50,7 @@ namespace Repomat.IlGen
             _valueSetMethod = typeof(IDataParameter).GetProperty("Value").GetSetMethod();
             _parametersGetMethod = typeof(IDbCommand).GetProperty("Parameters").GetGetMethod();
             _parametersAddMethod = typeof(IList).GetMethod("Add");
+            _dbTypeSetMethod     = typeof(IDataParameter).GetProperty("DbType").GetSetMethod();
             _executeNonQueryMethod = typeof(IDbCommand).GetMethod("ExecuteNonQuery", Type.EmptyTypes);
             _executeScalarMethod = typeof(IDbCommand).GetMethod("ExecuteScalar", Type.EmptyTypes);
             _disposeMethod = typeof(IDisposable).GetMethod("Dispose", Type.EmptyTypes);
@@ -118,6 +121,11 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlGenerator.Emit(OpCodes.Ldstr, name);
             IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
+
+            // parm.DbType = blah
+            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+            IlGenerator.Emit(OpCodes.Ldc_I4, (int)PrimitiveTypeInfo.Get(type).DbType);
+            IlGenerator.Emit(OpCodes.Callvirt, _dbTypeSetMethod);
 
             getParameterValue();
 
