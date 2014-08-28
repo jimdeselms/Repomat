@@ -30,6 +30,14 @@ namespace Repomat.IlGen
             _newConnectionEveryTime = newConnectionEveryTime;
         }
 
+        protected TypeBuilder TypeBuilder { get { return _typeBuilder; } }
+        protected FieldInfo ConnectionField { get { return _connectionField; } }
+        protected RepositoryDef RepoDef { get { return _repoDef; } }
+        protected bool NewConnectionEveryTime { get { return _newConnectionEveryTime; } }
+        protected int CustomQueryIndex { get { return _customQueryIdx; } }
+        protected bool UseStrictTypes { get { return _useStrictTypes; } }
+        protected ILGenerator CtorBuilder { get { return _ctorBuilder; } }
+
         public virtual MethodBuilderBase Create(MethodDef method)
         {
             switch (method.MethodType)

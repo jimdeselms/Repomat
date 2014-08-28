@@ -15,5 +15,18 @@ namespace Repomat.IlGen
             : base(typeBuilder, connectionField, ctorIlBuilder, repoDef, newConnectionEveryTime)
         {
         }
+
+        public override MethodBuilderBase Create(MethodDef method)
+        {
+            if (method.MethodType == MethodType.TableExists)
+            {
+                return new SQLiteTableExistsMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, CustomQueryIndex, this, UseStrictTypes, CtorBuilder);
+            }
+            else
+            {
+                return base.Create(method);
+            }
+        }
+    
     }
 }

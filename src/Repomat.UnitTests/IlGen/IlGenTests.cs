@@ -127,6 +127,23 @@ namespace Repomat.UnitTests.IlGen
         }
 
         [Test]
+        public void TableExistsTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+            if (repo.TableExists())
+            {
+                repo.DropTable();
+            }
+            Assert.IsFalse(repo.TableExists());
+
+            repo.CreateTable();
+
+            Assert.IsTrue(repo.TableExists());
+
+            repo.DropTable();
+        }
+
+        [Test]
         public void InsertTest()
         {
             var repo = CreateSimpleQueryInterface();
@@ -258,6 +275,7 @@ namespace Repomat.UnitTests.IlGen
             Person Get(int personId);
             void DropTable();
             void CreateTable();
+            bool TableExists();
 
             int Returns45();
             int ReturnsXMinusY(int x, int y);
