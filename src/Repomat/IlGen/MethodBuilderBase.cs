@@ -87,35 +87,27 @@ namespace Repomat.IlGen
 
         protected void AddSqlParameterFromArgument(LocalBuilder sqlParameter, string name, int argumentIndex, Type parmCSharpType)
         {
-            // parm = cmd.CreateParameter();
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
-            IlGenerator.Emit(OpCodes.Stloc, sqlParameter);
-
-            //// parm.ParameterName = name
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Ldstr, name);
-            IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
-
-            //// parm.Value = argX;
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Ldarg, argumentIndex);
-            if (parmCSharpType.IsValueType)
+            AddSqlParameter(sqlParameter, name, parmCSharpType, () =>
             {
-                IlGenerator.Emit(OpCodes.Box, parmCSharpType);
-            }
-
-            IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
-
-            //// cmd.Paramters.Add(parm);
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _parametersGetMethod);
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Callvirt, _parametersAddMethod);
-            IlGenerator.Emit(OpCodes.Pop);
+                IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+                IlGenerator.Emit(OpCodes.Ldarg, argumentIndex);
+            });
         }
 
+        public static readonly FieldInfo DBNULL_VALUE = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+
         protected void AddSqlParameterFromProperty(LocalBuilder sqlParameter, string name, int entityArgumentIndex, PropertyDef property)
+        {
+            AddSqlParameter(sqlParameter, name, property.Type, () =>
+            {
+                var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
+                IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
+                IlGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
+                IlGenerator.Emit(OpCodes.Call, propGet);
+            });
+        }
+
+        private void AddSqlParameter(LocalBuilder sqlParameter, string name, Type type, Action getParameterValue)
         {
             // parm = cmd.CreateParameter();
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
@@ -127,14 +119,28 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ldstr, name);
             IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
 
-            //// parm.Value = arg.Property;
-            var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
-            IlGenerator.Emit(OpCodes.Call, propGet);
-            if (property.Type.IsValueType)
+            getParameterValue();
+
+            if (type.IsValueType)
             {
-                IlGenerator.Emit(OpCodes.Box, property.Type);
+                IlGenerator.Emit(OpCodes.Box, type);
+            }
+            else
+            {
+                var nullCheckStore = IlGenerator.DeclareLocal(typeof(object));
+                var skipDbNullReplacement = IlGenerator.DefineLabel();
+
+                IlGenerator.Emit(OpCodes.Stloc, nullCheckStore);
+                IlGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
+                IlGenerator.Emit(OpCodes.Brtrue, skipDbNullReplacement);
+
+                IlGenerator.Emit(OpCodes.Ldsfld, DBNULL_VALUE);
+                IlGenerator.Emit(OpCodes.Stloc, nullCheckStore);
+
+                IlGenerator.MarkLabel(skipDbNullReplacement);
+
+                IlGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
+
             }
             IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
 

@@ -136,7 +136,7 @@ namespace Repomat.UnitTests.IlGen
         {
             var repo = CreateSimpleQueryInterface();
 
-            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = null };
 
             repo.Insert(person1);
 
@@ -144,9 +144,28 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(5, person.PersonId);
             Assert.AreEqual(new DateTime(2012, 2, 2), person.Birthday);
             Assert.AreEqual("Fred", person.Name);
-            CollectionAssert.AreEqual(new byte[0], person.Image);
+            Assert.IsNull(person.Image);
 
             Assert.AreEqual(1, repo.GetPersonCount());
+        }
+
+        [Test]
+        public void UpdateTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
+
+            repo.Insert(person1);
+
+            person1.Name = "Emilio";
+            repo.Update(person1);
+
+            var person = repo.Get(5);
+            Assert.AreEqual(5, person.PersonId);
+            Assert.AreEqual(new DateTime(2012, 2, 2), person.Birthday);
+            Assert.AreEqual("Emilio", person.Name);
+            Assert.AreEqual(new byte[0], person.Image);
         }
 
         private IFooRepo CreatePersonRepo()
@@ -196,6 +215,7 @@ namespace Repomat.UnitTests.IlGen
             int GetPersonCount();
 
             void Insert(Person person);
+            void Update(Person person);
         }
 
         public interface ISimplerQuery

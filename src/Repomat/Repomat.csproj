@@ -75,6 +75,7 @@
     <Compile Include="IlGen\Person.cs" />
     <Compile Include="IlGen\SqlMethodBuilderFactory.cs" />
     <Compile Include="IlGen\RepoSqlBuilder.cs" />
+    <Compile Include="IlGen\UpdateMethodBuilder.cs" />
     <Compile Include="ReadOnlyCollection.cs" />
     <Compile Include="RepomatExecption.cs" />
     <Compile Include="Runtime\ConcurrentlyLoadedCollection.cs" />

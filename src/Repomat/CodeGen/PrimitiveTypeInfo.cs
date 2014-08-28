@@ -16,7 +16,7 @@ namespace Repomat.CodeGen
         private readonly string _sqlDatatype;
         private readonly Action<ILGenerator> _emitConversion;
 
-        private static readonly FieldInfo DBNULL_VALUE = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
+        public static readonly FieldInfo DBNULL_VALUE = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
 
         public PrimitiveTypeInfo(Type type, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion)

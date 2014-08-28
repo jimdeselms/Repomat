@@ -42,6 +42,8 @@ namespace Repomat.IlGen
                     return new GetMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, _customQueryIdx++, this, _useStrictTypes, _ctorBuilder);
                 case MethodType.Insert:
                     return new InsertMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
+                case MethodType.Update:
+                    return new UpdateMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
                 case MethodType.Custom:
                     {
                         if (method.ReturnType == typeof(void))
