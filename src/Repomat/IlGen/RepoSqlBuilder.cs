@@ -1,6 +1,6 @@
 ﻿// Turn this on if you want to generate the assembly so that you can look at the generated IL
 // and decompile it.
-// #define OUTPUT_ASSEMBLY
+#define OUTPUT_ASSEMBLY
 
 
 using System;

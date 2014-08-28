@@ -103,14 +103,14 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void CustomQueryWithArguments()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
             Assert.AreEqual(15, repo.ReturnsXMinusY(50, 35));
         }
 
         [Test]
         public void CustomStatementTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
             repo.InsertARow();
 
             Assert.AreEqual(1, repo.GetPersonCount());
@@ -119,7 +119,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void CustomStatementWithParametersTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
             repo.InsertARowWithId(2);
             repo.InsertARowWithId(4);
 
@@ -129,7 +129,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void TableExistsTest_SqlServer()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
             if (repo.TableExists())
             {
                 repo.DropTable();
@@ -146,7 +146,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void TableExistsTest_SQLite()
         {
-            var repo = CreateSimpleQueryInterface(Connections.NewSQLiteConnection());
+            var repo = CreateRepo(Connections.NewSQLiteConnection());
             if (repo.TableExists())
             {
                 repo.DropTable();
@@ -163,7 +163,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void InsertTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
 
             Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[] {99, 100} };
 
@@ -181,7 +181,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void InsertingANullValue()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
 
             Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = null };
 
@@ -196,7 +196,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void UpdateTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
 
             Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
 
@@ -215,7 +215,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void DeleteTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
 
             Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
 
@@ -229,7 +229,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void GetCountTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
 
             Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
 
@@ -243,7 +243,7 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void ExistsTest()
         {
-            var repo = CreateSimpleQueryInterface();
+            var repo = CreateRepo();
 
             Assert.IsFalse(repo.Exists(6));
 
@@ -251,6 +251,30 @@ namespace Repomat.UnitTests.IlGen
             repo.Insert(person1);
 
             Assert.IsTrue(repo.Exists(6));
+        }
+
+        [Test]
+        public void MultiResultGetMethodTest()
+        {
+            var repo = CreateRepo();
+
+            Person p1 = new Person { PersonId = 1, Birthday = new DateTime(2012, 3, 3), Name="Diego", Image = new byte[0] };
+            Person p2 = new Person { PersonId = 2, Birthday = new DateTime(2013, 4, 4), Name="Diego", Image = new byte[0] };
+
+            repo.Insert(p1);
+            repo.Insert(p2);
+
+            var diegos = repo.GetByName("Diego");
+
+            if (diegos == null)
+            {
+                Assert.Fail("Test returned null.");
+            }
+            Assert.AreEqual(2, diegos.Count);
+            Assert.AreEqual(1, diegos[0].PersonId);
+            Assert.AreEqual("Diego", diegos[0].Name);
+            Assert.AreEqual(2, diegos[1].PersonId);
+            Assert.AreEqual("Diego", diegos[1].Name);
         }
 
         private IFooRepo CreatePersonRepo()
@@ -306,6 +330,8 @@ namespace Repomat.UnitTests.IlGen
 
             int GetCountOfPerson();
             bool Exists(int personId);
+
+            IList<Person> GetByName(string name);
         }
 
         public interface ISimplerQuery
@@ -313,7 +339,7 @@ namespace Repomat.UnitTests.IlGen
             int Returns45();
         }
 
-        private ISimpleQuery CreateSimpleQueryInterface(IDbConnection conn = null)
+        private ISimpleQuery CreateRepo(IDbConnection conn = null)
         {
             conn = conn ?? Connections.NewSqlConnection();
 

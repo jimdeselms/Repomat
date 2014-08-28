@@ -102,20 +102,16 @@ namespace Repomat.IlGen
                 {
                     WriteSingletonResultRead(readerLocal, resultLocal, columnsToGet, queryIdx, indexesAssignedField, columnIndexFields);
                 }
-                else
+                else if (MethodDef.ReturnType.GetCoreType().IsDatabaseType())
                 {
                     throw new NotImplementedException();
+//                    WriteMultiRowSimpleTypeRead();
                 }
-                //else if (MethodDef.ReturnType.GetCoreType().IsDatabaseType())
-                //{
-                //    WriteMultiRowSimpleTypeRead();
-                //}
-                //else
-                //{
-                //    WriteMultiRowResultRead(columnsToGet, queryIdx);
-                //}
-                //CodeBuilder.CloseBrace();
-
+                else
+                {
+                    WriteMultiRowResultRead(readerLocal, resultLocal, queryIdx, indexesAssignedField, columnsToGet, columnIndexFields);
+                }
+                
                 IlGenerator.BeginFinallyBlock();
 
                 IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
@@ -128,41 +124,19 @@ namespace Repomat.IlGen
             }
         }
 
-        private static readonly MethodInfo verifyFieldsAreUniqueMethod = typeof(ReaderHelper).GetMethod("VerifyFieldsAreUnique");
-        private static readonly MethodInfo getIndexForColumn = typeof(ReaderHelper).GetMethod("GetIndexForColumn");
-        private static readonly MethodInfo readMethod = typeof(IDataReader).GetMethod("Read", Type.EmptyTypes);
-
+        private static readonly MethodInfo _verifyFieldsAreUniqueMethod = typeof(ReaderHelper).GetMethod("VerifyFieldsAreUnique");
+        private static readonly MethodInfo _getIndexForColumn = typeof(ReaderHelper).GetMethod("GetIndexForColumn");
+        private static readonly MethodInfo _readMethod = typeof(IDataReader).GetMethod("Read", Type.EmptyTypes);
+        
         private void WriteSingletonResultRead(LocalBuilder readerLocal, LocalBuilder resultLocal, PropertyDef[] columnsToGet, int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
-            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
-            {
-                var afterIndexAssignment = IlGenerator.DefineLabel();
-
-                // if (!_query{0}_columnIndexesAssigned)
-                IlGenerator.Emit(OpCodes.Ldfld, indexesAssignedField);
-                IlGenerator.Emit(OpCodes.Brtrue, afterIndexAssignment);
-
-                // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
-                IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
-                IlGenerator.Emit(OpCodes.Call, verifyFieldsAreUniqueMethod);
-
-                foreach (var columnToGet in columnsToGet)
-                {
-                    // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
-                    IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
-                    IlGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
-                    IlGenerator.Emit(OpCodes.Call, getIndexForColumn);
-                    IlGenerator.Emit(OpCodes.Stfld, columnIndexFields[columnToGet.PropertyName]);
-                }
-
-                IlGenerator.MarkLabel(afterIndexAssignment);
-            }
+            EmitArgumentMappingCheck(readerLocal, indexesAssignedField, columnsToGet, columnIndexFields);
 
             var afterRead = IlGenerator.DefineLabel();
 
             // if (reader.Read())
             IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
-            IlGenerator.Emit(OpCodes.Call, readMethod);
+            IlGenerator.Emit(OpCodes.Call, _readMethod);
             IlGenerator.Emit(OpCodes.Brfalse, afterRead);
 
             if (MethodDef.CustomSqlOrNull != null)
@@ -206,6 +180,105 @@ namespace Repomat.IlGen
             //}
 
             IlGenerator.MarkLabel(afterRead);
+        }
+
+        private void EmitArgumentMappingCheck(LocalBuilder readerLocal, FieldBuilder indexesAssignedField, PropertyDef[] columnsToGet, IDictionary<string, FieldBuilder> columnIndexFields)
+        {
+            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
+            {
+                var afterIndexAssignment = IlGenerator.DefineLabel();
+
+                // if (!_query{0}_columnIndexesAssigned)
+                IlGenerator.Emit(OpCodes.Ldfld, indexesAssignedField);
+                IlGenerator.Emit(OpCodes.Brtrue, afterIndexAssignment);
+
+                // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
+                IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+                IlGenerator.Emit(OpCodes.Call, _verifyFieldsAreUniqueMethod);
+
+                foreach (var columnToGet in columnsToGet)
+                {
+                    // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
+                    IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+                    IlGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
+                    IlGenerator.Emit(OpCodes.Call, _getIndexForColumn);
+                    IlGenerator.Emit(OpCodes.Stfld, columnIndexFields[columnToGet.PropertyName]);
+                }
+
+                IlGenerator.MarkLabel(afterIndexAssignment);
+            }
+        }
+
+        private static Type GetListType(Type elementType)
+        {
+            Type listType = typeof(List<>).MakeGenericType(elementType);
+            return listType;
+        }
+
+        private void WriteMultiRowResultRead(LocalBuilder readerLocal, LocalBuilder resultLocal, int queryIdx, FieldBuilder indexesAssignedField, PropertyDef[] columnsToGet, IDictionary<string, FieldBuilder> columnIndexFields)
+        {
+//            EmitArgumentMappingCheck(readerLocal, indexesAssignedField, columnsToGet, columnIndexFields);
+
+            bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(EntityDef.Type);
+            var listType = GetListType(EntityDef.Type);
+
+            var rowLocal = IlGenerator.DeclareLocal(EntityDef.Type);
+
+            if (!isEnumerable)
+            {
+                IlGenerator.Emit(OpCodes.Newobj, listType.GetConstructor(Type.EmptyTypes));
+                IlGenerator.Emit(OpCodes.Stloc, resultLocal);
+            }
+
+            Label whileReaderReadStart = IlGenerator.DefineLabel();
+            IlGenerator.MarkLabel(whileReaderReadStart);
+
+            Label whileReaderReadEnd = IlGenerator.DefineLabel();
+
+            // while (reader.Read())
+            IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+            IlGenerator.Emit(OpCodes.Call, _readMethod);
+            IlGenerator.Emit(OpCodes.Brfalse, whileReaderReadEnd);
+
+            // The inside of the loop goes here.
+
+            if (MethodDef.CustomSqlOrNull != null)
+            {
+                AppendObjectSerialization(readerLocal, rowLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
+            }
+            else
+            {
+                AppendObjectSerialization(readerLocal, rowLocal, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
+            }
+
+            if (isEnumerable)
+            {
+//               CodeBuilder.WriteLine("yield return newObj;");
+                throw new NotImplementedException();
+            }
+            else
+            {
+                // result.Add(newObj);
+
+                var addMethod = listType.GetMethod("Add", new[] { EntityDef.Type });
+                IlGenerator.Emit(OpCodes.Ldloc, resultLocal);
+                IlGenerator.Emit(OpCodes.Ldloc, rowLocal);
+                IlGenerator.Emit(OpCodes.Callvirt, addMethod);
+            }
+
+            IlGenerator.Emit(OpCodes.Br, whileReaderReadStart);
+
+            IlGenerator.MarkLabel(whileReaderReadEnd);
+
+            //if (!isEnumerable)
+            //{
+            //    string toArray = "";
+            //    if (MethodDef.ReturnType.IsArray)
+            //    {
+            //        toArray = ".ToArray()";
+            //    }
+            //    CodeBuilder.WriteLine("return result{0};", toArray);
+            //}
         }
 
         private void AppendObjectSerialization(LocalBuilder readerLocal, LocalBuilder resultLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
