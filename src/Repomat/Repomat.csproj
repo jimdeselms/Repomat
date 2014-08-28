@@ -68,8 +68,10 @@
     <Compile Include="IlGen\CustomMethodBuilder.cs" />
     <Compile Include="IlGen\DeleteMethodBuilder.cs" />
     <Compile Include="IlGen\DropTableMethodBuilder.cs" />
+    <Compile Include="IlGen\ExistsMethodBuilder.cs" />
     <Compile Include="IlGen\ExtensionMethods.cs" />
     <Compile Include="IlGen\FieldDef.cs" />
+    <Compile Include="IlGen\GetCountMethodBuilder.cs" />
     <Compile Include="IlGen\GetMethodBuilder.cs" />
     <Compile Include="IlGen\InsertMethodBuilder.cs" />
     <Compile Include="IlGen\MethodBuilderBase.cs" />

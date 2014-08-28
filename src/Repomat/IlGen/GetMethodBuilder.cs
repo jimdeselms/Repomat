@@ -67,7 +67,7 @@ namespace Repomat.IlGen
         }
 
         private static readonly MethodInfo _disposeMethod = typeof(IDisposable).GetMethod("Dispose", Type.EmptyTypes);
-        
+
         private void GenerateGetMethodBody(int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
             Type typeToGet = MethodDef.ReturnType.GetCoreType();
@@ -298,7 +298,7 @@ namespace Repomat.IlGen
 
 
 
-        private void WriteSqlStatement(PropertyDef[] columnsToGet)
+        protected virtual void WriteSqlStatement(PropertyDef[] columnsToGet)
         {
             if (MethodDef.CustomSqlOrNull != null)
             {

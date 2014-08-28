@@ -96,13 +96,8 @@ namespace Repomat.UnitTests.IlGen
         [Test]
         public void SimpleQueryTest()
         {
-//            var repo = CreateSimplerQueryInterface();
-  //          Assert.AreEqual(45, repo.Returns45());
-
-            TestImpl i = new TestImpl(Connections.NewSqlConnection());
-            Assert.AreEqual(45, i.Returns45());
-
-            Assert.Fail("Figure out why the hand-coded implementation works but the generated one doesn't. The IL is not exactly the same.");
+            var repo = CreateSimplerQueryInterface();
+            Assert.AreEqual(45, repo.Returns45());
         }
 
         [Test]
@@ -197,6 +192,33 @@ namespace Repomat.UnitTests.IlGen
             Assert.AreEqual(0, repo.GetPersonCount());
         }
 
+        [Test]
+        public void GetCountTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+
+            Person person1 = new Person { PersonId = 5, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
+
+            repo.Insert(person1);
+            person1.PersonId = 6;
+            repo.Insert(person1);
+
+            Assert.AreEqual(2, repo.GetCountOfPerson());
+        }
+
+        [Test]
+        public void ExistsTest()
+        {
+            var repo = CreateSimpleQueryInterface();
+
+            Assert.IsFalse(repo.Exists(6));
+
+            Person person1 = new Person { PersonId = 6, Birthday = new DateTime(2012, 2, 2), Name = "Fred", Image = new byte[0] };
+            repo.Insert(person1);
+
+            Assert.IsTrue(repo.Exists(6));
+        }
+
         private IFooRepo CreatePersonRepo()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
@@ -246,6 +268,9 @@ namespace Repomat.UnitTests.IlGen
             void Insert(Person person);
             void Update(Person person);
             void Delete(Person person);
+
+            int GetCountOfPerson();
+            bool Exists(int personId);
         }
 
         public interface ISimplerQuery
