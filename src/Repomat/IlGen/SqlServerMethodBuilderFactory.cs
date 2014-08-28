@@ -1,4 +1,5 @@
-﻿using Repomat.Schema;
+﻿using Repomat.CodeGen;
+using Repomat.Schema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,13 @@ namespace Repomat.IlGen
             {
                 return base.Create(method);
             }
+        }
+
+        protected override string MapPropertyToSqlDatatype(PropertyDef p, bool isIdentity)
+        {
+            string width = p.StringWidthOrNull == null ? "MAX" : p.StringWidthOrNull.ToString();
+
+            return PrimitiveTypeInfo.Get(p.Type).GetSqlDatatype(isIdentity, width);
         }
     }
 }

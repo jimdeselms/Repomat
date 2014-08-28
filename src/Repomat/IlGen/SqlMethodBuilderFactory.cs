@@ -10,7 +10,7 @@ using Repomat.CodeGen;
 
 namespace Repomat.IlGen
 {
-    internal class SqlMethodBuilderFactory
+    internal abstract class SqlMethodBuilderFactory
     {
         private readonly TypeBuilder _typeBuilder;
         private readonly ILGenerator _ctorBuilder;
@@ -74,11 +74,6 @@ namespace Repomat.IlGen
             }
         }
 
-        protected virtual string MapPropertyToSqlDatatype(PropertyDef p, bool isIdentity)
-        {
-            string width = p.StringWidthOrNull == null ? "MAX" : p.StringWidthOrNull.ToString();
-
-            return PrimitiveTypeInfo.Get(p.Type).GetSqlDatatype(isIdentity, width);
-        }
+        protected abstract string MapPropertyToSqlDatatype(PropertyDef p, bool isIdentity);
     }
 }

@@ -127,9 +127,26 @@ namespace Repomat.UnitTests.IlGen
         }
 
         [Test]
-        public void TableExistsTest()
+        public void TableExistsTest_SqlServer()
         {
             var repo = CreateSimpleQueryInterface();
+            if (repo.TableExists())
+            {
+                repo.DropTable();
+            }
+            Assert.IsFalse(repo.TableExists());
+
+            repo.CreateTable();
+
+            Assert.IsTrue(repo.TableExists());
+
+            repo.DropTable();
+        }
+
+        [Test]
+        public void TableExistsTest_SQLite()
+        {
+            var repo = CreateSimpleQueryInterface(Connections.NewSQLiteConnection());
             if (repo.TableExists())
             {
                 repo.DropTable();
@@ -296,9 +313,11 @@ namespace Repomat.UnitTests.IlGen
             int Returns45();
         }
 
-        private ISimpleQuery CreateSimpleQueryInterface()
+        private ISimpleQuery CreateSimpleQueryInterface(IDbConnection conn = null)
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
+            conn = conn ?? Connections.NewSqlConnection();
+
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(conn);
             dlBuilder.UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<ISimpleQuery>();
             repoBuilder.SetupMethod("Returns45")
