@@ -159,7 +159,7 @@ namespace Repomat.Schema
             }
         }
 
-        public bool IsSimpleQuery
+        public bool IsScalarQuery
         {
             get { return !IsTryGet && ReturnType.IsDatabaseType(); }
         }

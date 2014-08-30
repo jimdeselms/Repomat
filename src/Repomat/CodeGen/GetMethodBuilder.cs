@@ -22,7 +22,7 @@ namespace Repomat.CodeGen
 
         public override void GenerateCode()
         {
-            if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsSimpleQuery)
+            if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsScalarQuery)
             {
                 CodeBuilder.WriteLine("private bool _query{0}_columnIndexesAssigned = false;", _customQueryIdx);
                 foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
@@ -72,7 +72,7 @@ namespace Repomat.CodeGen
 
             WriteParameterAssignments();
 
-            if (MethodDef.IsSimpleQuery)
+            if (MethodDef.IsScalarQuery)
             {
                 CodeBuilder.WriteLine("var ___result = cmd.ExecuteScalar();");
                 CodeBuilder.WriteLine("return {0};", GetScalarConvertExpression(MethodDef.ReturnType, "___result"));
@@ -106,7 +106,7 @@ namespace Repomat.CodeGen
             if (MethodDef.CustomSqlOrNull != null)
             {
                 // TODO: Get this naming convention from the database instead of using noop.
-                if (MethodDef.IsSimpleQuery)
+                if (MethodDef.IsScalarQuery)
                 {
                     columnsToGet = new PropertyDef[0];
                 }
@@ -183,7 +183,7 @@ namespace Repomat.CodeGen
 
         private void WriteSingletonResultRead(PropertyDef[] columnsToGet, int queryIdx)
         {
-            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
+            if (!MethodDef.IsScalarQuery && MethodDef.CustomSqlOrNull != null)
             {
                 CodeBuilder.WriteLine("if (!_query{0}_columnIndexesAssigned)", queryIdx);
                 CodeBuilder.OpenBrace();
@@ -239,7 +239,7 @@ namespace Repomat.CodeGen
 
         private void WriteMultiRowResultRead(PropertyDef[] columnsToGet, int queryIdx)
         {
-            if (!MethodDef.IsSimpleQuery && MethodDef.CustomSqlOrNull != null)
+            if (!MethodDef.IsScalarQuery && MethodDef.CustomSqlOrNull != null)
             {
                 CodeBuilder.WriteLine("if (!_query{0}_columnIndexesAssigned)", queryIdx);
                 CodeBuilder.OpenBrace();

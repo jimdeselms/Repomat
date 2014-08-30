@@ -21,6 +21,7 @@ namespace Repomat.IlGen
         private readonly TypeBuilder _typeBuilder;
         private readonly ILGenerator _ilGenerator;
         private readonly LocalBuilder _commandLocal;
+        private readonly LocalBuilder _returnValueLocal;
 
         private readonly LocalBuilder _testLocal;
 
@@ -69,6 +70,7 @@ namespace Repomat.IlGen
 
             _commandLocal = IlGenerator.DeclareLocal(typeof(IDbCommand));
             _testLocal = IlGenerator.DeclareLocal(typeof (string));
+            _returnValueLocal = MethodDef.ReturnType == typeof(void) ? null : IlGenerator.DeclareLocal(MethodDef.ReturnType);
         }
 
         protected void SetCommandText(string commandText)
@@ -198,6 +200,10 @@ namespace Repomat.IlGen
 
             IlGenerator.EndExceptionBlock();
 
+            if (_returnValueLocal != null)
+            {
+                IlGenerator.Emit(OpCodes.Ldloc, _returnValueLocal);
+            }
             IlGenerator.Emit(OpCodes.Ret);
         }
 
@@ -250,6 +256,7 @@ namespace Repomat.IlGen
         protected ILGenerator IlGenerator { get { return _ilGenerator; } }
 
         protected LocalBuilder CommandLocal { get { return _commandLocal; } }
+        protected LocalBuilder ReturnValueLocal { get { return _returnValueLocal; } }
 
         private Emit.MethodBuilder CreateMethod()
         {
