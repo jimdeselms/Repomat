@@ -52,7 +52,7 @@ namespace Repomat.IlGen
                     _ctorIlBuilder.Emit(OpCodes.Stfld, field);
                 }
             }
-            
+
             if (MethodDef.EntityDef != null && MethodDef.EntityDef.Type != typeof(void) && MethodDef.ReturnType.Equals(typeof(IEnumerable<>).MakeGenericType(MethodDef.EntityDef.Type)))
             {
                 //GenerateCodeForEnumerableGetMethod();
@@ -216,10 +216,13 @@ namespace Repomat.IlGen
 
             var rowLocal = IlGenerator.DeclareLocal(EntityDef.Type);
 
+            LocalBuilder listLocalOrNull = null;
+
             if (!isEnumerable)
             {
+                listLocalOrNull = IlGenerator.DeclareLocal(listType);
                 IlGenerator.Emit(OpCodes.Newobj, listType.GetConstructor(Type.EmptyTypes));
-                IlGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                IlGenerator.Emit(OpCodes.Stloc, listLocalOrNull);
             }
 
             Label whileReaderReadStart = IlGenerator.DefineLabel();
@@ -253,7 +256,7 @@ namespace Repomat.IlGen
                 // result.Add(newObj);
 
                 var addMethod = listType.GetMethod("Add", new[] { EntityDef.Type });
-                IlGenerator.Emit(OpCodes.Ldloc, ReturnValueLocal);
+                IlGenerator.Emit(OpCodes.Ldloc, listLocalOrNull);
                 IlGenerator.Emit(OpCodes.Ldloc, rowLocal);
                 IlGenerator.Emit(OpCodes.Callvirt, addMethod);
             }
@@ -262,15 +265,19 @@ namespace Repomat.IlGen
 
             IlGenerator.MarkLabel(whileReaderReadEnd);
 
-            //if (!isEnumerable)
-            //{
-            //    string toArray = "";
-            //    if (MethodDef.ReturnType.IsArray)
-            //    {
-            //        toArray = ".ToArray()";
-            //    }
-            //    CodeBuilder.WriteLine("return result{0};", toArray);
-            //}
+            if (!isEnumerable)
+            {
+                IlGenerator.Emit(OpCodes.Ldloc, listLocalOrNull);
+                if (MethodDef.ReturnType.IsArray)
+                {
+                    var toArrayMethod = typeof(System.Linq.Enumerable)
+                        .GetMethod("ToArray", BindingFlags.Static | BindingFlags.Public)
+                        .MakeGenericMethod(EntityDef.Type);
+                    IlGenerator.Emit(OpCodes.Call, toArrayMethod);
+
+                }
+                IlGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+            }
         }
 
         private void AppendObjectSerialization(LocalBuilder readerLocal, LocalBuilder resultLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
