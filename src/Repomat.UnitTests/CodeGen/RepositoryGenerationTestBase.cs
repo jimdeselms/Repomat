@@ -485,7 +485,7 @@ namespace Repomat.UnitTests.CodeGen
 
         private IDbConnection _connection;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
             _connection = CreateConnection();
@@ -500,7 +500,7 @@ namespace Repomat.UnitTests.CodeGen
 
         protected abstract DataLayerBuilder CreateFactory(Func<IDbConnection> func);
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TearDown()
         {
             if (_connection != null)
