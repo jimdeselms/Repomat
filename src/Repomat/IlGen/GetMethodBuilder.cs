@@ -122,6 +122,16 @@ namespace Repomat.IlGen
         
         private void WriteSingletonResultRead(LocalBuilder readerLocal, PropertyDef[] columnsToGet, int queryIdx, FieldBuilder indexesAssignedField, IDictionary<string, FieldBuilder> columnIndexFields)
         {
+            LocalBuilder returnValue;
+            if (MethodDef.IsTryGet)
+            {
+                returnValue = IlGenerator.DeclareLocal(EntityDef.Type);
+            }
+            else
+            {
+                returnValue = ReturnValueLocal;
+            }
+            
             EmitArgumentMappingCheck(readerLocal, indexesAssignedField, columnsToGet, columnIndexFields);
 
             var afterRead = IlGenerator.DefineLabel();
@@ -133,45 +143,70 @@ namespace Repomat.IlGen
 
             if (MethodDef.CustomSqlOrNull != null)
             {
-                AppendObjectSerialization(readerLocal, ReturnValueLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
+                AppendObjectSerialization(readerLocal, returnValue, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
             }
             else
             {
-                AppendObjectSerialization(readerLocal, ReturnValueLocal, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
+                AppendObjectSerialization(readerLocal, returnValue, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
             }
-            //if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
-            //{
-            //    CodeBuilder.WriteLine("if (reader.Read())");
-            //    CodeBuilder.OpenBrace();
-            //    CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"More than one row returned from singleton query\");");
-            //    CodeBuilder.CloseBrace();
-            //}
+            
+            if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
+            {
+                var noMoreRowsFound = IlGenerator.DefineLabel();
 
-            //if (MethodDef.IsTryGet)
-            //{
-            //    var tryGetOutColumn = MethodDef.OutParameterOrNull;
-            //    CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
-            //    CodeBuilder.WriteLine("return true;");
-            //    CodeBuilder.CloseBrace();
-            //    CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
-            //    CodeBuilder.WriteLine("return false;");
-            //}
-            //else
-            //{
-            //    CodeBuilder.WriteLine("return newObj;");
-            //    CodeBuilder.CloseBrace();
+                IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+                IlGenerator.Emit(OpCodes.Callvirt, _readMethod);
+                IlGenerator.Emit(OpCodes.Brfalse, noMoreRowsFound);
 
-            //    if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
-            //    {
-            //        CodeBuilder.WriteLine("throw new Repomat.RepomatException(\"No rows returned from singleton query\");");
-            //    }
-            //    else
-            //    {
-            //        CodeBuilder.WriteLine("return default({0});", EntityDef.Type.ToCSharp());
-            //    }
-            //}
+                ThrowRepomatException("More than one row returned from singleton query");
 
-            IlGenerator.MarkLabel(afterRead);
+                IlGenerator.MarkLabel(noMoreRowsFound);
+            }
+
+            var afterElse = IlGenerator.DefineLabel();
+
+            if (MethodDef.IsTryGet)
+            {
+                //var tryGetOutColumn = MethodDef.OutParameterOrNull;
+                //CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
+                //CodeBuilder.WriteLine("return true;");
+                //CodeBuilder.CloseBrace();
+                //CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
+                //CodeBuilder.WriteLine("return false;");
+                IlGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
+                IlGenerator.Emit(OpCodes.Ldloc, returnValue);
+                IlGenerator.Emit(OpCodes.Stind_Ref);
+                IlGenerator.Emit(OpCodes.Ldc_I4_1);
+                IlGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+
+                IlGenerator.Emit(OpCodes.Br, afterElse);
+                IlGenerator.MarkLabel(afterRead);
+
+                IlGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
+                IlGenerator.Emit(OpCodes.Ldnull);
+                IlGenerator.Emit(OpCodes.Stind_Ref);
+                IlGenerator.Emit(OpCodes.Ldc_I4_0);
+                IlGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+            }
+            else
+            {
+                IlGenerator.Emit(OpCodes.Br, afterElse);
+                IlGenerator.MarkLabel(afterRead);
+
+                if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
+                {
+                    ThrowRepomatException("No rows returned from singleton query");
+                }
+                else
+                {
+                    // return default(X);
+                    IlGenerator.Emit(OpCodes.Ldnull);
+                    IlGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                }
+            }
+
+            IlGenerator.MarkLabel(afterElse);
+
         }
 
         private void EmitArgumentMappingCheck(LocalBuilder readerLocal, FieldBuilder indexesAssignedField, PropertyDef[] columnsToGet, IDictionary<string, FieldBuilder> columnIndexFields)

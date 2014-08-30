@@ -15,14 +15,16 @@ namespace Repomat.Schema
         private readonly bool _isOut;
         private readonly bool _isTransaction;
         private readonly bool _isConnection;
+        private readonly int _index;
 
-        public ParameterDetails(ParameterInfo parameterInfo)
+        public ParameterDetails(ParameterInfo parameterInfo, int index)
         {
             _name = parameterInfo.Name;
             _type = parameterInfo.ParameterType;
             _isOut = parameterInfo.IsOut;
             _isTransaction = _type == typeof(IDbTransaction);
             _isConnection = _type == typeof(IDbConnection);
+            _index = index;
         }
 
         public string Name { get { return _name; } }
@@ -30,6 +32,7 @@ namespace Repomat.Schema
         public bool IsOut { get { return _isOut; } }
         public bool IsTransaction { get { return _isTransaction; } }
         public bool IsConnection { get { return _isConnection; } }
+        public int Index { get { return _index; } }
 
         public bool IsSimpleArgument { get { return !_isOut && !_isTransaction && !_isConnection; } }
         public bool IsPrimitiveType

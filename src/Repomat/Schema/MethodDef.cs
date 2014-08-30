@@ -97,9 +97,12 @@ namespace Repomat.Schema
 
         private IEnumerable<ParameterDetails> GetParameters(MethodInfo methodInfo)
         {
+            // For instance methods, the first argument is "this";
+            int i = methodInfo.IsStatic ? 0 : 1;
+
             foreach (var parm in methodInfo.GetParameters())
             {
-                yield return new ParameterDetails(parm);
+                yield return new ParameterDetails(parm, i++);
             }
         }
 

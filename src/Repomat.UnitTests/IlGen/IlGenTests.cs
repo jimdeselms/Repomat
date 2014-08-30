@@ -382,27 +382,12 @@ namespace Repomat.UnitTests.IlGen
         }
     }
 
-    public class TestImpl : IlGenTests.ISimplerQuery
+    public class TestImpl
     {
-        private readonly IDbConnection _connection;
-
-        public TestImpl(IDbConnection connection)
+        public bool foo(out string i)
         {
-            _connection = connection;
-        }
-
-        public int Returns45()
-        {
-            IDbCommand dbCommand = this._connection.CreateCommand();
-            try
-            {
-                dbCommand.CommandText = "select 45";
-                return Convert.ToInt32(dbCommand.ExecuteScalar());
-            }
-            finally
-            {
-                dbCommand.Dispose();
-            }
+            i = "hello";
+            return true;
         }
     }
 

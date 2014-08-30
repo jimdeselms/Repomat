@@ -177,6 +177,17 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Callvirt, _executeScalarMethod);
         }
 
+        private static readonly ConstructorInfo _repomatExceptionCtor = typeof(RepomatException).GetConstructor(new Type[] { typeof(string), typeof(object[]) });
+
+        protected void ThrowRepomatException(string format, params object[] args)
+        {
+            IlGenerator.Emit(OpCodes.Ldstr, string.Format(format, args));
+            IlGenerator.Emit(OpCodes.Ldc_I4_0);
+            IlGenerator.Emit(OpCodes.Newarr, typeof(object));
+            IlGenerator.Emit(OpCodes.Newobj, _repomatExceptionCtor);
+            IlGenerator.Emit(OpCodes.Throw);
+        }
+
         public void GenerateIl()
         {
             // var cmd = _connection.CreateCommand();
