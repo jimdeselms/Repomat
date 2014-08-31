@@ -17,9 +17,9 @@ namespace Repomat.CodeGen
         private readonly string _scalarConvertExpr;
         private readonly string _sqlDatatype;
         private readonly Action<ILGenerator> _emitConversion;
+        private readonly bool _canBeNull;
 
         public static readonly FieldInfo DBNULL_VALUE = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
-
 
         public PrimitiveTypeInfo(Type type, DbType dbType, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion)
         {
@@ -29,12 +29,15 @@ namespace Repomat.CodeGen
             _scalarConvertExpr = scalarConvertExpr;
             _sqlDatatype = sqlDatatype;
             _emitConversion = emitConversion;
+
+            _canBeNull = type.IsNullable() || !type.IsValueType;
         }
 
         public Type Type { get { return _type; } }
         public string ScalarConvertExpr { get { return _scalarConvertExpr; } }
         public string SqlDatatype { get { return _sqlDatatype; } }
         public DbType DbType { get { return _dbType; } }
+        public bool CanBeNull { get { return _canBeNull; } }
 
         public string GetReaderGetExpr(string index, bool useStrictTyping)
         {
@@ -99,8 +102,9 @@ namespace Repomat.CodeGen
                     string getExpr = string.Format("({0})({1})", t.ToCSharp(), underlyingType._readerGetExpr);
                     string convertExpr = string.Format("({0})({1})", t.ToCSharp(), underlyingType._scalarConvertExpr);
                     string datatype = underlyingType._sqlDatatype;
+                    Action<ILGenerator> conversion = underlyingType._emitConversion;
 
-                    CreateType(t, underlyingType.DbType, getExpr, convertExpr, datatype);
+                    CreateType(t, underlyingType.DbType, getExpr, convertExpr, datatype, conversion);
                 }
             }
 

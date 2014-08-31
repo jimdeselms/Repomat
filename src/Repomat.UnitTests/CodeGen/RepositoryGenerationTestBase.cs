@@ -128,6 +128,7 @@ namespace Repomat.UnitTests.CodeGen
         }
 
         [Test]
+        [Ignore]
         public void Insert_MultipleRowsConcurrently_BlockWhenUsingSingleConnection()
         {
             // If we're dealing with a repository that shares a single connection, it's critical that we don't allow multiple 
@@ -450,12 +451,18 @@ namespace Repomat.UnitTests.CodeGen
             repo.Insert(t2);
 
             ColorThing other = repo.Get(123);
-
             Assert.AreEqual(123, other.Id);
             Assert.AreEqual(Color.Blue, other.Color);
             Assert.AreEqual(BigColor.BigWhite, other.BigColor);
             Assert.AreEqual(LittleColor.LittleRed, other.LittleColor);
             Assert.AreEqual(Color.White, other.NullableColor);
+
+            ColorThing blah = repo.Get(333);
+            Assert.AreEqual(333, blah.Id);
+            Assert.AreEqual(Color.Red, blah.Color);
+            Assert.AreEqual(BigColor.BigBlue, blah.BigColor);
+            Assert.AreEqual(LittleColor.LittleWhite, blah.LittleColor);
+            Assert.AreEqual(null, blah.NullableColor);
         }
 
         [Test]

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
 using Repomat.CodeGen;
+using System.Threading;
 
 namespace Repomat.IlGen
 {
@@ -114,6 +115,8 @@ namespace Repomat.IlGen
 
         private void AddSqlParameter(LocalBuilder sqlParameter, string name, Type type, Action getParameterValue)
         {
+            var typeInfo = PrimitiveTypeInfo.Get(type);
+
             // parm = cmd.CreateParameter();
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
@@ -126,7 +129,8 @@ namespace Repomat.IlGen
 
             // parm.DbType = blah
             IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Ldc_I4, (int)PrimitiveTypeInfo.Get(type).DbType);
+            IlGenerator.Emit(OpCodes.Ldc_I4, (int)typeInfo.DbType);
+
             IlGenerator.Emit(OpCodes.Callvirt, _dbTypeSetMethod);
 
             getParameterValue();
@@ -135,7 +139,8 @@ namespace Repomat.IlGen
             {
                 IlGenerator.Emit(OpCodes.Box, type);
             }
-            else
+
+            if (typeInfo.CanBeNull)
             {
                 var nullCheckStore = IlGenerator.DeclareLocal(typeof(object));
                 var skipDbNullReplacement = IlGenerator.DefineLabel();
@@ -150,8 +155,8 @@ namespace Repomat.IlGen
                 IlGenerator.MarkLabel(skipDbNullReplacement);
 
                 IlGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
-
             }
+
             IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
 
             //// cmd.Paramters.Add(parm);
@@ -188,17 +193,54 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Throw);
         }
 
+        private static MethodInfo _monitorEnterMethod = typeof(Monitor).GetMethod("Enter", new Type[] { typeof(object), typeof(bool).MakeByRefType() });
+        private static MethodInfo _monitorExitMethod = typeof(Monitor).GetMethod("Exit", new Type[] { typeof(object) });
+
         public void GenerateIl()
         {
             // var cmd = _connection.CreateCommand();
             // try
             // finally
             // cmd.Disose();
+            var connectionLocal = IlGenerator.DeclareLocal(typeof(IDbConnection));
+            var lockTakenLocal = IlGenerator.DeclareLocal(typeof(bool));
 
-            IlGenerator.Emit(OpCodes.Ldarg_0);
-            IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
+            int? passedConnectionIndex = GetArgumentIndex(typeof(IDbConnection));
+            int? passedTransactionIndex = GetArgumentIndex(typeof(IDbTransaction));
+            if (passedConnectionIndex.HasValue)
+            {
+                IlGenerator.Emit(OpCodes.Ldarg, passedConnectionIndex.Value);
+            }
+            else if (passedTransactionIndex.HasValue)
+            {
+                var connProperty = typeof(IDbTransaction).GetProperty("Connection").GetGetMethod();
+                IlGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
+                IlGenerator.Emit(OpCodes.Call, connProperty);
+            }
+            else // use the _connectionField
+            {
+                IlGenerator.Emit(OpCodes.Ldarg_0);
+                IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
+            }
+            IlGenerator.Emit(OpCodes.Stloc, connectionLocal);
+
+            IlGenerator.BeginExceptionBlock();
+
+            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+            IlGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
+            IlGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
+
+            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
             IlGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
-            IlGenerator.Emit(OpCodes.Stloc, _commandLocal.LocalIndex);
+            IlGenerator.Emit(OpCodes.Stloc, _commandLocal);
+
+            if (passedTransactionIndex.HasValue)
+            {
+                var setTransactionProp = typeof(IDbCommand).GetProperty("Transaction").GetSetMethod();
+                IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
+                IlGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
+                IlGenerator.Emit(OpCodes.Call, setTransactionProp);
+            }
 
             IlGenerator.BeginExceptionBlock();
 
@@ -211,11 +253,29 @@ namespace Repomat.IlGen
 
             IlGenerator.EndExceptionBlock();
 
+            IlGenerator.BeginFinallyBlock();
+
+            var lockNotTakenLabel = IlGenerator.DefineLabel();
+            IlGenerator.Emit(OpCodes.Ldloc, lockTakenLocal);
+            IlGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
+
+            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+            IlGenerator.Emit(OpCodes.Call, _monitorExitMethod);
+
+            IlGenerator.MarkLabel(lockNotTakenLabel);
+
+            IlGenerator.EndExceptionBlock();
+
             if (_returnValueLocal != null)
             {
                 IlGenerator.Emit(OpCodes.Ldloc, _returnValueLocal);
             }
             IlGenerator.Emit(OpCodes.Ret);
+        }
+
+        private int? GetArgumentIndex(Type t)
+        {
+            return MethodDef.Parameters.Select((p, i) => new { p, i }).Where(p => p.p.Type == t).Select(p => (int?)p.i).FirstOrDefault() + 1;
         }
 
         protected void WriteParameterAssignmentsFromArgList()

@@ -386,8 +386,19 @@ namespace Repomat.UnitTests.IlGen
     {
         public bool foo(out string i)
         {
-            i = "hello";
-            return true;
+            lock (this)
+            {
+                i = "hello";
+                return true;
+            }
+        }
+
+        public bool DoSomethingElse()
+        {
+            lock (this)
+            {
+                return false;
+            }
         }
     }
 

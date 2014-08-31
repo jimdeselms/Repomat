@@ -53,7 +53,7 @@ namespace Repomat.IlGen
                 }
             }
 
-            if (MethodDef.EntityDef != null && MethodDef.EntityDef.Type != typeof(void) && MethodDef.ReturnType.Equals(typeof(IEnumerable<>).MakeGenericType(MethodDef.EntityDef.Type)))
+            if (NewConnectionEveryTime && MethodDef.EntityDef != null && MethodDef.EntityDef.Type != typeof(void) && MethodDef.ReturnType.Equals(typeof(IEnumerable<>).MakeGenericType(MethodDef.EntityDef.Type)))
             {
                 //GenerateCodeForEnumerableGetMethod();
             }
@@ -246,7 +246,7 @@ namespace Repomat.IlGen
         {
 //            EmitArgumentMappingCheck(readerLocal, indexesAssignedField, columnsToGet, columnIndexFields);
 
-            bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(EntityDef.Type);
+            bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(EntityDef.Type) && NewConnectionEveryTime;
             var listType = GetListType(EntityDef.Type);
 
             var rowLocal = IlGenerator.DeclareLocal(EntityDef.Type);
@@ -321,6 +321,32 @@ namespace Repomat.IlGen
 
             if (EntityDef.CreateClassThroughConstructor)
             {
+                var types = EntityDef.Properties.Select(p => p.Type);
+                var ctor = EntityDef.Type.GetConstructor(types.ToArray());
+
+                foreach (var prop in EntityDef.Properties)
+                {
+                    int? columnIndex = selectColumns
+                        .Select((p, i) => new { p, i })
+                        .Where(p => p.p.PropertyName == prop.PropertyName)
+                        .Select(p => (int?)p.i)
+                        .FirstOrDefault();
+                    if (columnIndex.HasValue)
+                    {
+                        EmitReaderGetExpression(readerLocal, columnIndex.Value, prop, queryIndexOrNull, readerIndexes);
+                    }
+                    else
+                    {
+                        var argIndex = argColumns
+                            .Select((p, i) => new { p, i })
+                            .Where(p => p.p.Name.Capitalize() == prop.PropertyName)
+                            .Select(p => p.i).First();
+                        IlGenerator.Emit(OpCodes.Ldarg, argIndex + 1);
+                    }
+                }
+
+                IlGenerator.Emit(OpCodes.Newobj, ctor);
+                IlGenerator.Emit(OpCodes.Stloc, resultLocal);
                 //body.WriteLine("var newObj = new {0}(", EntityDef.Type.ToCSharp());
 
                 //var argToExprMap = new Dictionary<string, string>();
