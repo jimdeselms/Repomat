@@ -496,6 +496,30 @@ namespace Repomat.UnitTests.CodeGen
             Assert.IsFalse(repo.GetExistsByName("Freddy"));
         }
 
+        [Test]
+        public void Upsert_WithInsertWhenRowAlreadyExists_Updates()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(CreateConnection()).UseIlGeneration();
+            var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>(); 
+            var repo = repoBuilder.CreateRepo();
+
+            if (repo.TableExists()) repo.DropTable();
+            repo.CreateTable();
+
+            Person p = new Person {PersonId = 123, Name = "Joe", Birthday = new DateTime(2014, 5, 5)};
+            repo.Insert(p);
+            
+            p.Name = "Henri";
+            p.Birthday = new DateTime(2015, 1, 1);
+            p.Image = new byte[] {65, 83, 83};
+            repo.Upsert(p);
+
+            Person p2 = repo.Get(123);
+            Assert.AreEqual("Henri", p2.Name);
+            Assert.AreEqual(new DateTime(2015, 1, 1), p2.Birthday);
+            CollectionAssert.AreEqual(new byte[] { 65, 83, 83}, p.Image);
+        }
+
         private IDbConnection _connection;
 
         [SetUp]

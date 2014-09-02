@@ -36,7 +36,6 @@ namespace Repomat.CodeGen
                 case MethodType.Insert: return new InsertMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.TableExists: return new TableExistsMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 case MethodType.Update: return new UpdateMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
-                case MethodType.Upsert: return new UpsertMethodBuilder(CodeBuilder, RepoDef, methodDef, _newConnectionEveryTime, this);
                 default: throw new RepomatException("Unhandled method type {0}", methodDef.MethodType);
             }
         }
