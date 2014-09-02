@@ -233,43 +233,28 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
             IlGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
 
-            IlGenerator.EmitWriteLine("Enter monitor " + MethodDef.MethodName);
-
             IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
             IlGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
             IlGenerator.Emit(OpCodes.Stloc, _commandLocal);
 
-            IlGenerator.EmitWriteLine("1");
             if (passedTransactionIndex.HasValue)
             {
                 var setTransactionProp = typeof(IDbCommand).GetProperty("Transaction").GetSetMethod();
                 IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
                 IlGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
                 IlGenerator.Emit(OpCodes.Call, setTransactionProp);
-                IlGenerator.EmitWriteLine("2");
-
             }
 
             IlGenerator.BeginExceptionBlock();
 
-            IlGenerator.EmitWriteLine("3");
-
             GenerateMethodIl(_commandLocal);
 
-            IlGenerator.EmitWriteLine("4");
-
             IlGenerator.BeginFinallyBlock();
-
-            IlGenerator.EmitWriteLine("5");
 
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
 
-            IlGenerator.EmitWriteLine("6");
-
             IlGenerator.EndExceptionBlock();
-
-            IlGenerator.EmitWriteLine("7");
 
             IlGenerator.BeginFinallyBlock();
                 
@@ -277,19 +262,13 @@ namespace Repomat.IlGen
             IlGenerator.Emit(OpCodes.Ldloc, lockTakenLocal);
             IlGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
 
-            IlGenerator.EmitWriteLine("8");
             IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-            IlGenerator.EmitWriteLine("9");
             IlGenerator.Emit(OpCodes.Call, _monitorExitMethod);
-            IlGenerator.EmitWriteLine("Exit monitor " + MethodDef.MethodName);
 
             IlGenerator.MarkLabel(lockNotTakenLabel);
 
-            IlGenerator.EmitWriteLine("Lock not taken");
-
             IlGenerator.EndExceptionBlock();
 
-            IlGenerator.EmitWriteLine("10");
             if (_returnValueLocal != null)
             {
                 IlGenerator.Emit(OpCodes.Ldloc, _returnValueLocal);

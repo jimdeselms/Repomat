@@ -404,10 +404,11 @@ namespace Repomat.UnitTests.IlGen
 
         public bool DoSomethingElse()
         {
-            lock (_connection)
-            {
-                return false;
-            }
+            IDbCommand cmd = null;
+            decimal result = (decimal)cmd.ExecuteScalar();
+            int otherResult = Convert.ToInt32(result);
+
+            return false;
         }
     }
 

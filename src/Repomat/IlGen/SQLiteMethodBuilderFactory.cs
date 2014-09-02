@@ -23,6 +23,10 @@ namespace Repomat.IlGen
             {
                 return new SQLiteTableExistsMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, CustomQueryIndex, this, UseStrictTypes, CtorBuilder);
             }
+            else if (method.MethodType == MethodType.Create)
+            {
+                return new CreateMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, ";", "last_insert_rowid()", typeof(long));
+            }
             else
             {
                 return base.Create(method);

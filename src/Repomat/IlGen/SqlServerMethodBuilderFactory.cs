@@ -23,6 +23,10 @@ namespace Repomat.IlGen
             {
                 return new SqlServerTableExistsMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, CustomQueryIndex, this, UseStrictTypes, CtorBuilder);
             }
+            else if (method.MethodType == MethodType.Create)
+            {
+                return new CreateMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, "", "SCOPE_IDENTITY()", typeof(decimal));
+            }
             else
             {
                 return base.Create(method);
