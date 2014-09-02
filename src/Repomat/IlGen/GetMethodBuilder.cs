@@ -80,7 +80,7 @@ namespace Repomat.IlGen
                 // return Convert.ToSomething(__result);
                 ExecuteScalar();
                 EmitScalarConversion(MethodDef.ReturnType);
-                IlGenerator.Emit(OpCodes.Ret);
+                IlGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
             }
             else
             {

@@ -10,6 +10,7 @@ using Repomat.Schema;
 
 namespace Repomat.UnitTests.CodeGen
 {
+    [TestFixture]
     public abstract class RepositoryGenerationTestBase
     {
         [Test]
@@ -128,7 +129,6 @@ namespace Repomat.UnitTests.CodeGen
         }
 
         [Test]
-        [Ignore]
         public void Insert_MultipleRowsConcurrently_BlockWhenUsingSingleConnection()
         {
             // If we're dealing with a repository that shares a single connection, it's critical that we don't allow multiple 
@@ -136,12 +136,18 @@ namespace Repomat.UnitTests.CodeGen
             // etc.
             var repo = CreateRepoWithJimAndSusan();
 
+            var myLock = new object();
+
             List<Task> tasks = new List<Task>();
 
             for (int i = 0; i < 250; i++)
             {
                 Person p = new Person { PersonId = i + 5, Name = "foo" + i, Birthday = new DateTime(2012, 1, 1) };
-                tasks.Add(Task.Factory.StartNew(() => repo.Insert(p)));
+                tasks.Add(Task.Factory.StartNew(() => 
+                { 
+                    lock (myLock) 
+                    { repo.Insert(p); }
+                }));
             }
 
             Task.WaitAll(tasks.ToArray());

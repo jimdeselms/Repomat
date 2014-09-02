@@ -17,6 +17,7 @@ namespace Repomat.UnitTests.CodeGen
     /// 2) Create a user called "Repomat_test" on the database instance
     /// 3) Map the user to dbo.
     /// </summary>
+    [TestFixture]
     public class SqlServerIlGenerationTests : SqlServerRepositoryGenerationTests
     {
         protected override DataLayerBuilder CreateDataLayerBuilder(IDbConnection conn)

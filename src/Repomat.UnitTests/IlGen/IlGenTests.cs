@@ -11,6 +11,8 @@ using System.Data;
 using System.Data.SqlClient;
 using Repomat.Schema;
 using Dapper;
+using Repomat.UnitTests;
+using Repomat;
 
 namespace Repomat.UnitTests.IlGen
 {
@@ -384,9 +386,16 @@ namespace Repomat.UnitTests.IlGen
 
     public class TestImpl
     {
+        private IDbConnection _connection;
+
+        public TestImpl(IDbConnection connection)
+        {
+            _connection = connection;
+        }
+
         public bool foo(out string i)
         {
-            lock (this)
+            lock (_connection)
             {
                 i = "hello";
                 return true;
@@ -395,7 +404,7 @@ namespace Repomat.UnitTests.IlGen
 
         public bool DoSomethingElse()
         {
-            lock (this)
+            lock (_connection)
             {
                 return false;
             }
