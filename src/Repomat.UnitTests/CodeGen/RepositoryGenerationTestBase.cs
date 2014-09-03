@@ -399,6 +399,14 @@ namespace Repomat.UnitTests.CodeGen
 
             Assert.AreEqual(1, micah.PersonId);
             Assert.AreEqual(2, nelly.PersonId);
+
+            var micah2 = repo.Get(1);
+            var nelly2 = repo.Get(2);
+
+            Assert.AreEqual("Nelly", nelly2.Name);
+            Assert.AreEqual(2, nelly2.PersonId);
+            Assert.AreEqual(new DateTime(2009, 1, 9), nelly2.Image);
+            Assert.IsNull(nelly2.Image);
         }
 
         [Test]
@@ -542,7 +550,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void Upsert_WithCreateWhenRowAlreadyExists_Updates()
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(CreateConnection()).UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
             var repo = repoBuilder.CreateRepo();
 
@@ -552,6 +560,8 @@ namespace Repomat.UnitTests.CodeGen
             Person p = new Person { Name = "Joe", Birthday = new DateTime(2014, 5, 5) };
             repo.Create(p);
             Assert.AreEqual(1, p.PersonId);
+
+            Person p3 = repo.Get(1);
 
             p.Name = "Henri";
             p.Birthday = new DateTime(2015, 1, 1);
@@ -569,16 +579,16 @@ namespace Repomat.UnitTests.CodeGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection()).UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
-            var repo = repoBuilder.CreateRepo();
+            var repo1 = repoBuilder.CreateRepo();
 
-            if (repo.TableExists()) repo.DropTable();
-            repo.CreateTable();
+            if (repo1.TableExists()) repo1.DropTable();
+            repo1.CreateTable();
 
             Person p = new Person { Name = "Joe", Birthday = new DateTime(2014, 5, 5) };
-            repo.Upsert(p);
+            repo1.Upsert(p);
             Assert.AreEqual(1, p.PersonId);
 
-            Person p2 = repo.Get(1);
+            Person p2 = repo1.Get(1);
             Assert.AreEqual("Joe", p2.Name);
             Assert.AreEqual(new DateTime(2014, 5, 5), p2.Birthday);
             Assert.IsNull(p.Image);

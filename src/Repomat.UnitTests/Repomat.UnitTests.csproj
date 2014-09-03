@@ -79,6 +79,7 @@
     <Compile Include="Db.cs" />
     <Compile Include="DbHelper.cs" />
     <Compile Include="DbHelperTests.cs" />
+    <Compile Include="DeleteMe.cs" />
     <Compile Include="ExtensionMethodTests.cs" />
     <Compile Include="IlGen\ConversionTests.cs" />
     <Compile Include="IlGen\IlGenTests.cs" />
