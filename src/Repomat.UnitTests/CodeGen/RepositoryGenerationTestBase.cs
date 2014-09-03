@@ -496,6 +496,94 @@ namespace Repomat.UnitTests.CodeGen
             Assert.IsFalse(repo.GetExistsByName("Freddy"));
         }
 
+        [Test]
+        public void Upsert_WithInsertWhenRowAlreadyExists_Updates()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
+            var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>();
+            var repo = repoBuilder.CreateRepo();
+
+            if (repo.TableExists()) repo.DropTable();
+            repo.CreateTable();
+
+            Person p = new Person { PersonId = 123, Name = "Joe", Birthday = new DateTime(2014, 5, 5) };
+            repo.Insert(p);
+
+            p.Name = "Henri";
+            p.Birthday = new DateTime(2015, 1, 1);
+            p.Image = new byte[] { 65, 83, 83 };
+            repo.Upsert(p);
+
+            Person p2 = repo.Get(123);
+            Assert.AreEqual("Henri", p2.Name);
+            Assert.AreEqual(new DateTime(2015, 1, 1), p2.Birthday);
+            CollectionAssert.AreEqual(new byte[] { 65, 83, 83 }, p.Image);
+        }
+
+        [Test]
+        public void Upsert_WithInsertWhenRowIsNew_Inserts()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
+            var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>();
+            var repo = repoBuilder.CreateRepo();
+
+            if (repo.TableExists()) repo.DropTable();
+            repo.CreateTable();
+
+            Person p = new Person { PersonId = 123, Name = "Joe", Birthday = new DateTime(2014, 5, 5) };
+            repo.Insert(p);
+
+            Person p2 = repo.Get(123);
+            Assert.AreEqual("Joe", p2.Name);
+            Assert.AreEqual(new DateTime(2014, 5, 5), p2.Birthday);
+            Assert.IsNull(p.Image);
+        }
+
+        [Test]
+        public void Upsert_WithCreateWhenRowAlreadyExists_Updates()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
+            var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
+            var repo = repoBuilder.CreateRepo();
+
+            if (repo.TableExists()) repo.DropTable();
+            repo.CreateTable();
+
+            Person p = new Person { Name = "Joe", Birthday = new DateTime(2014, 5, 5) };
+            repo.Create(p);
+            Assert.AreEqual(1, p.PersonId);
+
+            p.Name = "Henri";
+            p.Birthday = new DateTime(2015, 1, 1);
+            p.Image = new byte[] { 65, 83, 83 };
+            repo.Upsert(p);
+
+            Person p2 = repo.Get(1);
+            Assert.AreEqual("Henri", p2.Name);
+            Assert.AreEqual(new DateTime(2015, 1, 1), p2.Birthday);
+            CollectionAssert.AreEqual(new byte[] { 65, 83, 83 }, p.Image);
+        }
+
+        [Test]
+        public void Upsert_WithCreateWhenRowIsNew_Inserts()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection()).UseIlGeneration();
+            var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
+            var repo = repoBuilder.CreateRepo();
+
+            if (repo.TableExists()) repo.DropTable();
+            repo.CreateTable();
+
+            Person p = new Person { Name = "Joe", Birthday = new DateTime(2014, 5, 5) };
+            repo.Upsert(p);
+            Assert.AreEqual(1, p.PersonId);
+
+            Person p2 = repo.Get(1);
+            Assert.AreEqual("Joe", p2.Name);
+            Assert.AreEqual(new DateTime(2014, 5, 5), p2.Birthday);
+            Assert.IsNull(p.Image);
+        }
+
         private IDbConnection _connection;
 
         [SetUp]

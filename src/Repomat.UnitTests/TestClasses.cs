@@ -176,6 +176,31 @@ namespace Repomat.UnitTests
         LittleBlue,
     }
 
+    public interface IUpsertWithInsertRepo
+    {
+        Person Get(int personId);
+
+        void Insert(Person p);
+        void Update(Person p);
+        void Upsert(Person p);
+
+        void CreateTable();
+        void DropTable();
+        bool TableExists();
+    }
+
+    public interface IUpsertWithCreateRepo
+    {
+        Person Get(int personId);
+
+        void Create(Person p);
+        void Update(Person p);
+        void Upsert(Person p);
+
+        void CreateTable();
+        void DropTable();
+        bool TableExists();
+    }
 
 }
 

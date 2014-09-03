@@ -11,47 +11,16 @@ using System.Threading.Tasks;
 
 namespace Repomat.IlGen
 {
-    internal class InsertMethodBuilder : MethodBuilderBase
+    internal class InsertMethodBuilder : InsertCreateUpdateMethodBuilderBase
     {
-        internal InsertMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime)
-            : base(typeBuilder, connectionField, repoDef, methodDef, newConnectionEveryTime)
+        internal InsertMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, string statementSeparator, Type scopeIdentityType, string scopeIdentityFunction)
+            : base(typeBuilder, connectionField, repoDef, methodDef, newConnectionEveryTime, statementSeparator, scopeIdentityType, scopeIdentityFunction)
         {
         }
 
-        protected override void GenerateMethodIl(LocalBuilder cmdLocal)
+        protected override void GenerateMethodIl(LocalBuilder cmdVariable)
         {
-            StringBuilder sql = new StringBuilder();
-
-            sql.AppendFormat("insert into [{0}] (", EntityDef.TableName);
-            sql.AppendFormat(string.Join(", ", EntityDef.Properties.Select(c => string.Format("[{0}]", c.ColumnName))));
-            sql.AppendFormat(") values (");
-            sql.AppendFormat(string.Join(", ", EntityDef.Properties.Select(c => "@" + c.PropertyName)));
-            sql.AppendFormat(")");
-
-            SetCommandText(sql.ToString());
-
-            int propIndex = 0;
-            for (int i=0; i < MethodDef.Parameters.Count; i++)
-            {
-                if (MethodDef.Parameters[i].Type == EntityDef.Type)
-                {
-                    // Add 1, since the first entry is "this".
-                    propIndex = i+1;
-                }
-            }
-
-            foreach (var column in EntityDef.Properties)
-            {
-                IlGenerator.BeginScope();
-
-                var parm = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
-
-                AddSqlParameterFromProperty(parm, column.PropertyName, propIndex, column);
-
-                IlGenerator.EndScope();
-            }
-
-            ExecuteNonQuery();
+            GenerateIlForInsert(cmdVariable);
         }
     }
 }

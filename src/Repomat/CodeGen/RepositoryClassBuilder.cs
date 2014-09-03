@@ -56,6 +56,7 @@ namespace Repomat.CodeGen
                 case MethodType.GetCount:
                 case MethodType.Exists:
                 case MethodType.Create:
+                case MethodType.Upsert:
                     break;
                 default: throw new RepomatException("Unrecognized method pattern " + details.MethodName);
             }

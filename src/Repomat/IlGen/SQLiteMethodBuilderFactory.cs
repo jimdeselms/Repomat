@@ -19,6 +19,10 @@ namespace Repomat.IlGen
 
         public override MethodBuilderBase Create(MethodDef method)
         {
+            string statementSeparator = ";";
+            string scopeIdentityFunction = "last_insert_rowid()";
+            Type scopeIdentityType = typeof(long);
+
             if (method.MethodType == MethodType.TableExists)
             {
                 return new SQLiteTableExistsMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, CustomQueryIndex, this, UseStrictTypes, CtorBuilder);
@@ -26,6 +30,18 @@ namespace Repomat.IlGen
             else if (method.MethodType == MethodType.Create)
             {
                 return new CreateMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, ";", "last_insert_rowid()", typeof(long));
+            }
+            else if (method.MethodType == MethodType.Upsert)
+            {
+                return new SQLiteUpsertMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, statementSeparator, scopeIdentityType, scopeIdentityFunction);
+            }
+            else if (method.MethodType == MethodType.Insert)
+            {
+                return new InsertMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, statementSeparator, scopeIdentityType, scopeIdentityFunction);
+            }
+            else if (method.MethodType == MethodType.Update)
+            {
+                return new UpdateMethodBuilder(TypeBuilder, ConnectionField, RepoDef, method, NewConnectionEveryTime, statementSeparator, scopeIdentityType, scopeIdentityFunction);
             }
             else
             {

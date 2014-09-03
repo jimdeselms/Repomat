@@ -48,10 +48,6 @@ namespace Repomat.IlGen
                     return new DropTableMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
                 case MethodType.Get:
                     return new GetMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime, _customQueryIdx++, this, _useStrictTypes, _ctorBuilder);
-                case MethodType.Insert:
-                    return new InsertMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
-                case MethodType.Update:
-                    return new UpdateMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
                 case MethodType.Delete:
                     return new DeleteMethodBuilder(_typeBuilder, _connectionField, _repoDef, method, _newConnectionEveryTime);
                 case MethodType.GetCount:
