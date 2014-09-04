@@ -21,7 +21,7 @@ namespace Repomat.UnitTests.CodeGen
 
         protected override DataLayerBuilder CreateFactory(Func<System.Data.IDbConnection> func)
         {
-            return DataLayerBuilder.DefineSqlDatabase(func, DatabaseType.SQLite);
+            return DataLayerBuilder.DefineSqlDatabase(func, DatabaseType.SQLite).UseIlGeneration();
         }
     }
 }

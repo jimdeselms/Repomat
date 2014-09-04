@@ -424,7 +424,7 @@ namespace Repomat.IlGen
             }
         }
 
-
+        private static readonly MethodInfo _commandTypeSet = typeof(IDbCommand).GetProperty("CommandType").GetSetMethod();
 
         protected virtual void WriteSqlStatement(PropertyDef[] columnsToGet)
         {
@@ -433,8 +433,9 @@ namespace Repomat.IlGen
                 SetCommandText(MethodDef.CustomSqlOrNull);
                 if (MethodDef.CustomSqlIsStoredProcedure)
                 {
-                    throw new NotImplementedException();
-//                    CodeBuilder.WriteLine("cmd.CommandType = System.Data.CommandType.StoredProcedure;");
+                    IlGenerator.Emit(OpCodes.Ldloc, CommandLocal);
+                    IlGenerator.Emit(OpCodes.Ldc_I4, (int)CommandType.StoredProcedure);
+                    IlGenerator.Emit(OpCodes.Call, _commandTypeSet);
                 }
             }
             else

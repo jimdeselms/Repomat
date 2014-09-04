@@ -53,6 +53,11 @@ namespace Repomat.IlGen
         {
             string width = p.StringWidthOrNull == null ? "999" : p.StringWidthOrNull.ToString();
 
+            if (isIdentity)
+            {
+                return "INTEGER";
+            }
+
             return PrimitiveTypeInfo.Get(p.Type).GetSqlDatatype(isIdentity, width);
         }
     }

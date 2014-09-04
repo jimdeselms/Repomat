@@ -45,38 +45,38 @@ namespace Repomat.UnitTests
             Assert.AreEqual(37.5M, foo.MoneyMoney);
         }
 
-        [Test]
-        public void MethodWithResultSetNotInSameOrderAsProperties()
-        {
-            // Handles the case where the columns in the result set are not
-            // in the same order as the parameters of the query.
-            var repo = CreateFooRepo();
-            repo.CreateTheTable();
-            repo.MethodThatWritesARow(25);
-            var foo = repo.QueryWithDifferentOrder("DingleDoodle");
+        //[Test]
+        //public void MethodWithResultSetNotInSameOrderAsProperties()
+        //{
+        //    // Handles the case where the columns in the result set are not
+        //    // in the same order as the parameters of the query.
+        //    var repo = CreateFooRepo();
+        //    repo.CreateTheTable();
+        //    repo.MethodThatWritesARow(25);
+        //    var foo = repo.QueryWithDifferentOrder("DingleDoodle");
 
-            Assert.AreEqual(25, foo.Id);
-            Assert.AreEqual("DingleDoodle", foo.ColumnNameDifferentFromPropertyName);
-            Assert.IsNull(foo.NullableWhatsit);
-            Assert.AreEqual(37.5M, foo.MoneyMoney);
-        }
+        //    Assert.AreEqual(25, foo.Id);
+        //    Assert.AreEqual("DingleDoodle", foo.ColumnNameDifferentFromPropertyName);
+        //    Assert.IsNull(foo.NullableWhatsit);
+        //    Assert.AreEqual(37.5M, foo.MoneyMoney);
+        //}
 
-        [Test]
-        public void ExecuteMultiRowQuery()
-        {
-            var repo = CreateFooRepo();
-            repo.CreateTheTable();
-            repo.MethodThatWritesARow(25);
-            repo.MethodThatWritesARow(100);
+        //[Test]
+        //public void ExecuteMultiRowQuery()
+        //{
+        //    var repo = CreateFooRepo();
+        //    repo.CreateTheTable();
+        //    repo.MethodThatWritesARow(25);
+        //    repo.MethodThatWritesARow(100);
 
-            var result = repo.GetMultipleFoos().ToArray();
-            Assert.AreEqual(25, result[0].Id);
-            Assert.AreEqual(100, result[1].Id);
-            Assert.AreEqual("DingleDoodle", result[0].ColumnNameDifferentFromPropertyName);
-            Assert.AreEqual("DingleDoodle", result[1].ColumnNameDifferentFromPropertyName);
-            Assert.IsNull(result[0].NullableWhatsit);
-            Assert.IsNull(result[1].NullableWhatsit);
-        }
+        //    var result = repo.GetMultipleFoos().ToArray();
+        //    Assert.AreEqual(25, result[0].Id);
+        //    Assert.AreEqual(100, result[1].Id);
+        //    Assert.AreEqual("DingleDoodle", result[0].ColumnNameDifferentFromPropertyName);
+        //    Assert.AreEqual("DingleDoodle", result[1].ColumnNameDifferentFromPropertyName);
+        //    Assert.IsNull(result[0].NullableWhatsit);
+        //    Assert.IsNull(result[1].NullableWhatsit);
+        //}
 
         [Test]
         public void ExecuteScalarQuery()
@@ -195,10 +195,10 @@ namespace Repomat.UnitTests
                 .ExecutesSql("insert into Foo \r\nvalues (@someId, 'DingleDoodle', null, 1.5*@someId)");
             repoBuilder.SetupMethod("DingleSomething")
                 .ExecutesSql("select Id, Dingle, NullableWhatsit, MoneyMoney \nfrom Foo where Dingle = @theString");
-            repoBuilder.SetupMethod("QueryWithDifferentOrder")
-                .ExecutesSql("select NullableWhatsit, MoneyMoney, Id, Dingle \r\nfrom Foo where Dingle = @theString");
-            repoBuilder.SetupMethod("GetMultipleFoos")
-                .ExecutesSql("select Id, NullableWhatsit, Dingle, MoneyMoney from Foo");
+//            repoBuilder.SetupMethod("QueryWithDifferentOrder")
+//                .ExecutesSql("select NullableWhatsit, MoneyMoney, Id, Dingle \r\nfrom Foo where Dingle = @theString");
+//            repoBuilder.SetupMethod("GetMultipleFoos")
+//                .ExecutesSql("select Id, NullableWhatsit, Dingle, MoneyMoney from Foo");
             repoBuilder.SetupMethodWithParameters("GetMoneyMoney", typeof(int))
                 .ExecutesSql("select MoneyMoney from Foo where Id=@id");
             repoBuilder.SetupMethodWithParameters("GetMoneyMoney", typeof(string))
@@ -248,9 +248,9 @@ namespace Repomat.UnitTests
             void MethodThatWritesARow(int someId);
 
             Foo DingleSomething(string theString);
-            Foo QueryWithDifferentOrder(string theString);
+//            Foo QueryWithDifferentOrder(string theString);
 
-            List<Foo> GetMultipleFoos();
+//            List<Foo> GetMultipleFoos();
 
             decimal? GetMoneyMoney(int id);
             decimal GetMoneyMoney(string id);

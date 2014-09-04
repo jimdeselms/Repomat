@@ -9,8 +9,8 @@ namespace Repomat.IlGen
 {
     internal class SQLiteRepoSqlBuilder : RepoSqlBuilder
     {
-        public SQLiteRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, RepoConnectionType repoConnectionType)
-            : base(repoDef, newConnectionEveryTime, repoConnectionType)
+        public SQLiteRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime)
+            : base(repoDef, newConnectionEveryTime)
         {
         }
 

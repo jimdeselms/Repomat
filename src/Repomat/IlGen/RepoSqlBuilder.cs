@@ -41,8 +41,10 @@ namespace Repomat.IlGen
 
         private FieldBuilder _connectionField;
 
-        public RepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, RepoConnectionType repoConnectionType)
+        public RepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime)
         {
+            var repoConnectionType = newConnectionEveryTime ? RepoConnectionType.ConnectionFactory : RepoConnectionType.SingleConnection;
+
             _typeBuilder = _moduleBuilder.DefineType(repoDef.RepositoryType.FullName + "_" + _nextRepoSuffix++);
             _typeBuilder.AddInterfaceImplementation(repoDef.RepositoryType);
 

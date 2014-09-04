@@ -135,6 +135,7 @@
     <Compile Include="Schema\RepositoryDef.cs" />
     <Compile Include="Schema\RepositoryDefBuilder.cs" />
     <Compile Include="CodeGen\SqlServerMethodBuilderFactory.cs" />
+    <Compile Include="Schema\Validators\UpsertMethodValidator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

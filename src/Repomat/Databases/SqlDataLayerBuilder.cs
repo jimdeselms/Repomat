@@ -28,7 +28,7 @@ namespace Repomat.Databases
             _connectionFuncOrNull = conn;
         }
 
-        protected bool NewConnectionEveryTime { get { return _connectionOrNull == null; } }
+        internal override bool NewConnectionEveryTime { get { return _connectionOrNull == null; } }
 
         // Internal because protected will expose it to the outside
         internal override RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef)

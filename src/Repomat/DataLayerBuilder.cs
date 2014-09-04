@@ -55,7 +55,9 @@ namespace Repomat
 
         private NamingConvention _tableNamingConvention;
         private NamingConvention _columnNamingConvention;
-        private bool _useIlGeneration = false;
+        private bool _useIlGeneration = true;
+
+        internal abstract bool NewConnectionEveryTime { get; }
 
         // This is where all of the repository definitions live
         private readonly Dictionary<Type, RepositoryDef> _repoDefs = new Dictionary<Type, RepositoryDef>();
@@ -194,38 +196,17 @@ namespace Repomat
 
         public TRepo CreateRepo<TRepo>()
         {
-            if (_useIlGeneration)
-            {
-                var repoDef = _repoDefs[typeof(TRepo)];
-                RepoSqlBuilder builder = CreateRepoSqlBuilder(repoDef, false, RepoConnectionType.SingleConnection);
+            var repoDef = _repoDefs[typeof(TRepo)];
 
-                var type = builder.CreateType();
+            EnsureRepoIsValid(repoDef);
+            RepoSqlBuilder builder = CreateRepoSqlBuilder(repoDef, NewConnectionEveryTime);
 
-                return (TRepo)CreateRepoInstance(type, repoDef);
-            }
-            else
-            {
-                var repoDef = _repoDefs[typeof(TRepo)];
+            var type = builder.CreateType();
 
-                object repo;
-                if (_repoInstances.TryGetValue(typeof(TRepo), out repo))
-                {
-                    return (TRepo)repo;
-                }
-                else
-                {
-                    EnsureRepoIsValid(repoDef);
-
-                    var reposThatNeedToBeBuilt = _repoDefs.Values.Where(rd => !_repoInstances.Keys.Contains(rd.RepositoryType));
-
-                    CreateReposFromTableDefs(reposThatNeedToBeBuilt);
-
-                    return (TRepo)_repoInstances[typeof(TRepo)];
-                }
-            }
+            return (TRepo)CreateRepoInstance(type, repoDef);
         }
 
-        internal abstract RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, RepoConnectionType repoConnectionType);
+        internal abstract RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime);
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -246,12 +227,6 @@ namespace Repomat
         private void AddReferenceToTypeAssembly(Type type, CompilerParameters parms)
         {
             parms.ReferencedAssemblies.Add(Path.GetFileName(type.Assembly.CodeBase));
-        }
-
-        // This is only here for unit testing.
-        internal object[] __GetRepositoryInstances()
-        {
-            return _repoInstances.Values.ToArray();
         }
     }
 }

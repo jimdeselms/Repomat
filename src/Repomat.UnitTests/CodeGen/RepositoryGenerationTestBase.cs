@@ -405,7 +405,7 @@ namespace Repomat.UnitTests.CodeGen
 
             Assert.AreEqual("Nelly", nelly2.Name);
             Assert.AreEqual(2, nelly2.PersonId);
-            Assert.AreEqual(new DateTime(2009, 1, 9), nelly2.Image);
+            Assert.AreEqual(new DateTime(2009, 1, 9), nelly2.Birthday);
             Assert.IsNull(nelly2.Image);
         }
 
@@ -606,7 +606,7 @@ namespace Repomat.UnitTests.CodeGen
 
         protected virtual DataLayerBuilder CreateDataLayerBuilder(IDbConnection conn)
         {
-            return DataLayerBuilder.DefineSqlDatabase(conn);
+            return DataLayerBuilder.DefineSqlDatabase(conn).UseIlGeneration();
         }
 
         protected abstract DataLayerBuilder CreateFactory(Func<IDbConnection> func);

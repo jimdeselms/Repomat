@@ -224,7 +224,7 @@ namespace Repomat.UnitTests
 
         private IDiscountProvider CreateRepo(IDbConnection conn)
         {
-            SqlServerDataLayerBuilder db = new SqlServerDataLayerBuilder(conn);
+            DataLayerBuilder db = new SqlServerDataLayerBuilder(conn).UseIlGeneration();
             var builder = db.SetupRepo<IDiscountProvider>();
             builder.SetupEntity<Discount>()
                 .HasTableName("PerfTestTable");

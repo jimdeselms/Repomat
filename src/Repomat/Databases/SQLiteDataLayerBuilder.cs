@@ -27,9 +27,9 @@ namespace Repomat.Databases
             return new SQLiteRepositoryClassBuilder(tableDef, NewConnectionEveryTime);
         }
 
-        internal override RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime, IlGen.RepoConnectionType repoConnectionType)
+        internal override RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime)
         {
-            return new SQLiteRepoSqlBuilder(repoDef, newConnectionEveryTime, repoConnectionType);
+            return new SQLiteRepoSqlBuilder(repoDef, newConnectionEveryTime);
         }
     }
 }

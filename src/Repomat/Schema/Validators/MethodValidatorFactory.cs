@@ -23,6 +23,7 @@ namespace Repomat.Schema.Validators
                 case MethodType.GetCount: return new GetCountMethodValidator(repoDef, methodDef, databaseType, errors);
                 case MethodType.Exists: return new ExistsMethodValidator(repoDef, methodDef, databaseType, errors);
                 case MethodType.Custom: return new CustomMethodValidator(repoDef, methodDef, databaseType, errors);
+                case MethodType.Upsert: return new UpsertMethodValidator(repoDef, methodDef, databaseType, errors);
                 default: throw new RepomatException("Unknown method type {0}", methodDef.MethodType, databaseType, errors);
             }
         }

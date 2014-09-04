@@ -62,59 +62,6 @@ namespace Repomat.UnitTests
             }
         }
 
-        [Test]
-        public void CreateRepo_TwoReposStackedUp_CausesBothToBeGenerated()
-        {
-            // When two repositories are defined, when the first one is compiled,
-            // it will also cause the second to be compiled and cached away.
-            var dbBuilder = DataLayerBuilder.DefineInMemoryDatabase();
-            dbBuilder.SetupRepo<IPersonRepository>();
-            dbBuilder.SetupRepo<IPersonRepositoryWithCreate>();
-
-            Assert.AreEqual(0, dbBuilder.__GetRepositoryInstances().Length);
-
-            // Now, create one, and we should find that it creates the other too.
-            var repo = dbBuilder.CreateRepo<IPersonRepository>();
-
-            var compiledRepos = dbBuilder.__GetRepositoryInstances();
-            Assert.AreEqual(2, compiledRepos.Length);
-            Assert.IsTrue(compiledRepos.Contains(repo));
-
-            var other = compiledRepos.Where(r => r != repo).First();
-            Assert.IsTrue(other is IPersonRepositoryWithCreate);
-        }
-
-        [Test]
-        public void CreateRepo_GetRepoTwice_ReturnCached()
-        {
-            // When we get the same repository twice, the
-            // second one should come from the cache, rather than
-            // trying to create it again.
-            var dbBuilder = DataLayerBuilder.DefineInMemoryDatabase();
-            dbBuilder.SetupRepo<IPersonRepository>();
-
-            var repo = dbBuilder.CreateRepo<IPersonRepository>();
-
-            var sameRepo = dbBuilder.CreateRepo<IPersonRepository>();
-            Assert.AreSame(repo, sameRepo);
-        }
-
-        [Test]
-        public void CreateRepo_NewRepoAdded_PreviouslyBuiltRepoNotRebuilt()
-        {
-            // When we build a repo, then add another and build,
-            // we shouldn't rebuild the original one.
-            var dbBuilder = DataLayerBuilder.DefineInMemoryDatabase();
-            dbBuilder.SetupRepo<IPersonRepository>();
-            var repo = dbBuilder.CreateRepo<IPersonRepository>();
-
-            dbBuilder.SetupRepo<IPersonRepositoryWithCreate>();
-            var other = dbBuilder.CreateRepo<IPersonRepositoryWithCreate>();
-
-            var originalRepo = dbBuilder.__GetRepositoryInstances().Where(r => r is IPersonRepository).First();
-            Assert.AreSame(originalRepo, repo);
-        }
-
         /// <summary>
         /// Go through all the commands to make sure that the correct text is being emitted for each command
         /// </summary>

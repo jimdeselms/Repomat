@@ -60,7 +60,7 @@ namespace Repomat.UnitTests.IlGen
         {
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<INothing>(NamingConvention.NoOp, NamingConvention.NoOp);
 
-            RepoSqlBuilder b = new SqlServerRepoSqlBuilder(repoDef, false, RepoConnectionType.ConnectionFactory);
+            RepoSqlBuilder b = new SqlServerRepoSqlBuilder(repoDef, true);
             Type t = b.CreateType();
 
             var ctor = t.GetConstructor(new[] { typeof(Func<IDbConnection>) });
@@ -388,28 +388,9 @@ namespace Repomat.UnitTests.IlGen
     {
         private IDbConnection _connection;
 
-        public TestImpl(IDbConnection connection)
+        public void Foo(Func<IDbConnection> conn)
         {
-            _connection = connection;
-        }
-
-        public bool foo(out string i)
-        {
-            lock (_connection)
-            {
-                i = "hello";
-                return true;
-            }
-        }
-
-        public bool DoSomethingElse()
-        {
-            IDbCommand cmd = null;
-            decimal result = (decimal)cmd.ExecuteScalar();
-            int otherResult = Convert.ToInt32(result);
-
-            return false;
+            _connection = conn();
         }
     }
-
 }

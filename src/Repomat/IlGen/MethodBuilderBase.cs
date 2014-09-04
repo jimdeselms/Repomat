@@ -195,6 +195,8 @@ namespace Repomat.IlGen
 
         private static MethodInfo _monitorEnterMethod = typeof(Monitor).GetMethod("Enter", new Type[] { typeof(object), typeof(bool).MakeByRefType() });
         private static MethodInfo _monitorExitMethod = typeof(Monitor).GetMethod("Exit", new Type[] { typeof(object) });
+        private static MethodInfo _dbConnFuncInvokeMethod = typeof(Func<>).MakeGenericType(typeof(IDbConnection)).GetMethod("Invoke", Type.EmptyTypes);
+        private static MethodInfo _dbConnOpenMethod = typeof(IDbConnection).GetMethod("Open", Type.EmptyTypes);
 
         public void GenerateIl()
         {
@@ -227,9 +229,22 @@ namespace Repomat.IlGen
                 IlGenerator.Emit(OpCodes.Ldarg_0);
                 IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
             }
+
+//            if (NewConnectionEveryTime)
+  //          {
+    //            IlGenerator.Emit(OpCodes.Callvirt, _dbConnFuncInvokeMethod);
+      //      }
+
             IlGenerator.Emit(OpCodes.Dup);
             IlGenerator.Emit(OpCodes.Stloc, connectionLocal);
 
+//            if (NewConnectionEveryTime)
+  //          {
+    //            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+      //          IlGenerator.Emit(OpCodes.Callvirt, _dbConnOpenMethod);
+        //        IlGenerator.BeginExceptionBlock();
+        //    }
+        
             IlGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
             IlGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
 
@@ -268,6 +283,16 @@ namespace Repomat.IlGen
             IlGenerator.MarkLabel(lockNotTakenLabel);
 
             IlGenerator.EndExceptionBlock();
+
+//            if (NewConnectionEveryTime)
+  //          {
+    //            IlGenerator.BeginFinallyBlock();
+            //
+              //  IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+            //    IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+
+           //     IlGenerator.EndExceptionBlock();
+          ///  }
 
             if (_returnValueLocal != null)
             {
