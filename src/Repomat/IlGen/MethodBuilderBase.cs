@@ -39,6 +39,8 @@ namespace Repomat.IlGen
         private static readonly MethodInfo _executeNonQueryMethod;
         private static readonly MethodInfo _executeScalarMethod;
         private static readonly MethodInfo _disposeMethod;
+        private static readonly MethodInfo _commandTypeSet;
+
 
         protected MethodInfo CommandTextSetMethod { get { return _commandTextSetMethod; } }
 
@@ -56,6 +58,7 @@ namespace Repomat.IlGen
             _executeNonQueryMethod = typeof(IDbCommand).GetMethod("ExecuteNonQuery", Type.EmptyTypes);
             _executeScalarMethod = typeof(IDbCommand).GetMethod("ExecuteScalar", Type.EmptyTypes);
             _disposeMethod = typeof(IDisposable).GetMethod("Dispose", Type.EmptyTypes);
+            _commandTypeSet = typeof(IDbCommand).GetProperty("CommandType").GetSetMethod();
         }
 
         protected MethodBuilderBase(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime)
@@ -74,12 +77,19 @@ namespace Repomat.IlGen
             _returnValueLocal = MethodDef.ReturnType == typeof(void) ? null : IlGenerator.DeclareLocal(MethodDef.ReturnType);
         }
 
-        protected void SetCommandText(string commandText)
+        protected void SetCommandText(string commandText, bool isStoredProcedure=false)
         {
             // cmd.CommandText = commandText
             IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlGenerator.Emit(OpCodes.Ldstr, commandText);
             IlGenerator.Emit(OpCodes.Callvirt, _commandTextSetMethod);
+
+            if (MethodDef.CustomSqlIsStoredProcedure)
+            {
+                IlGenerator.Emit(OpCodes.Ldloc, CommandLocal);
+                IlGenerator.Emit(OpCodes.Ldc_I4, (int)CommandType.StoredProcedure);
+                IlGenerator.Emit(OpCodes.Call, _commandTypeSet);
+            }
         }
 
         protected void WriteCommandText()

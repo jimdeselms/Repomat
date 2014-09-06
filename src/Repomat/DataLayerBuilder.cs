@@ -55,7 +55,6 @@ namespace Repomat
 
         private NamingConvention _tableNamingConvention;
         private NamingConvention _columnNamingConvention;
-        private bool _useIlGeneration = true;
 
         internal abstract bool NewConnectionEveryTime { get; }
 
@@ -189,8 +188,6 @@ namespace Repomat
 
         public DataLayerBuilder UseIlGeneration()
         {
-            _useIlGeneration = true;
-
             return this;
         }
 

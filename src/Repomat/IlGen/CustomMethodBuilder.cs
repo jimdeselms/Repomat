@@ -18,7 +18,7 @@ namespace Repomat.IlGen
 
         protected override void GenerateMethodIl(LocalBuilder localBuilder)
         {
-            SetCommandText(MethodDef.CustomSqlOrNull);
+            SetCommandText(MethodDef.CustomSqlOrNull, MethodDef.CustomSqlIsStoredProcedure);
             WriteParameterAssignmentsFromArgList();
 
             ExecuteNonQuery();

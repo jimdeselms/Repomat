@@ -428,19 +428,11 @@ namespace Repomat.IlGen
             }
         }
 
-        private static readonly MethodInfo _commandTypeSet = typeof(IDbCommand).GetProperty("CommandType").GetSetMethod();
-
         protected virtual void WriteSqlStatement(PropertyDef[] columnsToGet)
         {
             if (MethodDef.CustomSqlOrNull != null)
             {
-                SetCommandText(MethodDef.CustomSqlOrNull);
-                if (MethodDef.CustomSqlIsStoredProcedure)
-                {
-                    IlGenerator.Emit(OpCodes.Ldloc, CommandLocal);
-                    IlGenerator.Emit(OpCodes.Ldc_I4, (int)CommandType.StoredProcedure);
-                    IlGenerator.Emit(OpCodes.Call, _commandTypeSet);
-                }
+                SetCommandText(MethodDef.CustomSqlOrNull, MethodDef.CustomSqlIsStoredProcedure);
             }
             else
             {
