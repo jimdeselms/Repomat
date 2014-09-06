@@ -341,6 +341,11 @@ namespace Repomat.IlGen
             return TypeBuilder.DefineField(name, typeof(T), FieldAttributes.Private);
         }
 
+        protected FieldBuilder DefineStaticField<T>(string name)
+        {
+            return TypeBuilder.DefineField(name, typeof(T), FieldAttributes.Private | FieldAttributes.Static);
+        }
+
         protected EntityDef EntityDef
         {
             get { return _methodDef.EntityDef; }

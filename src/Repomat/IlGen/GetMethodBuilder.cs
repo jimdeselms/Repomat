@@ -39,17 +39,17 @@ namespace Repomat.IlGen
             if (MethodDef.CustomSqlOrNull != null && !MethodDef.IsScalarQuery)
             {
                 // private _queryX_columnIndexesAssigned = false;
-                indexesAssignedField = DefineField<bool>(string.Format("_query{0}_columnIndexesAssigned", _customQueryIdx));
+                indexesAssignedField = DefineStaticField<bool>(string.Format("_query{0}_columnIndexesAssigned", _customQueryIdx));
                 _ctorIlBuilder.Emit(OpCodes.Ldc_I4, 0);
-                _ctorIlBuilder.Emit(OpCodes.Stfld, indexesAssignedField);
+                _ctorIlBuilder.Emit(OpCodes.Stsfld, indexesAssignedField);
 
                 foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
                 {
                     // private _queryX_columnYIdx = 0;
-                    var field = DefineField<int>(string.Format("_query{0}_column{1}Idx", _customQueryIdx, col.PropertyName));
+                    var field = DefineStaticField<int>(string.Format("_query{0}_column{1}Idx", _customQueryIdx, col.PropertyName));
                     columnIndexFields[col.PropertyName] = field;
                     _ctorIlBuilder.Emit(OpCodes.Ldc_I4, 0);
-                    _ctorIlBuilder.Emit(OpCodes.Stfld, field);
+                    _ctorIlBuilder.Emit(OpCodes.Stsfld, field);
                 }
             }
 
@@ -216,7 +216,7 @@ namespace Repomat.IlGen
                 var afterIndexAssignment = IlGenerator.DefineLabel();
 
                 // if (!_query{0}_columnIndexesAssigned)
-                IlGenerator.Emit(OpCodes.Ldfld, indexesAssignedField);
+                IlGenerator.Emit(OpCodes.Ldsfld, indexesAssignedField);
                 IlGenerator.Emit(OpCodes.Brtrue, afterIndexAssignment);
 
                 // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
@@ -229,7 +229,7 @@ namespace Repomat.IlGen
                     IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
                     IlGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
                     IlGenerator.Emit(OpCodes.Call, _getIndexForColumn);
-                    IlGenerator.Emit(OpCodes.Stfld, columnIndexFields[columnToGet.PropertyName]);
+                    IlGenerator.Emit(OpCodes.Stsfld, columnIndexFields[columnToGet.PropertyName]);
                 }
 
                 IlGenerator.MarkLabel(afterIndexAssignment);
@@ -380,14 +380,17 @@ namespace Repomat.IlGen
 
                 for (int i = 0; i < selectColumns.Count; i++)
                 {
+                    IlGenerator.EmitWriteLine(string.Format("Begin Emit selectColumns[{0}]", i));
                     // body.WriteLine("newObj.{0} = {1};", selectColumns[i].PropertyName, GetReaderGetExpression(selectColumns[i].Type, indexExpr));
                     var setter = EntityDef.Type.GetProperty(selectColumns[i].PropertyName).GetSetMethod();
                     IlGenerator.Emit(OpCodes.Ldloc, resultLocal);
                     EmitReaderGetExpression(readerLocal, i, selectColumns[i], queryIndexOrNull, readerIndexes);
                     IlGenerator.Emit(OpCodes.Call, setter);
+                    IlGenerator.EmitWriteLine(string.Format("End Emit selectColumns[{0}]", i));
                 }
                 for (int i = 0; i < args.Length; i++)
                 {
+                    IlGenerator.EmitWriteLine(string.Format("Begin Emit args[{0}]", i));
                     var arg = args[i];
                     var index = i + 1;
 
@@ -397,6 +400,7 @@ namespace Repomat.IlGen
                     IlGenerator.Emit(OpCodes.Call, setter);
 
                     // body.WriteLine("newObj.{0} = {1};", arg.Name.Capitalize(), arg.Name);
+                    IlGenerator.EmitWriteLine(string.Format("End Emit args[{0}]", i));
                 }
             }
         }
@@ -416,7 +420,7 @@ namespace Repomat.IlGen
         {
             if (queryIndexOrNull.HasValue)
             {
-                IlGenerator.Emit(OpCodes.Ldloc, readerIndexes[propertyName]);
+                IlGenerator.Emit(OpCodes.Ldsfld, readerIndexes[propertyName]);
             }
             else
             {

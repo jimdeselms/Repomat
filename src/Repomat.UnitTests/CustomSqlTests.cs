@@ -179,6 +179,17 @@ namespace Repomat.UnitTests
             CollectionAssert.AreEqual(new[] { "Hello", "World" }, stringsAsArray);
         }
 
+        [Test]
+        public void ReallySimpleTest()
+        {
+            var dlBuilder = DataLayerBuilder.DefineInMemoryDatabase();
+            var repoBuilder = dlBuilder.SetupRepo<IReallySimple>();
+            repoBuilder.SetupMethod("Doit").ExecutesSql("select 'Jim' as Name");
+            var repo = dlBuilder.CreateRepo<IReallySimple>();
+
+            SimpleClass c = repo.Doit();
+        }
+
         private IFooRepo CreateFooRepo()
         {
             var columnNamingConvention = NamingConvention.NoOp
@@ -279,6 +290,16 @@ namespace Repomat.UnitTests
             string Greet(string name, string greeting);
 
             void SameThingButNonQuery(string name, string greeting);
+        }
+
+        public interface IReallySimple
+        {
+            SimpleClass Doit();
+        }
+
+        public class SimpleClass
+        {
+            public string Name { get; set; }
         }
     }
 }
