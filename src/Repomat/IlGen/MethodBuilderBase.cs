@@ -322,7 +322,13 @@ namespace Repomat.IlGen
             {
                 ParameterDetails arg = MethodDef.Parameters[argIndex];
 
-                var column = EntityDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
+                PropertyDef column = null;
+
+                if (EntityDef != null)
+                {
+                    column = EntityDef.Properties.FirstOrDefault(c => c.PropertyName == arg.Name.Capitalize());
+                }
+
                 if (column == null)
                 {
                     if (MethodDef.CustomSqlOrNull != null)

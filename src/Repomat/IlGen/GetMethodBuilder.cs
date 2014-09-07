@@ -99,8 +99,7 @@ namespace Repomat.IlGen
                 }
                 else if (MethodDef.ReturnType.GetCoreType().IsDatabaseType())
                 {
-                    throw new NotImplementedException();
-//                    WriteMultiRowSimpleTypeRead();
+                    WriteMultiRowSimpleTypeRead(readerLocal);
                 }
                 else
                 {
@@ -207,6 +206,55 @@ namespace Repomat.IlGen
 
             IlGenerator.MarkLabel(afterElse);
 
+        }
+
+        private void WriteMultiRowSimpleTypeRead(LocalBuilder readerLocal)
+        {
+            var rowType = MethodDef.ReturnType.GetCoreType();
+            bool isEnumerable = MethodDef.ReturnType.IsIEnumerableOfType(rowType);
+
+            var listType = typeof(List<>).MakeGenericType(rowType);
+            var ctor = listType.GetConstructor(Type.EmptyTypes);
+            var addMethod = listType.GetMethod("Add", new Type[] { rowType });
+            IlGenerator.Emit(OpCodes.Newobj, ctor);
+
+            var resultListLocal = IlGenerator.DeclareLocal(listType);
+            IlGenerator.Emit(OpCodes.Stloc, resultListLocal);
+
+            var whileLoopStart = IlGenerator.DefineLabel();
+            var whileLoopEnd = IlGenerator.DefineLabel();
+
+            IlGenerator.MarkLabel(whileLoopStart);
+            IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+            IlGenerator.Emit(OpCodes.Call, _readMethod);
+            IlGenerator.Emit(OpCodes.Brfalse, whileLoopEnd);
+
+            // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
+            IlGenerator.Emit(OpCodes.Ldloc, readerLocal);
+            IlGenerator.Emit(OpCodes.Ldc_I4_0);
+            IlGenerator.Emit(OpCodes.Call, _getValueMethod);
+            PrimitiveTypeInfo.Get(rowType).EmitConversion(IlGenerator);
+
+            var currentResultLocal = IlGenerator.DeclareLocal(rowType);
+            IlGenerator.Emit(OpCodes.Stloc, currentResultLocal);
+            IlGenerator.Emit(OpCodes.Ldloc, resultListLocal);
+            IlGenerator.Emit(OpCodes.Ldloc, currentResultLocal);
+            IlGenerator.Emit(OpCodes.Call, addMethod);
+
+            IlGenerator.Emit(OpCodes.Br, whileLoopStart);
+
+            IlGenerator.MarkLabel(whileLoopEnd);
+
+            IlGenerator.Emit(OpCodes.Ldloc, resultListLocal);
+
+            if (MethodDef.ReturnType.IsArray)
+            {
+                var toArrayMethod = typeof(Enumerable).GetMethod("ToArray", BindingFlags.Static | BindingFlags.Public);
+                var genericToArrayMethod = toArrayMethod.MakeGenericMethod(rowType);
+                IlGenerator.Emit(OpCodes.Call, genericToArrayMethod);
+            }
+
+            IlGenerator.Emit(OpCodes.Ret);
         }
 
         private void EmitArgumentMappingCheck(LocalBuilder readerLocal, FieldBuilder indexesAssignedField, PropertyDef[] columnsToGet, IDictionary<string, FieldBuilder> columnIndexFields)

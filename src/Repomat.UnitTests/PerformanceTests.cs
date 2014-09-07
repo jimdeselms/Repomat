@@ -19,7 +19,6 @@ namespace Repomat.UnitTests
         /// Test the time it takes to get a fill result set.
         /// </summary>
         [Test]
-        [Ignore]
         public void SelectToArrayTest()
         {
             const int count = 1000;
