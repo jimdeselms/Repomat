@@ -26,7 +26,7 @@ namespace Repomat.UnitTests
             Console.WriteLine();
             Console.WriteLine("### Testing Select {0} rows to dataset", count);
             Stopwatch dapper = new Stopwatch();
-            Stopwatch Repomat = new Stopwatch();
+            Stopwatch repomat = new Stopwatch();
 
             IDbConnection conn = Connections.NewSqlConnection();
 
@@ -35,17 +35,17 @@ namespace Repomat.UnitTests
             var firstDiscounts = conn.Query<Discount>("select DiscountId, DiscountTypeId, Description, Created, CreatedBy, OperationLogId, PricingConfigurationId from PerfTestTable").ToArray();
             dapper.Stop();
 
-            Repomat.Start();
+            repomat.Start();
             var repo = CreateRepo(conn);
             var firstList = repo.GetAll().ToArray();
-            Repomat.Stop();
+            repomat.Stop();
 
             Console.WriteLine("Dapper first:         {0}", dapper.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat first:      {0}", Repomat.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat vs. Dapper: {0}%", (Repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
+            Console.WriteLine("Repomat first:      {0}", repomat.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Repomat vs. Dapper: {0}%", (repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
 
             dapper.Reset();
-            Repomat.Reset();
+            repomat.Reset();
 
             InsertRows(count);
 
@@ -60,9 +60,9 @@ namespace Repomat.UnitTests
                 dapperDiscounts = conn.Query<Discount>("select DiscountId, DiscountTypeId, Description, Created, CreatedBy, OperationLogId, PricingConfigurationId from PerfTestTable").ToArray();
                 dapper.Stop();
 
-                Repomat.Start();
+                repomat.Start();
                 spededbDiscounts = repo.GetAll().ToArray();
-                Repomat.Stop();
+                repomat.Stop();
             }
 
             Assert.AreEqual(count, spededbDiscounts.Length);
@@ -71,8 +71,8 @@ namespace Repomat.UnitTests
 
             Console.WriteLine("-----");
             Console.WriteLine("Dapper {0} times:     {1}", iterations, dapper.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat {0} times:  {1}", iterations, Repomat.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat vs. Dapper: {0}%", (Repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
+            Console.WriteLine("Repomat {0} times:  {1}", iterations, repomat.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Repomat vs. Dapper: {0}%", (repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Repomat.UnitTests
             Console.WriteLine();
             Console.WriteLine("### Testing Insert");
             Stopwatch dapper = new Stopwatch();
-            Stopwatch Repomat = new Stopwatch();
+            Stopwatch repomat = new Stopwatch();
 
             IDbConnection conn = Connections.NewSqlConnection();
 
@@ -106,7 +106,7 @@ namespace Repomat.UnitTests
 
             dapper.Stop();
 
-            Repomat.Start();
+            repomat.Start();
             var repo = CreateRepo(conn);
             Discount d = new Discount()
             {
@@ -119,14 +119,14 @@ namespace Repomat.UnitTests
                 PricingConfigurationId = 23942
             };
             repo.Insert(d);
-            Repomat.Stop();
+            repomat.Stop();
 
             Console.WriteLine("Dapper first:         {0}", dapper.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat first:      {0}", Repomat.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat vs. Dapper: {0}%", (Repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
+            Console.WriteLine("Repomat first:      {0}", repomat.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Repomat vs. Dapper: {0}%", (repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
 
             dapper.Reset();
-            Repomat.Reset();
+            repomat.Reset();
 
             for (int i = 0; i < count; i++)
             {
@@ -146,7 +146,7 @@ namespace Repomat.UnitTests
 
                 dapper.Stop();
 
-                Repomat.Start();
+                repomat.Start();
 
                 d = new Discount
                     {
@@ -159,13 +159,13 @@ namespace Repomat.UnitTests
                         PricingConfigurationId = 23942
                     };
                 repo.Insert(d);
-                Repomat.Stop();
+                repomat.Stop();
             }
 
             Console.WriteLine("-----");
             Console.WriteLine("Dapper {0} times:     {1}", count, dapper.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat {0} times:  {1}", count, Repomat.Elapsed.TotalMilliseconds);
-            Console.WriteLine("Repomat vs. Dapper: {0}%", count, (Repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
+            Console.WriteLine("Repomat {0} times:  {1}", count, repomat.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Repomat vs. Dapper: {0}%", count, (repomat.Elapsed.TotalMilliseconds / dapper.Elapsed.TotalMilliseconds) * 100.0);
         }
 
         [Test]

@@ -428,17 +428,14 @@ namespace Repomat.IlGen
 
                 for (int i = 0; i < selectColumns.Count; i++)
                 {
-                    IlGenerator.EmitWriteLine(string.Format("Begin Emit selectColumns[{0}]", i));
                     // body.WriteLine("newObj.{0} = {1};", selectColumns[i].PropertyName, GetReaderGetExpression(selectColumns[i].Type, indexExpr));
                     var setter = EntityDef.Type.GetProperty(selectColumns[i].PropertyName).GetSetMethod();
                     IlGenerator.Emit(OpCodes.Ldloc, resultLocal);
                     EmitReaderGetExpression(readerLocal, i, selectColumns[i], queryIndexOrNull, readerIndexes);
                     IlGenerator.Emit(OpCodes.Call, setter);
-                    IlGenerator.EmitWriteLine(string.Format("End Emit selectColumns[{0}]", i));
                 }
                 for (int i = 0; i < args.Length; i++)
                 {
-                    IlGenerator.EmitWriteLine(string.Format("Begin Emit args[{0}]", i));
                     var arg = args[i];
                     var index = i + 1;
 
@@ -446,9 +443,6 @@ namespace Repomat.IlGen
                     IlGenerator.Emit(OpCodes.Ldloc, resultLocal);
                     IlGenerator.Emit(OpCodes.Ldarg, index);
                     IlGenerator.Emit(OpCodes.Call, setter);
-
-                    // body.WriteLine("newObj.{0} = {1};", arg.Name.Capitalize(), arg.Name);
-                    IlGenerator.EmitWriteLine(string.Format("End Emit args[{0}]", i));
                 }
             }
         }
