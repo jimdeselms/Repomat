@@ -41,7 +41,6 @@ namespace Repomat.IlGen
         private static readonly MethodInfo _disposeMethod;
         private static readonly MethodInfo _commandTypeSet;
 
-
         protected MethodInfo CommandTextSetMethod { get { return _commandTextSetMethod; } }
 
         static MethodBuilderBase()
@@ -210,20 +209,24 @@ namespace Repomat.IlGen
 
         public void GenerateIl()
         {
-            // var cmd = _connection.CreateCommand();
-            // try
-            // finally
-            // cmd.Disose();
-            var connectionLocal = IlGenerator.DeclareLocal(typeof(IDbConnection));
-            var lockTakenLocal = IlGenerator.DeclareLocal(typeof(bool));
+            int? passedConnectionIndex = GetArgumentIndex(typeof(IDbConnection));
+            int? passedTransactionIndex = GetArgumentIndex(typeof(IDbTransaction));
 
-            IlGenerator.Emit(OpCodes.Ldc_I4_0);
-            IlGenerator.Emit(OpCodes.Stloc, lockTakenLocal);
+            bool lockConnection = passedConnectionIndex.HasValue || passedTransactionIndex.HasValue || !_newConnectionEveryTime;
+
+            var connectionLocal = IlGenerator.DeclareLocal(typeof(IDbConnection));
+            LocalBuilder lockTakenLocal = null;
+
+            if (lockConnection)
+            {
+                lockTakenLocal = IlGenerator.DeclareLocal(typeof(bool));
+
+                IlGenerator.Emit(OpCodes.Ldc_I4_0);
+                IlGenerator.Emit(OpCodes.Stloc, lockTakenLocal);
+            }
 
             IlGenerator.BeginExceptionBlock();
 
-            int? passedConnectionIndex = GetArgumentIndex(typeof(IDbConnection));
-            int? passedTransactionIndex = GetArgumentIndex(typeof(IDbTransaction));
             if (passedConnectionIndex.HasValue)
             {
                 IlGenerator.Emit(OpCodes.Ldarg, passedConnectionIndex.Value);
@@ -234,31 +237,33 @@ namespace Repomat.IlGen
                 IlGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
                 IlGenerator.Emit(OpCodes.Call, connProperty);
             }
+            else if (_newConnectionEveryTime)
+            {
+                IlGenerator.Emit(OpCodes.Ldarg_0);
+                IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
+
+                IlGenerator.Emit(OpCodes.Callvirt, _dbConnFuncInvokeMethod);
+                IlGenerator.Emit(OpCodes.Stloc, connectionLocal);
+                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+                IlGenerator.Emit(OpCodes.Callvirt, _dbConnOpenMethod);
+                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+            }
             else // use the _connectionField
             {
                 IlGenerator.Emit(OpCodes.Ldarg_0);
                 IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
             }
 
-//            if (NewConnectionEveryTime)
-  //          {
-    //            IlGenerator.Emit(OpCodes.Callvirt, _dbConnFuncInvokeMethod);
-      //      }
-
             IlGenerator.Emit(OpCodes.Dup);
             IlGenerator.Emit(OpCodes.Stloc, connectionLocal);
 
-//            if (NewConnectionEveryTime)
-  //          {
-    //            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-      //          IlGenerator.Emit(OpCodes.Callvirt, _dbConnOpenMethod);
-        //        IlGenerator.BeginExceptionBlock();
-        //    }
-        
-            IlGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
-            IlGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
+            if (lockConnection)
+            {
+                IlGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
+                IlGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
+                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+            }
 
-            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
             IlGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
             IlGenerator.Emit(OpCodes.Stloc, _commandLocal);
 
@@ -282,27 +287,24 @@ namespace Repomat.IlGen
             IlGenerator.EndExceptionBlock();
 
             IlGenerator.BeginFinallyBlock();
-                
-            var lockNotTakenLabel = IlGenerator.DefineLabel();
-            IlGenerator.Emit(OpCodes.Ldloc, lockTakenLocal);
-            IlGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
 
-            IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-            IlGenerator.Emit(OpCodes.Call, _monitorExitMethod);
+            if (lockConnection)
+            {
+                var lockNotTakenLabel = IlGenerator.DefineLabel();
+                IlGenerator.Emit(OpCodes.Ldloc, lockTakenLocal);
+                IlGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
 
-            IlGenerator.MarkLabel(lockNotTakenLabel);
+                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+                IlGenerator.Emit(OpCodes.Call, _monitorExitMethod);
+                IlGenerator.MarkLabel(lockNotTakenLabel);
+            }
+            else
+            {
+                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+                IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+            }
 
             IlGenerator.EndExceptionBlock();
-
-//            if (NewConnectionEveryTime)
-  //          {
-    //            IlGenerator.BeginFinallyBlock();
-            //
-              //  IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-            //    IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
-
-           //     IlGenerator.EndExceptionBlock();
-          ///  }
 
             if (_returnValueLocal != null)
             {
