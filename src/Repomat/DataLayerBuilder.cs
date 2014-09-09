@@ -55,9 +55,6 @@ namespace Repomat
         // This is where all of the repository definitions live
         private readonly Dictionary<Type, RepositoryDef> _repoDefs = new Dictionary<Type, RepositoryDef>();
 
-        // This is where all of the generated repositories are cached.
-        private readonly Dictionary<Type, object> _repoInstances = new Dictionary<Type, object>();
-
         private readonly DatabaseType _databaseType;
 
         protected DataLayerBuilder(DatabaseType databaseType)
@@ -65,76 +62,6 @@ namespace Repomat
             _tableNamingConvention = NamingConvention.NoOp;
             _columnNamingConvention = NamingConvention.NoOp;
             _databaseType = databaseType;
-        }
-
-        internal void CreateReposFromTableDefs(IEnumerable<RepositoryDef> repoDefs)
-        {
-            // Build up a list of all of the source code for all of the repositories.
-            var codeAndClassNames = new List<dynamic>();
-
-            foreach (var repoDef in repoDefs)
-            {
-                string className;
-                string classCode = GenerateClassCode(repoDef, out className);
-
-                codeAndClassNames.Add(new { RepoDef = repoDef, ClassName = className, ClassCode = classCode });
-            }
-
-            CSharpCodeProvider p = new CSharpCodeProvider();
-            CompilerParameters parms = new CompilerParameters();
-
-            var assemblies = GetDistinctAssembliesFromRepoDefs(codeAndClassNames.Select(x => (RepositoryDef)x.RepoDef));
-
-            foreach (var assembly in assemblies)
-            {
-                parms.ReferencedAssemblies.Add(Path.GetFileName(assembly.CodeBase));
-            }
-            parms.ReferencedAssemblies.Add(Path.GetFileName(typeof(DataLayerBuilder).Assembly.CodeBase));
-            parms.ReferencedAssemblies.Add("System.Core.dll");
-            parms.ReferencedAssemblies.Add("System.Data.dll");
-            parms.ReferencedAssemblies.Add("System.dll");
-            parms.ReferencedAssemblies.Add("System.Data.SQLite.dll");
-
-            parms.GenerateInMemory = true;
-
-            // Compile all of the waiting repositories in one shot; this is way faster
-            // then doing them one at a time.
-            var result = p.CompileAssemblyFromSource(parms, codeAndClassNames.Select(x => (string)x.ClassCode).ToArray());
-            if (result.Errors.HasErrors)
-            {
-                StringBuilder errorList = new StringBuilder();
-                foreach (var error in result.Errors)
-                {
-                    errorList.AppendLine(error.ToString());
-                }
-                throw new RepomatException("Compilation Errors:\n" + string.Join("\n", errorList));
-            }
-            var asm = result.CompiledAssembly;
-
-            foreach (var entry in codeAndClassNames)
-            {
-                var repoType = entry.RepoDef.RepositoryType;
-                var generatedType = asm.GetType(entry.ClassName);
-                _repoInstances[repoType] = CreateRepoInstance(generatedType, _repoDefs[repoType]);
-            }
-        }
-
-        private IEnumerable<Assembly> GetDistinctAssembliesFromRepoDefs(IEnumerable<RepositoryDef> repoDefs)
-        {
-            HashSet<Assembly> asms = new HashSet<Assembly>();
-            foreach (var repoDef in repoDefs)
-            {
-                foreach (var method in repoDef.Methods)
-                {
-                    if (method.EntityDef != null)
-                    {
-                        asms.Add(method.EntityDef.Type.Assembly);
-                    }
-                }
-                asms.Add(repoDef.RepositoryType.Assembly);
-            }
-
-            return asms;
         }
 
         private void EnsureRepoIsValid(RepositoryDef repoDef)
@@ -200,17 +127,6 @@ namespace Repomat
         internal abstract RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime);
 
         private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        private string GenerateClassCode(RepositoryDef tableDef, out string className)
-        {
-            var classBuilder = CreateClassBuilder(tableDef);
-
-            className = classBuilder.ClassName;
-            return classBuilder.GenerateClassDefinition();
-        }
-
-        // Internal so that I don't have to expose it to the outside by making it protected.
-        internal abstract RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef);
 
         // internal because protected will expose it to the outside.
         internal abstract object CreateRepoInstance(Type repoClass, RepositoryDef tableDef);

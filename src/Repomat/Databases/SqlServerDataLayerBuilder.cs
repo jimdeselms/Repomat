@@ -20,12 +20,6 @@ namespace Repomat.Databases
         {
         }
 
-        // Internal because protected will expose it to the outside
-        internal override RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef)
-        {
-            return new SqlServerRepositoryClassBuilder(tableDef, NewConnectionEveryTime);
-        }
-
         internal override RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime)
         {
             return new SqlServerRepoSqlBuilder(repoDef, newConnectionEveryTime);

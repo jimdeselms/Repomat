@@ -69,8 +69,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeGen\CodeBuilderUnitTests.cs" />
-    <Compile Include="CodeGen\SqlCodeGenerationTests.cs" />
     <Compile Include="CodeGen\SqlServerIlGenerationTests.cs" />
     <Compile Include="ConcurrentLoadedCollectionTests.cs" />
     <Compile Include="Connections.cs" />

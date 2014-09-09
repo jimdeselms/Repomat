@@ -30,12 +30,6 @@ namespace Repomat.Databases
 
         internal override bool NewConnectionEveryTime { get { return _connectionOrNull == null; } }
 
-        // Internal because protected will expose it to the outside
-        internal override RepositoryClassBuilder CreateClassBuilder(RepositoryDef tableDef)
-        {
-            return new SqlServerRepositoryClassBuilder(tableDef, NewConnectionEveryTime);
-        }
-
         // internal because protected will expose it to the outside.
         internal override object CreateRepoInstance(Type repoClass, RepositoryDef tableDef)
         {

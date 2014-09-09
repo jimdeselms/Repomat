@@ -222,7 +222,7 @@ namespace Repomat.UnitTests
 
         private IStringRepo CreateStringRepo()
         {
-            var db = DataLayerBuilder.DefineSqlDatabase(Connections.NewSQLiteConnection());
+            var db = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             var repoBuilder = db.SetupRepo<IStringRepo>();
             repoBuilder.SetupMethod("CreateTheTable")
                 .ExecutesSql("create table stringTable (s varchar(100))");
