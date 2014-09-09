@@ -15,7 +15,7 @@ namespace Repomat.UnitTests
         [Test]
         public void Create_BuildDatabaseForUnmatchedMethod_Throws()
         {
-            var db = DataLayerBuilder.DefineInMemoryDatabase();
+            var db = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             Assert.Throws<RepomatException>(() => { var ignored = db.SetupRepo<IFooRepo>().Repo; });
         }
 
@@ -182,7 +182,7 @@ namespace Repomat.UnitTests
         [Test]
         public void ReallySimpleTest()
         {
-            var dlBuilder = DataLayerBuilder.DefineInMemoryDatabase();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             var repoBuilder = dlBuilder.SetupRepo<IReallySimple>();
             repoBuilder.SetupMethod("Doit").ExecutesSql("select 'Jim' as Name");
             var repo = dlBuilder.CreateRepo<IReallySimple>();
@@ -195,7 +195,7 @@ namespace Repomat.UnitTests
             var columnNamingConvention = NamingConvention.NoOp
                 .AddOverride("ColumnNameDifferentFromPropertyName", "Dingle");
 
-            var db = DataLayerBuilder.DefineInMemoryDatabase();
+            var db = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             db.SetColumnNamingConvention(columnNamingConvention);
             var repoBuilder = db.SetupRepo<IFooRepo>();
 
@@ -222,7 +222,7 @@ namespace Repomat.UnitTests
 
         private IStringRepo CreateStringRepo()
         {
-            var db = DataLayerBuilder.DefineInMemoryDatabase();
+            var db = DataLayerBuilder.DefineSqlDatabase(Connections.NewSQLiteConnection());
             var repoBuilder = db.SetupRepo<IStringRepo>();
             repoBuilder.SetupMethod("CreateTheTable")
                 .ExecutesSql("create table stringTable (s varchar(100))");

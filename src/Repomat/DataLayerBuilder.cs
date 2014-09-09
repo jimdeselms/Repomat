@@ -10,7 +10,6 @@ using Microsoft.CSharp;
 using Repomat.CodeGen;
 using Repomat.Schema;
 using System.Data.SqlClient;
-using System.Data.SQLite;
 using Repomat.Schema.Validators;
 using Repomat.Databases;
 using System.IO;
@@ -26,7 +25,7 @@ namespace Repomat
             {
                 return DefineSqlDatabase(conn, DatabaseType.SqlServer);
             }
-            else if (conn is SQLiteConnection)
+            else if (conn.GetType().FullName == "System.Data.SQLite.SQLiteConnection")
             {
                 return DefineSqlDatabase(conn, DatabaseType.SQLite);
             }
@@ -44,11 +43,6 @@ namespace Repomat
         public static DataLayerBuilder DefineSqlDatabase(Func<IDbConnection> conn, DatabaseType type)
         {
             return type.CreateDataLayerBuilder(conn);
-        }
-
-        public static DataLayerBuilder DefineInMemoryDatabase()
-        {
-            return InMemoryDatabase.Create();
         }
 
         public DatabaseType DatabaseType { get { return _databaseType; } }

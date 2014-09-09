@@ -52,7 +52,7 @@ namespace Repomat.UnitTests
         
         private INonStandardMethods CreateRepo()
         {
-            var dlBuilder = DataLayerBuilder.DefineInMemoryDatabase();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             var repoBuilder = dlBuilder.SetupRepo<INonStandardMethods>();
 
             repoBuilder.SetupMethod("CauseTheTableToBeCreated")

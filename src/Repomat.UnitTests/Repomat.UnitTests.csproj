@@ -84,7 +84,6 @@
     <Compile Include="IlGen\ConversionTests.cs" />
     <Compile Include="IlGen\IlGenTests.cs" />
     <Compile Include="IlTester.cs" />
-    <Compile Include="InMemoryDatabaseTests.cs" />
     <Compile Include="MethodEntityTypeTests.cs" />
     <Compile Include="MethodTypeOverrideTests.cs" />
     <Compile Include="NamingConventionTests.cs" />
