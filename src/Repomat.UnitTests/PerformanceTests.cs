@@ -175,21 +175,19 @@ namespace Repomat.UnitTests
 
             var conn = Connections.NewSqlConnection();
 
-            SqlServerDataLayerBuilder db = new SqlServerDataLayerBuilder(conn);
-
             Stopwatch s = new Stopwatch();
             s.Start();
 
-            var builder = db.SetupRepo<IDiscountProvider>();
-
-            builder
-              .SetupMethod("InsertStuffIntoTable")
-//              .SetTableName("PerfTestTable")
-              .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
-
             for (int i = 0; i < count; i++)
             {
-                builder.CreateRepo();
+                SqlServerDataLayerBuilder db = new SqlServerDataLayerBuilder(conn);
+                var builder = db.SetupRepo<IDiscountProvider>();
+
+                builder
+                  .SetupMethod("InsertStuffIntoTable")
+                    //              .SetTableName("PerfTestTable")
+                  .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
+                var ignored = builder.Repo;
             }
             s.Stop();
 
@@ -233,7 +231,7 @@ namespace Repomat.UnitTests
             builder.SetupMethod("InsertStuffIntoTable")
               .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
-            return builder.CreateRepo();
+            return builder.Repo;
         }
 
     }

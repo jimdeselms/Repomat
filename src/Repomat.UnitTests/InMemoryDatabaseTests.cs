@@ -16,13 +16,13 @@ namespace Repomat.UnitTests
         {
             var repo1 = DataLayerBuilder.DefineInMemoryDatabase()
                 .SetupRepo<IPersonRepository>()
-                .CreateRepo();
+                .Repo;
             
             repo1.CreateTable();
 
             var repo2 = DataLayerBuilder.DefineInMemoryDatabase()
                 .SetupRepo<IPersonRepository>()
-                .CreateRepo();
+                .Repo;
 
             // The second repository won't know about the table.
             Assert.IsFalse(repo2.TableExists());

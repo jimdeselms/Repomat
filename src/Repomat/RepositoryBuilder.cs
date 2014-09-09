@@ -18,9 +18,9 @@ namespace Repomat
             _repoDef = repoDef;
         }
 
-        public TRepo CreateRepo()
+        public TRepo Repo
         {
-            return (TRepo)_dataLayerBuilder.CreateRepo<TRepo>();
+            get { return _dataLayerBuilder.CreateRepo<TRepo>(); }
         }
 
         public MethodBuilder SetupMethod(string methodName)

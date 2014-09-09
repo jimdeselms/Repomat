@@ -395,29 +395,6 @@ namespace Repomat.IlGen
 
                 IlGenerator.Emit(OpCodes.Newobj, ctor);
                 IlGenerator.Emit(OpCodes.Stloc, resultLocal);
-                //body.WriteLine("var newObj = new {0}(", EntityDef.Type.ToCSharp());
-
-                //var argToExprMap = new Dictionary<string, string>();
-                //for (int i = 0; i < selectColumns.Count; i++)
-                //{
-                //    var col = selectColumns[i];
-                //    string indexExpr = GetIndexExpr(i, col.PropertyName, queryIndexOrNull);
-                //    argToExprMap[col.PropertyName.Uncapitalize()] = GetReaderGetExpression(col.Type, indexExpr);
-                //}
-                //foreach (var arg in argColumns)
-                //{
-                //    argToExprMap[arg.Name] = arg.Name;
-                //}
-
-                //var arguments = new List<string>();
-                //foreach (var prop in EntityDef.Properties)
-                //{
-                //    arguments.Add(argToExprMap[prop.PropertyName.Uncapitalize()]);
-                //}
-
-                //body.Write(string.Join(", ", arguments));
-
-                //body.WriteLine(");");
             }
             else
             {
