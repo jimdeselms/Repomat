@@ -1,31 +1,64 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Repomat.Schema.Validators
 {
-    internal class RepositoryDefValidator
+    internal class RepositoryDefValidator : ValidatorBase
     {
-        private DatabaseType _databaseType;
-
-        public RepositoryDefValidator(DatabaseType databaseType)
+        public RepositoryDefValidator(RepositoryDef repoDef, DatabaseType databaseType)
+            : base(repoDef, databaseType, new List<ValidationError>())
         {
-            _databaseType = databaseType;
+            AddValidators(OnlyOneSingletonGetAllowed);
         }
 
-        public IReadOnlyList<ValidationError> Validate(RepositoryDef repoDef)
+        public IReadOnlyList<ValidationError> Validate()
         {
             List<ValidationError> errors = new List<ValidationError>();
 
-            foreach (var method in repoDef.Methods)
+            foreach (var method in RepoDef.Methods)
             {
-                var validator = MethodValidatorFactory.Create(repoDef, method, _databaseType, errors);
+                var validator = MethodValidatorFactory.Create(RepoDef, method, DatabaseType, errors);
                 validator.Validate();
             }
 
             return errors;
+        }
+
+        private void OnlyOneSingletonGetAllowed()
+        {
+            foreach (var entityDef in RepoDef.GetEntityDefs())
+            {
+                if (!entityDef.HasExplicitPrimaryKey)
+                {
+                    // Get all the singleton get methods.
+                    var singletonGets = RepoDef.Methods.Where(m => m.EntityDef == entityDef && m.MethodType == MethodType.Get && m.IsSingleton).ToArray();
+                    {
+                        for (int i = 0; i < singletonGets.Length; i++)
+                        {
+                            for (int j = 0; j < singletonGets.Length; j++)
+                            {
+                                if (GetMethodHashCode(singletonGets[i]) != GetMethodHashCode(singletonGets[j]))
+                                {
+                                    AddError("DupePrimaryKey", "Entity with more than one singleton get. call UsesPrimaryKey() to define primary key.");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private int GetMethodHashCode(MethodDef method)
+        {
+            int result = 0;
+            foreach (var parameter in method.Parameters)
+            {
+                result = result << 1;
+                result = result ^ (parameter.Type.GetHashCode()<< 1) ^ parameter.Type.Name.GetHashCode();
+            }
+            return result;
         }
     }
 }

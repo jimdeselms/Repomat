@@ -16,7 +16,7 @@ namespace Repomat.Schema.Validators
 
         private void FailIfBothCreateAndInsertExist()
         {
-            if (RepositoryDef.Methods.Any(r => r.MethodType == MethodType.Insert))
+            if (RepoDef.Methods.Any(r => r.MethodType == MethodType.Insert))
             {
                 AddError("BothCreateAndInsert", "Create and Insert methods are mutually exclusive. Please choose one");
             }

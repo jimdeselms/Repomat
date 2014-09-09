@@ -15,13 +15,13 @@ namespace Repomat.UnitTests
         [Test]
         public void Validate_NoErrors()
         {
-            Validate<Person, IPersonRepository>();
+            Validate<IPersonRepository>();
         }
 
         [Test]
         public void Validate_TryGetWithoutBoolReturn()
         {
-            Validate<Person, ITryGetWithoutBoolReturn>(
+            Validate<ITryGetWithoutBoolReturn>(
                 Error("MultiGetReturningWrongType", "expected enumerable return type Repomat.UnitTests.Person, returns string instead"),
                 Error("TryGetReturnWrongType", "expected return type bool, returns string instead"));
         }
@@ -29,28 +29,28 @@ namespace Repomat.UnitTests
         [Test]
         public void Validate_GetArgumentsDontMapToProperties()
         {
-            Validate<Person, IGetWithParameterThatDoesntMap>(
+            Validate<IGetWithParameterThatDoesntMap>(
                 Error("ParameterDoesntHaveProperty", "found parameter badParam that does not map to a settable property BadParam"));
         }
 
         [Test]
         public void Validate_GetArgumentsParameterTypeDoesntMatchProperty()
         {
-            Validate<Person, IGetWithParameterOfDifferentType>(
+            Validate<IGetWithParameterOfDifferentType>(
                 Error("ParameterDoesntHaveProperty", "parameter birthday is not the same type as property Birthday. It must be System.DateTime"));
         }
 
         [Test]
         public void Validate_CreateAndInsertMutuallyExclusive()
         {
-            Validate<Person, IRepoWithCreateAndInsert>(
+            Validate<IRepoWithCreateAndInsert>(
                 Error("BothCreateAndInsert", "Create and Insert methods are mutually exclusive. Please choose one"));
         }
 
         [Test]
         public void Validate_CustomMethodDoesntHaveSqlDefined()
         {
-            Validate<Person, ICustomMethodWithoutCustomSql>(
+            Validate<ICustomMethodWithoutCustomSql>(
                 Error("CustomMethodWithoutSql", "Method looks custom, but does not have SQL defined. Call SetCustomSql() to define the SQL"));
         }
 
@@ -71,7 +71,47 @@ namespace Repomat.UnitTests
             {
                 StringAssert.Contains("Stored procedures not supported in SQLite", e.Message);
             }
+        }
 
+        [Test]
+        public void Validate_MoreThanOneSingletonGetMethod_Fail()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+            var repoBuilder = dlBuilder.SetupRepo<ITwoGets>();
+
+            try
+            {
+                var ignored = repoBuilder.Repo;
+                Assert.Fail();
+            }
+            catch (RepomatException e)
+            {
+                StringAssert.Contains("Entity with more than one singleton get. call UsesPrimaryKey() to define primary key.", e.Message);
+            }
+        }
+
+        [Test]
+        public void Validate_MoreThanOneSingleGetButExplicitPrimaryKey_Success()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+            var repoBuilder = dlBuilder.SetupRepo<ITwoGets>();
+            repoBuilder
+                .SetupEntity<Person>()
+                .HasPrimaryKey("PersonId");
+
+            var ignored = repoBuilder.Repo;
+        }
+
+        [Test]
+        public void Validate_MoreThanOneSingleGetButSameType_Success()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+            var repoBuilder = dlBuilder.SetupRepo<ITwoGets>();
+            repoBuilder
+                .SetupEntity<Person>()
+                .HasPrimaryKey("PersonId");
+
+            var ignored = repoBuilder.Repo;
         }
 
         private interface ITryGetWithoutBoolReturn
@@ -110,13 +150,25 @@ namespace Repomat.UnitTests
             void DoSomethingSpecial();
         }
 
+        public interface ITwoGets
+        {
+            Person GetById(int personId);
+            Person GetByName(string name);
+        }
+
+        public interface ITwoGetsSameTime
+        {
+            Person GetById(int personId);
+            Person GetById2(int personId);
+        }
+
         #region Helpers
 
-        private void Validate<TType, TRepo>(params ValidationError[] expectedErrors)
+        private void Validate<TRepo>(params ValidationError[] expectedErrors)
         {
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
-            RepositoryDefValidator v = new RepositoryDefValidator(DatabaseType.SqlServer);
-            var errors = v.Validate(repoDef);
+            RepositoryDefValidator v = new RepositoryDefValidator(repoDef, DatabaseType.SqlServer);
+            var errors = v.Validate();
 
             Assert.AreEqual(expectedErrors.Length, errors.Count);
             for (int i = 0; i < expectedErrors.Length; i++)

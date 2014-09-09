@@ -6,52 +6,24 @@ using System.Threading.Tasks;
 
 namespace Repomat.Schema.Validators
 {
-    internal abstract class MethodValidator
+    internal abstract class MethodValidator : ValidatorBase
     {
-        private readonly RepositoryDef _repoDef;
         private readonly MethodDef _methodDef;
-        private readonly IList<ValidationError> _errors;
-        private readonly DatabaseType _databaseType;
-        private readonly List<Action> _validators = new List<Action>();
 
         public MethodValidator(RepositoryDef repoDef, MethodDef methodDef, DatabaseType databaseType, IList<ValidationError> errors)
+            : base(repoDef, databaseType, errors)
         {
-            _repoDef = repoDef;
             _methodDef = methodDef;
-            _databaseType = databaseType;
-            _errors = errors;
 
             AddValidators(
                 ValidateMethodWithParameterThatDoesntMapToProperty,
                 ValidateMethodWithParameterDifferentTypeThanProperty);
         }
 
-        public void Validate()
+        protected override void AddError(string errorCode, string format, params object[] args)
         {
-            foreach (var validator in _validators)
-            {
-                validator();
-            }
-        }
-
-        public IReadOnlyList<string> Errors { get { return (List<string>)(_errors); } }
-
-        public bool HasErrors { get { return _errors.Count > 0; } }
-
-        protected DatabaseType DatabaseType { get { return _databaseType; } }
-
-        protected void AddValidators(params Action[] actions)
-        {
-            foreach (var action in actions)
-            {
-                _validators.Add(action);
-            }
-        }
-
-        protected void AddError(string errorCode, string format, params object[] args)
-        {
-            string firstPart = string.Format("{0} method {1} on {2}: ", MethodDef.MethodType, MethodDef.NameAndArgumentList, RepositoryDef.RepositoryType.ToCSharp());
-            _errors.Add(new ValidationError(errorCode, firstPart + format, args));
+            string firstPart = string.Format("{0} method {1} on {2}: ", MethodDef.MethodType, MethodDef.NameAndArgumentList, RepoDef.RepositoryType.ToCSharp());
+            base.AddError(errorCode, firstPart + format, args);
         }
 
         private void ValidateMethodWithParameterThatDoesntMapToProperty()
@@ -113,6 +85,5 @@ namespace Repomat.Schema.Validators
         }
 
         protected MethodDef MethodDef { get { return _methodDef; } }
-        protected RepositoryDef RepositoryDef { get { return _repoDef; } }
     }
 }

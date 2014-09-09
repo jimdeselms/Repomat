@@ -66,8 +66,8 @@ namespace Repomat
 
         private void EnsureRepoIsValid(RepositoryDef repoDef)
         {
-            var validator = new RepositoryDefValidator(_databaseType);
-            var errors = validator.Validate(repoDef);
+            var validator = new RepositoryDefValidator(repoDef, _databaseType);
+            var errors = validator.Validate();
 
             if (errors.Count != 0)
             {
@@ -126,14 +126,7 @@ namespace Repomat
 
         internal abstract RepoSqlBuilder CreateRepoSqlBuilder(RepositoryDef repoDef, bool newConnectionEveryTime);
 
-        private static MethodInfo _createClassBuilder = typeof(DataLayerBuilder).GetMethod("CreateClassBuilder", BindingFlags.NonPublic | BindingFlags.Instance);
-
         // internal because protected will expose it to the outside.
         internal abstract object CreateRepoInstance(Type repoClass, RepositoryDef tableDef);
-
-        private void AddReferenceToTypeAssembly(Type type, CompilerParameters parms)
-        {
-            parms.ReferencedAssemblies.Add(Path.GetFileName(type.Assembly.CodeBase));
-        }
     }
 }

@@ -59,6 +59,5 @@ namespace Repomat.Schema.Validators
                 }
             }
         }
-
     }
 }

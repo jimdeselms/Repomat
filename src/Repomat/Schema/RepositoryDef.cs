@@ -33,5 +33,10 @@ namespace Repomat.Schema
         public Type RepositoryType { get { return _repoType; } }
 
         public NamingConvention ColumnNamingConvention { get { return _columnNamingConvention; } }
+
+        internal IEnumerable<EntityDef> GetEntityDefs()
+        {
+            return Methods.Select(m => m.EntityDef).Distinct();
+        }
     }
 }

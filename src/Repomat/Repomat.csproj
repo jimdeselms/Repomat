@@ -110,6 +110,7 @@
     <Compile Include="Schema\RepositoryDef.cs" />
     <Compile Include="Schema\RepositoryDefBuilder.cs" />
     <Compile Include="Schema\Validators\UpsertMethodValidator.cs" />
+    <Compile Include="Schema\Validators\ValidatorBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

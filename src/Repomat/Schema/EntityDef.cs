@@ -15,6 +15,8 @@ namespace Repomat.Schema
         private readonly bool _hasIdentity;
         private readonly bool _createClassThroughConstructor;
 
+        private bool _hasExplicitPrimaryKey = false;
+
         private IReadOnlyList<PropertyDef> _primaryKey;
         
         public EntityDef(Type type, string tableName, IEnumerable<PropertyDef> columns, IEnumerable<PropertyDef> primaryKey, bool hasIdentity, bool createClassThroughConstructor)
@@ -51,7 +53,16 @@ namespace Repomat.Schema
         public IReadOnlyList<PropertyDef> PrimaryKey 
         { 
             get { return _primaryKey; }
-            set { _primaryKey = value; }
+            internal set
+            {
+                _primaryKey = value;
+                _hasExplicitPrimaryKey = true;
+            }
+        }
+
+        internal bool HasExplicitPrimaryKey
+        {
+            get { return _hasExplicitPrimaryKey; }
         }
 
         public IReadOnlyList<PropertyDef> Properties { get { return _columns; } }
