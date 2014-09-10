@@ -168,7 +168,7 @@ namespace Repomat.UnitTests
         {
             var repoDef = RepositoryDefBuilder.BuildRepositoryDef<TRepo>(NamingConvention.NoOp, NamingConvention.NoOp);
             RepositoryDefValidator v = new RepositoryDefValidator(repoDef, DatabaseType.SqlServer);
-            var errors = v.Validate();
+            var errors = v.Validate().ToList();
 
             Assert.AreEqual(expectedErrors.Length, errors.Count);
             for (int i = 0; i < expectedErrors.Length; i++)

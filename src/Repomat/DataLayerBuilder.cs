@@ -67,7 +67,7 @@ namespace Repomat
         private void EnsureRepoIsValid(RepositoryDef repoDef)
         {
             var validator = new RepositoryDefValidator(repoDef, _databaseType);
-            var errors = validator.Validate();
+            var errors = validator.Validate().ToList();
 
             if (errors.Count != 0)
             {

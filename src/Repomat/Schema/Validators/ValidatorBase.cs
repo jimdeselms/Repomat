@@ -20,15 +20,19 @@ namespace Repomat.Schema.Validators
             _errors = errors;
         }
 
-        public void Validate()
+        public IEnumerable<ValidationError> Validate()
         {
             foreach (var validator in _validators)
             {
                 validator();
             }
+
+            return _errors;
         }
 
         public IReadOnlyList<string> Errors { get { return (List<string>)(_errors); } }
+
+        internal IList<ValidationError> ErrorList { get { return _errors; } }
 
         public bool HasErrors { get { return _errors.Count > 0; } }
 
@@ -36,6 +40,8 @@ namespace Repomat.Schema.Validators
 
         protected RepositoryDef RepoDef { get { return _repoDef; } }
 
+        internal IEnumerable<Action> Validators { get { return _validators; } }
+        
         protected void AddValidators(params Action[] actions)
         {
             foreach (var action in actions)

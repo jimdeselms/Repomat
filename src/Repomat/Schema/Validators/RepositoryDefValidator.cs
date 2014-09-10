@@ -10,19 +10,16 @@ namespace Repomat.Schema.Validators
             : base(repoDef, databaseType, new List<ValidationError>())
         {
             AddValidators(OnlyOneSingletonGetAllowed);
+            AddMethodValidations();
         }
 
-        public IReadOnlyList<ValidationError> Validate()
+        public void AddMethodValidations()
         {
-            List<ValidationError> errors = new List<ValidationError>();
-
             foreach (var method in RepoDef.Methods)
             {
-                var validator = MethodValidatorFactory.Create(RepoDef, method, DatabaseType, errors);
-                validator.Validate();
+                var validator = MethodValidatorFactory.Create(RepoDef, method, DatabaseType, ErrorList);
+                AddValidators(validator.Validators.ToArray());
             }
-
-            return errors;
         }
 
         private void OnlyOneSingletonGetAllowed()
@@ -36,7 +33,7 @@ namespace Repomat.Schema.Validators
                     {
                         for (int i = 0; i < singletonGets.Length; i++)
                         {
-                            for (int j = 0; j < singletonGets.Length; j++)
+                            for (int j = i+1; j < singletonGets.Length; j++)
                             {
                                 if (GetMethodHashCode(singletonGets[i]) != GetMethodHashCode(singletonGets[j]))
                                 {
@@ -53,7 +50,7 @@ namespace Repomat.Schema.Validators
         private int GetMethodHashCode(MethodDef method)
         {
             int result = 0;
-            foreach (var parameter in method.Parameters)
+            foreach (var parameter in method.Parameters.Where(p => !p.IsOut))
             {
                 result = result << 1;
                 result = result ^ (parameter.Type.GetHashCode()<< 1) ^ parameter.Type.Name.GetHashCode();

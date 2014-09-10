@@ -36,7 +36,7 @@ namespace Repomat.Schema
 
         internal IEnumerable<EntityDef> GetEntityDefs()
         {
-            return Methods.Select(m => m.EntityDef).Distinct();
+            return Methods.Select(m => m.EntityDef).Where(m => m != null).Distinct();
         }
     }
 }

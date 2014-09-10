@@ -35,7 +35,6 @@ namespace Repomat.UnitTests
         bool GetExistsByName(string name);
 
         bool TryGet(int personId, out Person result);
-        bool TryGetByName(string name, out Person result);
 
         void Update(Person person);
         void Delete(Person person);
@@ -85,7 +84,6 @@ namespace Repomat.UnitTests
 
         ConstructorInjected Get(int personId);
         bool TryGet(int personId, out ConstructorInjected result);
-        bool TryGetByName(string name, out ConstructorInjected result);
 
         void Update(ConstructorInjected person);
         void Delete(ConstructorInjected person);

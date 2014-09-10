@@ -265,15 +265,25 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void TryGetBy_TooManyFound_Throws()
         {
-            var repo = CreateRepoWithJimAndSusan();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(CreateConnection());
+            var repoBuilder = dlBuilder.SetupRepo<IPersonRepository>();
+            repoBuilder.SetupEntity<Person>().HasPrimaryKey();
 
-            Person dupe = new Person { PersonId = 9, Name = "Jim", Birthday = new DateTime(2011, 1, 1) };
+            var repo = repoBuilder.Repo;
+
+            if (repo.TableExists()) repo.DropTable();
+            repo.CreateTable();
+
+            Person person1 = new Person { PersonId = 9, Name = "Jim", Birthday = new DateTime(2011, 1, 1) };
+            repo.Insert(person1);
+
+            Person dupe = new Person { PersonId = 9, Name = "Frank", Birthday = new DateTime(2011, 1, 1) };
             repo.Insert(dupe);
 
             // Even though this is a TryGet, the situation where there are two matching values is still an exception situation.
             // If the user wanted this to be successful, they'd have to call a non-singleton method.
             Person person;
-            Assert.Throws<RepomatException>(() => repo.TryGetByName("Jim", out person));
+            Assert.Throws<RepomatException>(() => repo.TryGet(9, out person));
         }
 
         [Test]
@@ -637,7 +647,6 @@ namespace Repomat.UnitTests.CodeGen
             var builder = factory.SetupRepo<IPersonRepository>();
             if (getBehavior.HasValue)
             {
-                builder.SetupMethod("TryGetByName").SetSingletonGetMethodBehavior(getBehavior.Value);
                 builder.SetupMethod("Get").SetSingletonGetMethodBehavior(getBehavior.Value);
             }
 
