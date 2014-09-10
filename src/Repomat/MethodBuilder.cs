@@ -26,7 +26,7 @@ namespace Repomat
             _method.CustomSqlOrNull = sql;
             _method.CustomSqlIsStoredProcedure = false;
             return this;
-        }
+        }   
 
         public MethodBuilder SetEntityType(Type type)
         {

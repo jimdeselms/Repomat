@@ -107,12 +107,7 @@ namespace Repomat
             return new RepositoryBuilder<TRepo>(this, tableDef);
         }
 
-        public DataLayerBuilder UseIlGeneration()
-        {
-            return this;
-        }
-
-        public TRepo CreateRepo<TRepo>()
+        internal TRepo CreateRepo<TRepo>()
         {
             var repoDef = _repoDefs[typeof(TRepo)];
 

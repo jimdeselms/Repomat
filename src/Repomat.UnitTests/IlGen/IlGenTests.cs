@@ -75,7 +75,6 @@ namespace Repomat.UnitTests.IlGen
         public void SingletonGetTest()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            dlBuilder.UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IFooRepo>();
             repoBuilder.SetupMethod("InsertARow")
                 .ExecutesSql("insert into Foo values (1, 'Jim', '2014-01-01')");
@@ -282,7 +281,6 @@ namespace Repomat.UnitTests.IlGen
         private IFooRepo CreatePersonRepo()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            dlBuilder.UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IFooRepo>();
             var repo = dlBuilder.CreateRepo<IFooRepo>();
 
@@ -346,7 +344,6 @@ namespace Repomat.UnitTests.IlGen
             conn = conn ?? Connections.NewSqlConnection();
 
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(conn);
-            dlBuilder.UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<ISimpleQuery>();
             repoBuilder.SetupMethod("Returns45")
                 .ExecutesSql("select 45");
@@ -373,7 +370,6 @@ namespace Repomat.UnitTests.IlGen
         private ISimplerQuery CreateSimplerQueryInterface()
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
-            dlBuilder.UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<ISimplerQuery>();
             repoBuilder.SetupMethod("Returns45")
                 .ExecutesSql("select 45");

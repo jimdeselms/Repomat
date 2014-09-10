@@ -27,7 +27,7 @@ namespace Repomat.UnitTests.CodeGen
 
         protected override DataLayerBuilder CreateFactory(Func<IDbConnection> func)
         {
-            return new SqlServerDataLayerBuilder(func).UseIlGeneration();
+            return new SqlServerDataLayerBuilder(func);
         }
 
     }

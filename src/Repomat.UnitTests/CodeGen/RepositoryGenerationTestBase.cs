@@ -517,7 +517,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void Upsert_WithInsertWhenRowAlreadyExists_Updates()
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>();
             var repo = repoBuilder.Create();
 
@@ -541,7 +541,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void Upsert_WithInsertWhenRowIsNew_Inserts()
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>();
             var repo = repoBuilder.Create();
 
@@ -560,7 +560,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void Upsert_WithCreateWhenRowAlreadyExists_Updates()
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(CreateConnection()).UseIlGeneration();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(CreateConnection());
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
             var repo = repoBuilder.Create();
 
@@ -587,7 +587,7 @@ namespace Repomat.UnitTests.CodeGen
         [Test]
         public void Upsert_WithCreateWhenRowIsNew_Inserts()
         {
-            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection()).UseIlGeneration();
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection());
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
             var repo1 = repoBuilder.Create();
 
@@ -616,7 +616,7 @@ namespace Repomat.UnitTests.CodeGen
 
         protected virtual DataLayerBuilder CreateDataLayerBuilder(IDbConnection conn)
         {
-            return DataLayerBuilder.DefineSqlDatabase(conn).UseIlGeneration();
+            return DataLayerBuilder.DefineSqlDatabase(conn);
         }
 
         protected abstract DataLayerBuilder CreateFactory(Func<IDbConnection> func);
