@@ -9,7 +9,10 @@ namespace Repomat.Schema.Validators
         public RepositoryDefValidator(RepositoryDef repoDef, DatabaseType databaseType)
             : base(repoDef, databaseType, new List<ValidationError>())
         {
-            AddValidators(OnlyOneSingletonGetAllowed);
+            AddValidators(
+                OnlyOneSingletonGetAllowed,
+                OnlySimpleTypesAreAllowed);
+
             AddMethodValidations();
         }
 
@@ -42,6 +45,23 @@ namespace Repomat.Schema.Validators
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        private void OnlySimpleTypesAreAllowed()
+        {
+            foreach (var entityDef in RepoDef.GetEntityDefs())
+            {
+                foreach (var prop in entityDef.Properties)
+                {
+                    if (!prop.Type.IsDatabaseType() && !prop.Type.GetCoreType().IsEnum)
+                    {
+                        AddError("ComplexPropertyType", "Only simple datatypes are supported; found property {0} of type {1} on {2}",
+                            prop.PropertyName,
+                            prop.Type.ToCSharp(),
+                            entityDef.Type.ToCSharp());
                     }
                 }
             }

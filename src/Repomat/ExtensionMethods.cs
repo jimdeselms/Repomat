@@ -114,7 +114,11 @@ namespace Repomat
                 || t == typeof(bool)
                 || t == typeof(bool?)
                 || t == typeof(string)
-                || t == typeof(byte[]);
+                || t == typeof(byte[])
+                || t == typeof(DateTime)
+                || t == typeof(DateTime?)
+                || t == typeof(DateTimeOffset)
+                || t == typeof(DateTimeOffset?);
         }
 
         public static bool ImplementsIEnumerableOfType(this Type t, Type coreType)

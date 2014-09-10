@@ -114,6 +114,24 @@ namespace Repomat.UnitTests
             var ignored = repoBuilder.Repo;
         }
 
+        [Test]
+        public void Validate_OnlyDatabaseTypesAreSupported()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+            var repoBuilder = dlBuilder.SetupRepo<IHasComplexDatatype>();
+
+            try
+            {
+                var ignored = repoBuilder.Repo;
+                Assert.Fail();
+            }
+            catch (RepomatException e)
+            {
+                StringAssert.Contains("Only simple datatypes are supported; found property Parent of type Repomat.UnitTests.Person on Repomat.UnitTests.ValidationTests.ClassWithComplexType", e.Message);
+                    
+            }
+        }
+
         private interface ITryGetWithoutBoolReturn
         {
             string TryGet(int personId, out Person p);
@@ -132,6 +150,17 @@ namespace Repomat.UnitTests
         private interface IGetWithParameterOfDifferentType
         {
             Person Get(int personId, string birthday);
+        }
+
+        public interface IHasComplexDatatype
+        {
+            ClassWithComplexType[] GetAll();
+        }
+
+        public class ClassWithComplexType
+        {
+            public int ComplexId { get; set; }
+            public Person Parent { get; set; }
         }
 
         public interface IProcRepo
