@@ -74,7 +74,8 @@ namespace Repomat.Schema
             {
                 if (MethodType != MethodType.Custom && _entityDefOrUndefined == null)
                 {
-                    throw new RepomatException("Can't clone a method to a new name unless the entity type is defined");
+                    // This is an error that will be picked up later, at validation time.
+                    return null;
                 }
                 return _entityDefOrUndefined;
             }

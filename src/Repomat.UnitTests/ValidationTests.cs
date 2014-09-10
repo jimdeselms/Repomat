@@ -132,6 +132,23 @@ namespace Repomat.UnitTests
             }
         }
 
+        [Test]
+        public void Validate_NonCustomMethodDoesntHaveEntityDef_Fails()
+        {
+            Validate<INoEntityDef>(
+                Error("CantInferEntityType", "Can't infer entity type. Call SetEntityType() to define it explicitly"));
+        }
+
+        [Test]
+        public void Validate_NonCustomMethodWithExplicityEntityDef_Success()
+        {
+            var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
+            var repoBuilder = dlBuilder.SetupRepo<INoEntityDef>();
+            repoBuilder.SetupMethod("CreateTable").SetEntityType(typeof(Person));
+
+            var ignored = repoBuilder.Create();
+        }
+
         private interface ITryGetWithoutBoolReturn
         {
             string TryGet(int personId, out Person p);
@@ -161,6 +178,11 @@ namespace Repomat.UnitTests
         {
             public int ComplexId { get; set; }
             public Person Parent { get; set; }
+        }
+
+        public interface INoEntityDef
+        {
+            void CreateTable();
         }
 
         public interface IProcRepo

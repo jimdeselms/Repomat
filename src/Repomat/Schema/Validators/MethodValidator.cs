@@ -17,7 +17,8 @@ namespace Repomat.Schema.Validators
 
             AddValidators(
                 ValidateMethodWithParameterThatDoesntMapToProperty,
-                ValidateMethodWithParameterDifferentTypeThanProperty);
+                ValidateMethodWithParameterDifferentTypeThanProperty,
+                ValidateNonCustomMethodHasEntityDefined);
         }
 
         protected override void AddError(string errorCode, string format, params object[] args)
@@ -66,6 +67,17 @@ namespace Repomat.Schema.Validators
                             }
                         }
                     }
+                }
+            }
+        }
+
+        private void ValidateNonCustomMethodHasEntityDefined()
+        {
+            if (MethodDef.MethodType != MethodType.Custom)
+            {
+                if (MethodDef.EntityDef == null)
+                {
+                    AddError("CantInferEntityType", "Can't infer entity type. Call SetEntityType() to define it explicitly");
                 }
             }
         }
