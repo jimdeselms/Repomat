@@ -149,6 +149,12 @@ namespace Repomat.UnitTests
             var ignored = repoBuilder.Create();
         }
 
+        [Test]
+        public void Validate_EnumerableMethodDoesntReturnKnownType()
+        {
+            Validate<IReturnsUnknownEnumerable>(Error("EnumerableOfUnknownType", "Methods that return an enumerable type must be IEnumerable<T>, List<T>, IList<T>, or T[]"));
+        }
+
         private interface ITryGetWithoutBoolReturn
         {
             string TryGet(int personId, out Person p);
@@ -194,6 +200,11 @@ namespace Repomat.UnitTests
         {
             void Create(Person p);
             void Insert(Person p);
+        }
+
+        public interface IReturnsUnknownEnumerable
+        {
+            HashSet<Person> GetAll();
         }
 
         private interface ICustomMethodWithoutCustomSql

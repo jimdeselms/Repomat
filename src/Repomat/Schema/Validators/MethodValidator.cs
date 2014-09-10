@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Repomat;
+using Repomat.Runtime;
 
 namespace Repomat.Schema.Validators
 {
@@ -18,7 +20,8 @@ namespace Repomat.Schema.Validators
             AddValidators(
                 ValidateMethodWithParameterThatDoesntMapToProperty,
                 ValidateMethodWithParameterDifferentTypeThanProperty,
-                ValidateNonCustomMethodHasEntityDefined);
+                ValidateNonCustomMethodHasEntityDefined,
+                ValidateEnumerableMethodWithUnknownType);
         }
 
         protected override void AddError(string errorCode, string format, params object[] args)
@@ -78,6 +81,25 @@ namespace Repomat.Schema.Validators
                 if (MethodDef.EntityDef == null)
                 {
                     AddError("CantInferEntityType", "Can't infer entity type. Call SetEntityType() to define it explicitly");
+                }
+            }
+        }
+
+        private void ValidateEnumerableMethodWithUnknownType()
+        {
+            if (MethodDef.EntityDef != null && MethodDef.EntityDef.Type != null)
+            {
+                var type = MethodDef.EntityDef.Type;
+
+                if (type != typeof(void) && MethodDef.ReturnType.ImplementsIEnumerableOfType(type))
+                {
+                    if (!MethodDef.ReturnType.Equals(typeof(IEnumerable<>).MakeGenericType(type)) &&
+                        !MethodDef.ReturnType.Equals(typeof(IList<>).MakeGenericType(type)) &&
+                        !MethodDef.ReturnType.Equals(typeof(List<>).MakeGenericType(type)) &&
+                        !MethodDef.ReturnType.Equals(type.MakeArrayType()))
+                    {
+                        AddError("EnumerableOfUnknownType", "Methods that return an enumerable type must be IEnumerable<T>, List<T>, IList<T>, or T[]");
+                    }
                 }
             }
         }
