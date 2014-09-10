@@ -81,7 +81,7 @@ namespace Repomat.UnitTests
 
             try
             {
-                var ignored = repoBuilder.Repo;
+                var ignored = repoBuilder.Create();
                 Assert.Fail();
             }
             catch (RepomatException e)
@@ -99,7 +99,7 @@ namespace Repomat.UnitTests
                 .SetupEntity<Person>()
                 .HasPrimaryKey("PersonId");
 
-            var ignored = repoBuilder.Repo;
+            var ignored = repoBuilder.Create();
         }
 
         [Test]
@@ -111,7 +111,7 @@ namespace Repomat.UnitTests
                 .SetupEntity<Person>()
                 .HasPrimaryKey("PersonId");
 
-            var ignored = repoBuilder.Repo;
+            var ignored = repoBuilder.Create();
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace Repomat.UnitTests
 
             try
             {
-                var ignored = repoBuilder.Repo;
+                var ignored = repoBuilder.Create();
                 Assert.Fail();
             }
             catch (RepomatException e)

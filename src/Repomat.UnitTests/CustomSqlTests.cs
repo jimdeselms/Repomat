@@ -16,7 +16,7 @@ namespace Repomat.UnitTests
         public void Create_BuildDatabaseForUnmatchedMethod_Throws()
         {
             var db = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection());
-            Assert.Throws<RepomatException>(() => { var ignored = db.SetupRepo<IFooRepo>().Repo; });
+            Assert.Throws<RepomatException>(() => db.SetupRepo<IFooRepo>().Create());
         }
 
         [Test]
@@ -217,7 +217,7 @@ namespace Repomat.UnitTests
             repoBuilder.SetupMethod("GetRowCount")
                 .ExecutesSql("select count(*) from Foo");
 
-            return repoBuilder.Repo;
+            return repoBuilder.Create();
         }
 
         private IStringRepo CreateStringRepo()

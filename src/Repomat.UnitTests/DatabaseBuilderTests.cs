@@ -22,7 +22,7 @@ namespace Repomat.UnitTests
                 var builder = factory.SetupRepo<IPersonRepository>();
                 builder.SetupEntity<Person>().SetupProperty("Name").SetColumnName("person_name");
                 builder.SetupEntity<Person>().SetupProperty("PersonId").SetColumnName("id");
-                var repo = builder.Repo;
+                var repo = builder.Create();
 
                 var entityDef = builder.RepoDef.Methods.First().EntityDef;
 
@@ -49,7 +49,7 @@ namespace Repomat.UnitTests
                     .SetColumnNamingConvention(columnConvention)
                     .SetTableNamingConvention(tableConvention);
                 var builder = factory.SetupRepo<IPersonRepository>();
-                var repo = builder.Repo;
+                var repo = builder.Create();
 
                 var entityDef = builder.RepoDef.Methods.First().EntityDef;
 

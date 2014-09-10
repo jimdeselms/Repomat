@@ -81,7 +81,7 @@ namespace Repomat.UnitTests
             repoBuilder.SetupEntity<Person>()
                 .HasPrimaryKey("PersonId");
 
-            var repo = repoBuilder.Repo;
+            var repo = repoBuilder.Create();
 
             if (repo.DoesTheTableExist())
             {

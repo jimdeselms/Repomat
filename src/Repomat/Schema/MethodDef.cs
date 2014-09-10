@@ -10,8 +10,8 @@ namespace Repomat.Schema
     {
         private readonly MethodInfo _methodInfo;
         private readonly string _methodName;
-        private readonly IReadOnlyList<ParameterDetails> _parameters;
-        private readonly IReadOnlyList<ParameterDetails> _properties;
+        private readonly IList<ParameterDetails> _parameters;
+        private readonly IList<ParameterDetails> _properties;
         private readonly Type _returnType;
         
         private readonly bool _isTryGet;
@@ -85,7 +85,7 @@ namespace Repomat.Schema
         }
 
         public string MethodName { get { return _methodName; } }
-        public IReadOnlyList<ParameterDetails> Parameters { get { return _parameters; } }
+        public IList<ParameterDetails> Parameters { get { return _parameters; } }
         public Type ReturnType { get { return _returnType; } }
         public bool IsTryGet { get { return _isTryGet; } }
         public ParameterDetails OutParameterOrNull { get { return _outParameterOrNull; } }
@@ -132,7 +132,7 @@ namespace Repomat.Schema
             set { _singletonGetMethodBehavior = value; }
         }
 
-        private IReadOnlyList<ParameterDetails> GetProperties()
+        private IList<ParameterDetails> GetProperties()
         {
             return _parameters.Where(p => p.IsSimpleArgument && p.IsPrimitiveType).ToList();
         }

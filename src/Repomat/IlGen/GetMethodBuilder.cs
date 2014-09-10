@@ -363,7 +363,7 @@ namespace Repomat.IlGen
             }
         }
 
-        private void AppendObjectSerialization(LocalBuilder readerLocal, LocalBuilder resultLocal, IReadOnlyList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
+        private void AppendObjectSerialization(LocalBuilder readerLocal, LocalBuilder resultLocal, IList<PropertyDef> selectColumns, IEnumerable<ParameterDetails> argColumns, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
         {
             var args = argColumns.ToArray();
 

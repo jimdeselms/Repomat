@@ -269,7 +269,7 @@ namespace Repomat.UnitTests.CodeGen
             var repoBuilder = dlBuilder.SetupRepo<IPersonRepository>();
             repoBuilder.SetupEntity<Person>().HasPrimaryKey();
 
-            var repo = repoBuilder.Repo;
+            var repo = repoBuilder.Create();
 
             if (repo.TableExists()) repo.DropTable();
             repo.CreateTable();
@@ -439,7 +439,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateDataLayerBuilder(_connection)
                 .SetupRepo<IConstructorInjectedRepository>()
-                .Repo;
+                .Create();
             if (repo.TableExists())
             {
                 repo.DropTable();
@@ -460,7 +460,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateDataLayerBuilder(_connection)
                 .SetupRepo<IColorThingRepo>()
-                .Repo;
+                .Create();
 
             if (repo.TableExists())
             {
@@ -519,7 +519,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>();
-            var repo = repoBuilder.Repo;
+            var repo = repoBuilder.Create();
 
             if (repo.TableExists()) repo.DropTable();
             repo.CreateTable();
@@ -543,7 +543,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewInMemoryConnection()).UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithInsertRepo>();
-            var repo = repoBuilder.Repo;
+            var repo = repoBuilder.Create();
 
             if (repo.TableExists()) repo.DropTable();
             repo.CreateTable();
@@ -562,7 +562,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(CreateConnection()).UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
-            var repo = repoBuilder.Repo;
+            var repo = repoBuilder.Create();
 
             if (repo.TableExists()) repo.DropTable();
             repo.CreateTable();
@@ -589,7 +589,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var dlBuilder = DataLayerBuilder.DefineSqlDatabase(Connections.NewSqlConnection()).UseIlGeneration();
             var repoBuilder = dlBuilder.SetupRepo<IUpsertWithCreateRepo>();
-            var repo1 = repoBuilder.Repo;
+            var repo1 = repoBuilder.Create();
 
             if (repo1.TableExists()) repo1.DropTable();
             repo1.CreateTable();
@@ -650,7 +650,7 @@ namespace Repomat.UnitTests.CodeGen
                 builder.SetupMethod("Get").SetSingletonGetMethodBehavior(getBehavior.Value);
             }
 
-            var repo = builder.Repo;
+            var repo = builder.Create();
 
             if (repo.TableExists())
             {
@@ -678,7 +678,7 @@ namespace Repomat.UnitTests.CodeGen
         {
             var repo = CreateDataLayerBuilder(_connection)
                 .SetupRepo<IPersonRepositoryWithCreate>()
-                .Repo;
+                .Create();
 
             if (repo.TableExists())
             {

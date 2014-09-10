@@ -52,7 +52,7 @@ namespace Repomat.Runtime
 
         internal bool IsCompletelyLoaded { get { return _isCompletelyLoaded; } }
 
-        public IReadOnlyList<T> LoadedValues { get { return _loadedValues; } } 
+        public IList<T> LoadedValues { get { return _loadedValues; } } 
 
         public IEnumerator<T> GetEnumerator()
         {

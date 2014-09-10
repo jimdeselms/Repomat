@@ -11,7 +11,7 @@ namespace Repomat.Schema
     internal class RepositoryDef
     {
         private readonly Type _repoType;
-        private readonly IReadOnlyList<MethodDef> _implementationDetails;
+        private readonly IList<MethodDef> _implementationDetails;
         private readonly NamingConvention _tableNamingConvention;
         private readonly NamingConvention _columnNamingConvention;
 
@@ -28,7 +28,7 @@ namespace Repomat.Schema
             return RepositoryDefBuilder.GetEntityDef(_repoType, _tableNamingConvention, _columnNamingConvention, entityType);
         }
 
-        public IReadOnlyList<MethodDef> Methods { get { return _implementationDetails; } }
+        public IEnumerable<MethodDef> Methods { get { return _implementationDetails; } }
 
         public Type RepositoryType { get { return _repoType; } }
 

@@ -187,7 +187,7 @@ namespace Repomat.UnitTests
                   .SetupMethod("InsertStuffIntoTable")
                     //              .SetTableName("PerfTestTable")
                   .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
-                var ignored = builder.Repo;
+                builder.Create();
             }
             s.Stop();
 
@@ -231,7 +231,7 @@ namespace Repomat.UnitTests
             builder.SetupMethod("InsertStuffIntoTable")
               .ExecutesSql("insert into PerfTestTable values (@discountId, @discountTypeId, @description, '2014-01-02, 'jim', 50, 90)");
 
-            return builder.Repo;
+            return builder.Create();
         }
 
     }

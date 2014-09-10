@@ -30,7 +30,7 @@ namespace Repomat.Schema.Validators
             return _errors;
         }
 
-        public IReadOnlyList<string> Errors { get { return (List<string>)(_errors); } }
+        public IEnumerable<string> Errors { get { return (List<string>)(_errors); } }
 
         internal IList<ValidationError> ErrorList { get { return _errors; } }
 
