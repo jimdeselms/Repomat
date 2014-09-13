@@ -111,9 +111,9 @@ namespace Repomat.CodeGen
             return _primitiveTypes[t]; 
         }
 
-        public void EmitConversion(ILGenerator ilGenerator)
+        public void EmitConversion(ILGenerator il)
         {
-            _emitConversion(ilGenerator);
+            _emitConversion(il);
         }
 
         static PrimitiveTypeInfo()
