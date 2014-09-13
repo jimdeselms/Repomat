@@ -10,6 +10,7 @@ using System.Xml;
 namespace Repomat.UnitTests
 {
     [TestFixture]
+    [Ignore]
     public class IlBuilderTests
     {
         [Test]
