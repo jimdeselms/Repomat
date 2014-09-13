@@ -103,7 +103,7 @@ namespace Repomat.IlGen
             if (_type == null)
             {
                 // Finish off the constructor.
-                _ctorIlBuilder.ILGenerator.Emit(OpCodes.Ret);
+                _ctorIlBuilder.Ret();
 
                 _type = _typeBuilder.CreateType();
                 

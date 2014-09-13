@@ -138,7 +138,7 @@ namespace Repomat.IlGen
 
             // parm.DbType = blah
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4, (int)typeInfo.DbType);
+            IlBuilder.Ldc((int)typeInfo.DbType);
 
             IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _dbTypeSetMethod);
 
@@ -196,7 +196,7 @@ namespace Repomat.IlGen
         protected void ThrowRepomatException(string format, params object[] args)
         {
             IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, string.Format(format, args));
-            IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4_0);
+            IlBuilder.Ldc(0);
             IlBuilder.ILGenerator.Emit(OpCodes.Newarr, typeof(object));
             IlBuilder.ILGenerator.Emit(OpCodes.Newobj, _repomatExceptionCtor);
             IlBuilder.ILGenerator.Emit(OpCodes.Throw);
@@ -221,7 +221,7 @@ namespace Repomat.IlGen
             {
                 lockTakenLocal = IlBuilder.DeclareLocal(typeof(bool));
 
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4_0);
+                IlBuilder.Ldc(0);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, lockTakenLocal);
             }
 
@@ -310,7 +310,7 @@ namespace Repomat.IlGen
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _returnValueLocal);
             }
-            IlBuilder.ILGenerator.Emit(OpCodes.Ret);
+            IlBuilder.Ret();
         }
 
         private int? GetArgumentIndex(Type t)

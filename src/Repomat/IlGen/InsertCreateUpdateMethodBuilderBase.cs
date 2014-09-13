@@ -106,7 +106,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, newValueLocal);
             }
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Ret);
+            IlBuilder.Ret();
         }
 
         protected void GenerateIlForUpdate(LocalBuilder cmdLocal)

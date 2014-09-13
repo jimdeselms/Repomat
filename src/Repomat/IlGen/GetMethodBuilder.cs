@@ -254,7 +254,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Call, genericToArrayMethod);
             }
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Ret);
+            IlBuilder.Ret();
         }
 
         private void EmitArgumentMappingCheck(LocalBuilder readerLocal, FieldBuilder indexesAssignedField, PropertyDef[] columnsToGet, IDictionary<string, FieldBuilder> columnIndexFields)
