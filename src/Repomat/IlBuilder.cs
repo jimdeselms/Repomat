@@ -63,9 +63,44 @@ namespace Repomat
             _evalStack.Push(typeof(string));
         }
 
+        public void BeginExceptionBlock()
+        {
+            _ilGen.BeginExceptionBlock();
+        }
+
+        public void BeginFinallyBlock()
+        {
+            _ilGen.BeginFinallyBlock();
+        }
+
+        public void BeginScope()
+        {
+            _ilGen.BeginScope();
+        }
+
+        public void EndExceptionBlock()
+        {
+            _ilGen.EndExceptionBlock();
+        }
+        
+        public void EndScope()
+        {
+            _ilGen.EndScope();
+        }
+
         public LocalBuilder DeclareLocal(Type t)
         {
             return _ilGen.DeclareLocal(t);
+        }
+
+        public Label DefineLabel()
+        {
+            return _ilGen.DefineLabel();
+        }
+
+        public void MarkLabel(Label label)
+        {
+            _ilGen.MarkLabel(label);
         }
 
         public void Ret()

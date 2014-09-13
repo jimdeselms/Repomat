@@ -48,13 +48,13 @@ namespace Repomat.IlGen
 
             foreach (var column in EntityDef.Properties)
             {
-                IlBuilder.ILGenerator.BeginScope();
+                IlBuilder.BeginScope();
 
                 var parm = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 AddSqlParameterFromProperty(parm, column.PropertyName, propIndex, column);
 
-                IlBuilder.ILGenerator.EndScope();
+                IlBuilder.EndScope();
             }
 
             ExecuteNonQuery();
@@ -140,13 +140,13 @@ namespace Repomat.IlGen
 
             foreach (var column in EntityDef.Properties)
             {
-                IlBuilder.ILGenerator.BeginScope();
+                IlBuilder.BeginScope();
 
                 var parm = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 AddSqlParameterFromProperty(parm, column.PropertyName, propIndex, column);
 
-                IlBuilder.ILGenerator.EndScope();
+                IlBuilder.EndScope();
             }
 
             ExecuteNonQuery();

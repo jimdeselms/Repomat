@@ -87,7 +87,7 @@ namespace Repomat.IlGen
                 var readerLocal = IlBuilder.DeclareLocal(typeof(IDataReader));
 
                 // using (var reader = cmd.ExecuteReader())
-                IlBuilder.ILGenerator.BeginExceptionBlock();
+                IlBuilder.BeginExceptionBlock();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, CommandLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Call, _executeReaderMethod);
@@ -106,12 +106,12 @@ namespace Repomat.IlGen
                     WriteMultiRowResultRead(readerLocal, queryIdx, indexesAssignedField, columnsToGet, columnIndexFields);
                 }
 
-                IlBuilder.ILGenerator.BeginFinallyBlock();
+                IlBuilder.BeginFinallyBlock();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
 
-                IlBuilder.ILGenerator.EndExceptionBlock();
+                IlBuilder.EndExceptionBlock();
             }
         }
 
@@ -133,7 +133,7 @@ namespace Repomat.IlGen
             
             EmitArgumentMappingCheck(readerLocal, indexesAssignedField, columnsToGet, columnIndexFields);
 
-            var afterRead = IlBuilder.ILGenerator.DefineLabel();
+            var afterRead = IlBuilder.DefineLabel();
 
             // if (reader.Read())
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
@@ -151,7 +151,7 @@ namespace Repomat.IlGen
             
             if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
             {
-                var noMoreRowsFound = IlBuilder.ILGenerator.DefineLabel();
+                var noMoreRowsFound = IlBuilder.DefineLabel();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _readMethod);
@@ -159,10 +159,10 @@ namespace Repomat.IlGen
 
                 ThrowRepomatException("More than one row returned from singleton query");
 
-                IlBuilder.ILGenerator.MarkLabel(noMoreRowsFound);
+                IlBuilder.MarkLabel(noMoreRowsFound);
             }
 
-            var afterElse = IlBuilder.ILGenerator.DefineLabel();
+            var afterElse = IlBuilder.DefineLabel();
 
             if (MethodDef.IsTryGet)
             {
@@ -179,7 +179,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
-                IlBuilder.ILGenerator.MarkLabel(afterRead);
+                IlBuilder.MarkLabel(afterRead);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
@@ -190,7 +190,7 @@ namespace Repomat.IlGen
             else
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
-                IlBuilder.ILGenerator.MarkLabel(afterRead);
+                IlBuilder.MarkLabel(afterRead);
 
                 if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
                 {
@@ -204,7 +204,7 @@ namespace Repomat.IlGen
                 }
             }
 
-            IlBuilder.ILGenerator.MarkLabel(afterElse);
+            IlBuilder.MarkLabel(afterElse);
 
         }
 
@@ -221,10 +221,10 @@ namespace Repomat.IlGen
             var resultListLocal = IlBuilder.DeclareLocal(listType);
             IlBuilder.ILGenerator.Emit(OpCodes.Stloc, resultListLocal);
 
-            var whileLoopStart = IlBuilder.ILGenerator.DefineLabel();
-            var whileLoopEnd = IlBuilder.ILGenerator.DefineLabel();
+            var whileLoopStart = IlBuilder.DefineLabel();
+            var whileLoopEnd = IlBuilder.DefineLabel();
 
-            IlBuilder.ILGenerator.MarkLabel(whileLoopStart);
+            IlBuilder.MarkLabel(whileLoopStart);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
             IlBuilder.ILGenerator.Emit(OpCodes.Call, _readMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, whileLoopEnd);
@@ -233,7 +233,7 @@ namespace Repomat.IlGen
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4_0);
             IlBuilder.ILGenerator.Emit(OpCodes.Call, _getValueMethod);
-            PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder.ILGenerator);
+            PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder);
 
             var currentResultLocal = IlBuilder.DeclareLocal(rowType);
             IlBuilder.ILGenerator.Emit(OpCodes.Stloc, currentResultLocal);
@@ -243,7 +243,7 @@ namespace Repomat.IlGen
 
             IlBuilder.ILGenerator.Emit(OpCodes.Br, whileLoopStart);
 
-            IlBuilder.ILGenerator.MarkLabel(whileLoopEnd);
+            IlBuilder.MarkLabel(whileLoopEnd);
 
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, resultListLocal);
 
@@ -261,7 +261,7 @@ namespace Repomat.IlGen
         {
             if (!MethodDef.IsScalarQuery && MethodDef.CustomSqlOrNull != null)
             {
-                var afterIndexAssignment = IlBuilder.ILGenerator.DefineLabel();
+                var afterIndexAssignment = IlBuilder.DefineLabel();
 
                 // if (!_query{0}_columnIndexesAssigned)
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldsfld, indexesAssignedField);
@@ -280,7 +280,7 @@ namespace Repomat.IlGen
                     IlBuilder.ILGenerator.Emit(OpCodes.Stsfld, columnIndexFields[columnToGet.PropertyName]);
                 }
 
-                IlBuilder.ILGenerator.MarkLabel(afterIndexAssignment);
+                IlBuilder.MarkLabel(afterIndexAssignment);
             }
         }
 
@@ -308,10 +308,10 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, listLocalOrNull);
             }
 
-            Label whileReaderReadStart = IlBuilder.ILGenerator.DefineLabel();
-            IlBuilder.ILGenerator.MarkLabel(whileReaderReadStart);
+            Label whileReaderReadStart = IlBuilder.DefineLabel();
+            IlBuilder.MarkLabel(whileReaderReadStart);
 
-            Label whileReaderReadEnd = IlBuilder.ILGenerator.DefineLabel();
+            Label whileReaderReadEnd = IlBuilder.DefineLabel();
 
             // while (reader.Read())
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
@@ -346,7 +346,7 @@ namespace Repomat.IlGen
 
             IlBuilder.ILGenerator.Emit(OpCodes.Br, whileReaderReadStart);
 
-            IlBuilder.ILGenerator.MarkLabel(whileReaderReadEnd);
+            IlBuilder.MarkLabel(whileReaderReadEnd);
 
             if (!isEnumerable)
             {
@@ -432,7 +432,7 @@ namespace Repomat.IlGen
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
             EmitIndexExpr(index, property.PropertyName, queryIndexOrNull, readerIndexes);
             IlBuilder.ILGenerator.Emit(OpCodes.Call, _getValueMethod);
-            PrimitiveTypeInfo.Get(property.Type).EmitConversion(IlBuilder.ILGenerator);
+            PrimitiveTypeInfo.Get(property.Type).EmitConversion(IlBuilder);
         }
 
         private void EmitIndexExpr(int index, string propertyName, int? queryIndexOrNull, IDictionary<string, FieldBuilder> readerIndexes)
@@ -503,7 +503,7 @@ namespace Repomat.IlGen
 
         private void EmitScalarConversion(Type convertToType)
         {
-            PrimitiveTypeInfo.Get(convertToType).EmitConversion(IlBuilder.ILGenerator);
+            PrimitiveTypeInfo.Get(convertToType).EmitConversion(IlBuilder);
         }
 
     }

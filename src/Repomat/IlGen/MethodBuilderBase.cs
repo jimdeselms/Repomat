@@ -152,7 +152,7 @@ namespace Repomat.IlGen
             if (typeInfo.CanBeNull)
             {
                 var nullCheckStore = IlBuilder.DeclareLocal(typeof(object));
-                var skipDbNullReplacement = IlBuilder.ILGenerator.DefineLabel();
+                var skipDbNullReplacement = IlBuilder.DefineLabel();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, nullCheckStore);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
@@ -161,7 +161,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldsfld, DBNULL_VALUE);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, nullCheckStore);
 
-                IlBuilder.ILGenerator.MarkLabel(skipDbNullReplacement);
+                IlBuilder.MarkLabel(skipDbNullReplacement);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
             }
@@ -225,7 +225,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, lockTakenLocal);
             }
 
-            IlBuilder.ILGenerator.BeginExceptionBlock();
+            IlBuilder.BeginExceptionBlock();
 
             if (passedConnectionIndex.HasValue)
             {
@@ -275,28 +275,28 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Call, setTransactionProp);
             }
 
-            IlBuilder.ILGenerator.BeginExceptionBlock();
+            IlBuilder.BeginExceptionBlock();
 
             GenerateMethodIl(_commandLocal);
 
-            IlBuilder.ILGenerator.BeginFinallyBlock();
+            IlBuilder.BeginFinallyBlock();
 
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
 
-            IlBuilder.ILGenerator.EndExceptionBlock();
+            IlBuilder.EndExceptionBlock();
 
-            IlBuilder.ILGenerator.BeginFinallyBlock();
+            IlBuilder.BeginFinallyBlock();
 
             if (lockConnection)
             {
-                var lockNotTakenLabel = IlBuilder.ILGenerator.DefineLabel();
+                var lockNotTakenLabel = IlBuilder.DefineLabel();
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, lockTakenLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, connectionLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Call, _monitorExitMethod);
-                IlBuilder.ILGenerator.MarkLabel(lockNotTakenLabel);
+                IlBuilder.MarkLabel(lockNotTakenLabel);
             }
             else
             {
@@ -304,7 +304,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
             }
 
-            IlBuilder.ILGenerator.EndExceptionBlock();
+            IlBuilder.EndExceptionBlock();
 
             if (_returnValueLocal != null)
             {
@@ -343,14 +343,14 @@ namespace Repomat.IlGen
                     }
                 }
 
-                IlBuilder.ILGenerator.BeginScope();
+                IlBuilder.BeginScope();
 
                 var parmLocal = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 // Add one to the argument index; the first one is "this"
                 AddSqlParameterFromArgument(parmLocal, arg.Name, argIndex + 1, arg.Type);
 
-                IlBuilder.ILGenerator.EndScope();
+                IlBuilder.EndScope();
             }
         }
 

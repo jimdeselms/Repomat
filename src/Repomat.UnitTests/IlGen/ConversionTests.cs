@@ -23,7 +23,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldstr, "1234");
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<int>();
@@ -41,7 +41,7 @@ namespace Repomat.UnitTests.IlGen
 
             il.Emit(OpCodes.Ldc_I4, 1234);
             il.Emit(OpCodes.Box, typeof(int));
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<int>();
@@ -58,7 +58,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldstr, "12/13/1971");
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<DateTime>();
@@ -75,7 +75,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldarg_0);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var offset = new DateTimeOffset(new DateTime(2000, 2, 4));
@@ -93,7 +93,7 @@ namespace Repomat.UnitTests.IlGen
 
             il.Emit(OpCodes.Ldc_I4, 9876);
             il.Emit(OpCodes.Box, typeof(int));
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<string>();
@@ -109,7 +109,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldnull);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<string>();
@@ -125,7 +125,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldstr, "Hello");
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<char>();
@@ -141,7 +141,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldnull);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<int?>();
@@ -158,7 +158,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldstr, "123");
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<int?>();
@@ -176,7 +176,7 @@ namespace Repomat.UnitTests.IlGen
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
             il.Emit(OpCodes.Ldsfld, dbNullValueProp);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<int?>();
@@ -193,7 +193,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldnull);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<DateTime?>();
@@ -210,7 +210,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldstr, "4/5/2012");
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<DateTime?>();
@@ -228,7 +228,7 @@ namespace Repomat.UnitTests.IlGen
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
             il.Emit(OpCodes.Ldsfld, dbNullValueProp);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<DateTime?>();
@@ -245,7 +245,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldnull);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<char?>();
@@ -262,7 +262,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldstr, "hi there");
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<char?>();
@@ -280,7 +280,7 @@ namespace Repomat.UnitTests.IlGen
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
             il.Emit(OpCodes.Ldsfld, dbNullValueProp);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<char?>();
@@ -296,7 +296,7 @@ namespace Repomat.UnitTests.IlGen
             var il = t.ILGenerator;
 
             il.Emit(OpCodes.Ldnull);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<byte[]>();
@@ -314,7 +314,7 @@ namespace Repomat.UnitTests.IlGen
 
             il.Emit(OpCodes.Ldc_I4, 3);
             il.Emit(OpCodes.Newarr, typeof(byte));
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<byte[]>();
@@ -332,7 +332,7 @@ namespace Repomat.UnitTests.IlGen
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
             il.Emit(OpCodes.Ldsfld, dbNullValueProp);
-            info.EmitConversion(il);
+            info.EmitConversion(t.IL);
             il.Emit(OpCodes.Ret);
 
             var result = t.Invoke<byte[]>();
