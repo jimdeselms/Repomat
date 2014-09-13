@@ -156,6 +156,18 @@ namespace Repomat
 //            _evalStack.Pop();
         }
 
+        public void Stfld(FieldInfo field)
+        {
+            if (field.IsStatic)
+            {
+                _ilGen.Emit(OpCodes.Stsfld, field);
+            }
+            else
+            {
+                _ilGen.Emit(OpCodes.Stfld, field);
+            }
+        }
+
         public void If(Action ifTrue)
         {
             var skip = _ilGen.DefineLabel();

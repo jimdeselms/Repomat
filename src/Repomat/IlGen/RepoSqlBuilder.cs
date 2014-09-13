@@ -136,7 +136,7 @@ namespace Repomat.IlGen
             var ilBuilder = new IlBuilder(ctor, new Type[] { fieldType });
             ilBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
             ilBuilder.ILGenerator.Emit(OpCodes.Ldarg_1);
-            ilBuilder.ILGenerator.Emit(OpCodes.Stfld, _connectionField);
+            ilBuilder.Stfld(_connectionField);
 
             return ilBuilder;
         }

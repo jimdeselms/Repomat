@@ -41,7 +41,7 @@ namespace Repomat.IlGen
                 // private _queryX_columnIndexesAssigned = false;
                 indexesAssignedField = DefineStaticField<bool>(string.Format("_query{0}_columnIndexesAssigned", _customQueryIdx));
                 _ctorIlBuilder.Ldc(0);
-                _ctorIlBuilder.ILGenerator.Emit(OpCodes.Stsfld, indexesAssignedField);
+                _ctorIlBuilder.Stfld(indexesAssignedField);
 
                 foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
                 {
@@ -49,7 +49,7 @@ namespace Repomat.IlGen
                     var field = DefineStaticField<int>(string.Format("_query{0}_column{1}Idx", _customQueryIdx, col.PropertyName));
                     columnIndexFields[col.PropertyName] = field;
                     _ctorIlBuilder.Ldc(0);
-                    _ctorIlBuilder.ILGenerator.Emit(OpCodes.Stsfld, field);
+                    _ctorIlBuilder.Stfld(field);
                 }
             }
 
@@ -277,7 +277,7 @@ namespace Repomat.IlGen
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
                     IlBuilder.Call(_getIndexForColumn);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Stsfld, columnIndexFields[columnToGet.PropertyName]);
+                    IlBuilder.Stfld(columnIndexFields[columnToGet.PropertyName]);
                 }
 
                 IlBuilder.MarkLabel(afterIndexAssignment);
