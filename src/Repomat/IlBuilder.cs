@@ -115,6 +115,18 @@ namespace Repomat
 //            _evalStack.Push(parm.Type);
         }
 
+        public void Ldfld(FieldInfo field)
+        {
+            if (field.IsStatic)
+            {
+                _ilGen.Emit(OpCodes.Ldsfld, field);
+            }
+            else
+            {
+                _ilGen.Emit(OpCodes.Ldfld, field);
+            }
+        }
+
         public void Ldloc(LocalBuilder local)
         {
             _ilGen.Emit(OpCodes.Ldloc, local);

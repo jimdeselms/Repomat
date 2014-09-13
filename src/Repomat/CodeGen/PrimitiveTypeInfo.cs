@@ -177,7 +177,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Brfalse, label1);
 
                 il.Ldloc(nullableValueLabel);
-                il.ILGenerator.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Ldfld(dbNullValue);
                 il.ILGenerator.Emit(OpCodes.Beq, label1);
 
                 il.Ldloc(nullableValueLabel);
@@ -209,7 +209,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Brfalse, label1);
 
                 il.Ldloc(nullableValueLabel);
-                il.ILGenerator.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Ldfld(dbNullValue);
                 il.ILGenerator.Emit(OpCodes.Beq, label1);
 
                 il.Ldloc(nullableValueLabel);
@@ -238,7 +238,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Brfalse_S, label1);
 
                 il.Ldloc(nullableValueLabel);
-                il.ILGenerator.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Ldfld(dbNullValue);
                 il.ILGenerator.Emit(OpCodes.Beq_S, label1);
 
                 il.Ldloc(nullableValueLabel);
@@ -297,7 +297,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Brfalse_S, label1);
 
                 il.Ldloc(nullableValueLocal);
-                il.ILGenerator.Emit(OpCodes.Ldsfld, dbNullValue);
+                il.Ldfld(dbNullValue);
                 il.ILGenerator.Emit(OpCodes.Beq_S, label1);
 
                 il.Ldloc(nullableValueLocal);

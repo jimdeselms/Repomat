@@ -264,7 +264,7 @@ namespace Repomat.IlGen
                 var afterIndexAssignment = IlBuilder.DefineLabel();
 
                 // if (!_query{0}_columnIndexesAssigned)
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldsfld, indexesAssignedField);
+                IlBuilder.Ldfld(indexesAssignedField);
                 IlBuilder.ILGenerator.Emit(OpCodes.Brtrue, afterIndexAssignment);
 
                 // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
@@ -439,7 +439,7 @@ namespace Repomat.IlGen
         {
             if (queryIndexOrNull.HasValue)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldsfld, readerIndexes[propertyName]);
+                IlBuilder.Ldfld(readerIndexes[propertyName]);
             }
             else
             {

@@ -172,12 +172,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(int?));
 
             var t = IlTester.Create<int?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
-            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            il.Ldfld(dbNullValueProp);
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<int?>();
 
@@ -276,12 +276,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(char?));
 
             var t = IlTester.Create<char?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
-            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            il.Ldfld(dbNullValueProp);
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<char?>();
 
@@ -328,12 +328,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(byte[]));
 
             var t = IlTester.Create<byte[]>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
-            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            il.Ldfld(dbNullValueProp);
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<byte[]>();
 

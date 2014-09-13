@@ -158,7 +158,7 @@ namespace Repomat.IlGen
                 IlBuilder.Ldloc(nullCheckStore);
                 IlBuilder.ILGenerator.Emit(OpCodes.Brtrue, skipDbNullReplacement);
 
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldsfld, DBNULL_VALUE);
+                IlBuilder.Ldfld(DBNULL_VALUE);
                 IlBuilder.Stloc(nullCheckStore);
 
                 IlBuilder.MarkLabel(skipDbNullReplacement);
@@ -240,7 +240,7 @@ namespace Repomat.IlGen
             else if (_newConnectionEveryTime)
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldfld, _connectionField);
+                IlBuilder.Ldfld(_connectionField);
 
                 IlBuilder.Call(_dbConnFuncInvokeMethod);
                 IlBuilder.Stloc(connectionLocal);
@@ -251,7 +251,7 @@ namespace Repomat.IlGen
             else // use the _connectionField
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldfld, _connectionField);
+                IlBuilder.Ldfld(_connectionField);
             }
 
             IlBuilder.ILGenerator.Emit(OpCodes.Dup);
