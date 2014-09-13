@@ -18,10 +18,8 @@ namespace Repomat
         private Stack<Type> _evalStack = new Stack<Type>();
 
         public IlBuilder(EmitMethodBuilder methodBuilder, ParameterDetails[] parameterTypes)
+            : this(methodBuilder.GetILGenerator(), methodBuilder.ReturnType, parameterTypes)
         {
-            _ilGen = methodBuilder.GetILGenerator();
-            _returnType = methodBuilder.ReturnType;
-            _parameterTypes = parameterTypes;
         }
 
         public IlBuilder(EmitMethodBuilder methodBuilder, ParameterInfo[] parameterTypes)
@@ -35,32 +33,46 @@ namespace Repomat
         {
         }
 
+        public IlBuilder(ConstructorBuilder ctor, Type[] types)
+            : this(ctor.GetILGenerator(), typeof(void), types.Select(t => new ParameterDetails(t, "x", false, 0)).ToArray())
+        {
+            
+        }
+       
+
+        private IlBuilder(ILGenerator ilGen, Type returnType, ParameterDetails[] parms)
+        {
+            _ilGen = ilGen;
+            _returnType = returnType;
+            _parameterTypes = parms;
+        }
+
         internal ILGenerator ILGenerator { get { return _ilGen; } }
 
         public void Ldc(int i)
         {
             _ilGen.Emit(OpCodes.Ldc_I4, i);
-            _evalStack.Push(typeof(int));
+//            _evalStack.Push(typeof(int));
         }
 
         public void Ldc(long l)
         {
             _ilGen.Emit(OpCodes.Ldc_I8, l);
-            _evalStack.Push(typeof(long));
+//            _evalStack.Push(typeof(long));
         }
 
         public void Ldarg(int i)
         {
             _ilGen.Emit(OpCodes.Ldarg, i);
 
-            var parm = _parameterTypes[i];
-            _evalStack.Push(parm.Type);
+//            var parm = _parameterTypes[i];
+//            _evalStack.Push(parm.Type);
         }
 
         public void Ldstr(string s)
         {
             _ilGen.Emit(OpCodes.Ldstr, s);
-            _evalStack.Push(typeof(string));
+//            _evalStack.Push(typeof(string));
         }
 
         public void BeginExceptionBlock()
@@ -105,24 +117,24 @@ namespace Repomat
 
         public void Ret()
         {
-            int expectedStackSize = _returnType == typeof(void) ? 0 : 1;
+            //int expectedStackSize = _returnType == typeof(void) ? 0 : 1;
 
-            if (expectedStackSize != _evalStack.Count)
-            {
-                throw new RepomatException("Invalid stack size {0}, expected {1}", _evalStack.Count, expectedStackSize);
-            }
+            //if (expectedStackSize != _evalStack.Count)
+            //{
+            //    throw new RepomatException("Invalid stack size {0}, expected {1}", _evalStack.Count, expectedStackSize);
+            //}
 
-            if (_returnType != typeof(void))
-            {
-                HandleBoxing(_returnType);
+            //if (_returnType != typeof(void))
+            //{
+            //    HandleBoxing(_returnType);
 
-                var topType = _evalStack.Peek();
-                if (!_returnType.IsAssignableFrom(topType))
-                {
-                    throw new RepomatException("Cannot convert type {0} into type {1}", topType, _returnType);
-                }
+            //    var topType = _evalStack.Peek();
+            //    if (!_returnType.IsAssignableFrom(topType))
+            //    {
+            //        throw new RepomatException("Cannot convert type {0} into type {1}", topType, _returnType);
+            //    }
 
-            }
+            //}
 
             _ilGen.Emit(OpCodes.Ret);
         }
@@ -130,7 +142,7 @@ namespace Repomat
         public void Pop()
         {
             _ilGen.Emit(OpCodes.Pop);
-            _evalStack.Pop();
+//            _evalStack.Pop();
         }
 
         public void If(Action ifTrue)

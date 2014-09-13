@@ -86,7 +86,7 @@ namespace Repomat.IlGen
             if (MethodDef.CustomSqlIsStoredProcedure)
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, CommandLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4, (int)CommandType.StoredProcedure);
+                IlBuilder.Ldc((int)CommandType.StoredProcedure);
                 IlBuilder.ILGenerator.Emit(OpCodes.Call, _commandTypeSet);
             }
         }

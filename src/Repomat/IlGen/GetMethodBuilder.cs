@@ -15,12 +15,12 @@ namespace Repomat.IlGen
     internal class GetMethodBuilder : MethodBuilderBase
     {
         private readonly int _customQueryIdx;
-        private readonly ILGenerator _ctorIlBuilder;
+        private readonly IlBuilder _ctorIlBuilder;
         private readonly SqlMethodBuilderFactory _methodBuilderFactory;
 
         private bool _useStrictTyping;
 
-        internal GetMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, SqlMethodBuilderFactory methodBuilderFactory, bool useStrictTyping, ILGenerator ctorIlBuilder)
+        internal GetMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, SqlMethodBuilderFactory methodBuilderFactory, bool useStrictTyping, IlBuilder ctorIlBuilder)
             : base(typeBuilder, connectionField, repoDef, methodDef, newConnectionEveryTime)
         {
             _customQueryIdx = customQueryIdx;
@@ -40,16 +40,16 @@ namespace Repomat.IlGen
             {
                 // private _queryX_columnIndexesAssigned = false;
                 indexesAssignedField = DefineStaticField<bool>(string.Format("_query{0}_columnIndexesAssigned", _customQueryIdx));
-                _ctorIlBuilder.Emit(OpCodes.Ldc_I4, 0);
-                _ctorIlBuilder.Emit(OpCodes.Stsfld, indexesAssignedField);
+                _ctorIlBuilder.Ldc(0);
+                _ctorIlBuilder.ILGenerator.Emit(OpCodes.Stsfld, indexesAssignedField);
 
                 foreach (var col in RepositoryDefBuilder.GetAssignableColumnsForType(RepoDef.ColumnNamingConvention, MethodDef.ReturnType))
                 {
                     // private _queryX_columnYIdx = 0;
                     var field = DefineStaticField<int>(string.Format("_query{0}_column{1}Idx", _customQueryIdx, col.PropertyName));
                     columnIndexFields[col.PropertyName] = field;
-                    _ctorIlBuilder.Emit(OpCodes.Ldc_I4, 0);
-                    _ctorIlBuilder.Emit(OpCodes.Stsfld, field);
+                    _ctorIlBuilder.Ldc(0);
+                    _ctorIlBuilder.ILGenerator.Emit(OpCodes.Stsfld, field);
                 }
             }
 
@@ -175,7 +175,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, returnValue);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4_1);
+                IlBuilder.Ldc(1);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
@@ -184,7 +184,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4_0);
+                IlBuilder.Ldc(0);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
             }
             else
@@ -231,7 +231,7 @@ namespace Repomat.IlGen
 
             // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4_0);
+            IlBuilder.Ldc(0);
             IlBuilder.ILGenerator.Emit(OpCodes.Call, _getValueMethod);
             PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder);
 
@@ -443,7 +443,7 @@ namespace Repomat.IlGen
             }
             else
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldc_I4, index);
+                IlBuilder.Ldc(index);
             }
         }
 

@@ -273,7 +273,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Ldloc, loc);
 
                 var getChars = typeof(string).GetMethod("get_Chars");
-                il.ILGenerator.Emit(OpCodes.Ldc_I4_0);
+                il.Ldc(0);
                 il.ILGenerator.Emit(OpCodes.Callvirt, getChars);
             };
         }

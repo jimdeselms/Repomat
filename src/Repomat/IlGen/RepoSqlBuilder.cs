@@ -36,7 +36,7 @@ namespace Repomat.IlGen
         }
 
         private readonly TypeBuilder _typeBuilder;
-        private readonly ILGenerator _ctorIlBuilder;
+        private readonly IlBuilder _ctorIlBuilder;
         private Type _type = null;
 
         private FieldBuilder _connectionField;
@@ -69,7 +69,7 @@ namespace Repomat.IlGen
         }
 
         protected TypeBuilder TypeBuilder { get { return _typeBuilder; } }
-        protected ILGenerator CtorIlBuilder { get { return _ctorIlBuilder; } }
+        protected IlBuilder CtorIlBuilder { get { return _ctorIlBuilder; } }
         protected FieldBuilder ConnectionField { get { return _connectionField; } }
 
         protected abstract SqlMethodBuilderFactory CreateMethodBuilderFactory(RepositoryDef repoDef, bool newConnectionEveryTime);
@@ -103,7 +103,7 @@ namespace Repomat.IlGen
             if (_type == null)
             {
                 // Finish off the constructor.
-                _ctorIlBuilder.Emit(OpCodes.Ret);
+                _ctorIlBuilder.ILGenerator.Emit(OpCodes.Ret);
 
                 _type = _typeBuilder.CreateType();
                 
@@ -118,25 +118,25 @@ namespace Repomat.IlGen
             return _type;
         }
 
-        private ILGenerator DefineSingleConnectionCtor()
+        private IlBuilder DefineSingleConnectionCtor()
         {
             return DefineConstructor("_connection", typeof(IDbConnection));
         }
 
-        private ILGenerator DefineConnectionFactoryCtor()
+        private IlBuilder DefineConnectionFactoryCtor()
         {
             return DefineConstructor("_connectionFactory", typeof(Func<IDbConnection>));
         }
 
-        private ILGenerator DefineConstructor(string fieldName, Type fieldType)
+        private IlBuilder DefineConstructor(string fieldName, Type fieldType)
         {
             _connectionField = _typeBuilder.DefineField(fieldName, fieldType, FieldAttributes.Private);
 
             var ctor = _typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, new Type[] { fieldType });
-            var ilBuilder = ctor.GetILGenerator();
-            ilBuilder.Emit(OpCodes.Ldarg_0);
-            ilBuilder.Emit(OpCodes.Ldarg_1);
-            ilBuilder.Emit(OpCodes.Stfld, _connectionField);
+            var ilBuilder = new IlBuilder(ctor, new Type[] { fieldType });
+            ilBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
+            ilBuilder.ILGenerator.Emit(OpCodes.Ldarg_1);
+            ilBuilder.ILGenerator.Emit(OpCodes.Stfld, _connectionField);
 
             return ilBuilder;
         }
