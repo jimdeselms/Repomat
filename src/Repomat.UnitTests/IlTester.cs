@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define SAVE_ASSEMBLY
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -47,7 +49,7 @@ namespace Repomat.UnitTests
             string typeName = "IlTestType" + _typeIdx++;
             _typeBuilder = _moduleBuilder.DefineType(typeName);
             _methodBuilder = _typeBuilder.DefineMethod("IlTestMethod", MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard, _returnType, parmTypes);
-            _ilBuilder = new IlBuilder(_methodBuilder);
+            _ilBuilder = new IlBuilder(_methodBuilder, parmTypes);
         }
 
         internal ILGenerator ILGenerator { get { return _ilBuilder.ILGenerator; } }
@@ -58,11 +60,13 @@ namespace Repomat.UnitTests
         {
             var type = _typeBuilder.CreateType();
 
+#if SAVE_ASSEMBLY
             if (!_hasBeenSaved)
             {
                 _hasBeenSaved = true;
                 _assemblyBuilder.Save("temp.dll");
             }
+#endif
 
             var method = type.GetMethod("IlTestMethod");
 
