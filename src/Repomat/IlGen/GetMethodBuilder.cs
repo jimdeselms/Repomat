@@ -80,7 +80,7 @@ namespace Repomat.IlGen
                 // return Convert.ToSomething(__result);
                 ExecuteScalar();
                 EmitScalarConversion(MethodDef.ReturnType);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                IlBuilder.Stloc(ReturnValueLocal);
             }
             else
             {
@@ -91,7 +91,7 @@ namespace Repomat.IlGen
 
                 IlBuilder.Ldloc(CommandLocal);
                 IlBuilder.Call(_executeReaderMethod);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, readerLocal);
+                IlBuilder.Stloc(readerLocal);
 
                 if (MethodDef.IsSingleton)
                 {
@@ -176,7 +176,7 @@ namespace Repomat.IlGen
                 IlBuilder.Ldloc(returnValue);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
                 IlBuilder.Ldc(1);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                IlBuilder.Stloc(ReturnValueLocal);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
                 IlBuilder.MarkLabel(afterRead);
@@ -185,7 +185,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
                 IlBuilder.Ldc(0);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                IlBuilder.Stloc(ReturnValueLocal);
             }
             else
             {
@@ -200,7 +200,7 @@ namespace Repomat.IlGen
                 {
                     // return default(X);
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                    IlBuilder.Stloc(ReturnValueLocal);
                 }
             }
 
@@ -219,7 +219,7 @@ namespace Repomat.IlGen
             IlBuilder.ILGenerator.Emit(OpCodes.Newobj, ctor);
 
             var resultListLocal = IlBuilder.DeclareLocal(listType);
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, resultListLocal);
+            IlBuilder.Stloc(resultListLocal);
 
             var whileLoopStart = IlBuilder.DefineLabel();
             var whileLoopEnd = IlBuilder.DefineLabel();
@@ -236,7 +236,7 @@ namespace Repomat.IlGen
             PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder);
 
             var currentResultLocal = IlBuilder.DeclareLocal(rowType);
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, currentResultLocal);
+            IlBuilder.Stloc(currentResultLocal);
             IlBuilder.Ldloc(resultListLocal);
             IlBuilder.Ldloc(currentResultLocal);
             IlBuilder.Call(addMethod);
@@ -305,7 +305,7 @@ namespace Repomat.IlGen
             {
                 listLocalOrNull = IlBuilder.DeclareLocal(listType);
                 IlBuilder.ILGenerator.Emit(OpCodes.Newobj, listType.GetConstructor(Type.EmptyTypes));
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, listLocalOrNull);
+                IlBuilder.Stloc(listLocalOrNull);
             }
 
             Label whileReaderReadStart = IlBuilder.DefineLabel();
@@ -359,7 +359,7 @@ namespace Repomat.IlGen
                     IlBuilder.Call(toArrayMethod);
 
                 }
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
+                IlBuilder.Stloc(ReturnValueLocal);
             }
         }
 
@@ -394,14 +394,14 @@ namespace Repomat.IlGen
                 }
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Newobj, ctor);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, resultLocal);
+                IlBuilder.Stloc(resultLocal);
             }
             else
             {
                 // body.WriteLine("var newObj = new {0}();", EntityDef.Type.ToCSharp());
                 var ctor = EntityDef.Type.GetConstructor(Type.EmptyTypes);
                 IlBuilder.ILGenerator.Emit(OpCodes.Newobj, ctor);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, resultLocal);
+                IlBuilder.Stloc(resultLocal);
 
                 for (int i = 0; i < selectColumns.Count; i++)
                 {

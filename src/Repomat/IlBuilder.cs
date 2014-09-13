@@ -173,6 +173,11 @@ namespace Repomat
             }
         }
 
+        public void Stloc(LocalBuilder local)
+        {
+            _ilGen.Emit(OpCodes.Stloc, local);
+        }
+
         public void If(Action ifTrue)
         {
             var skip = _ilGen.DefineLabel();

@@ -96,7 +96,7 @@ namespace Repomat.IlGen
             IlBuilder.Ldloc(_commandLocal);
             IlBuilder.Call(_commandTextGetMethod);
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, 1);
+            IlBuilder.Stloc(_testLocal);
             IlBuilder.ILGenerator.EmitWriteLine(_testLocal);
         }
 
@@ -129,7 +129,7 @@ namespace Repomat.IlGen
             // parm = cmd.CreateParameter();
             IlBuilder.Ldloc(_commandLocal);
             IlBuilder.Call(_createParameterMethod);
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, sqlParameter);
+            IlBuilder.Stloc(sqlParameter);
 
             // parm.ParameterName = name
             IlBuilder.Ldloc(sqlParameter);
@@ -154,12 +154,12 @@ namespace Repomat.IlGen
                 var nullCheckStore = IlBuilder.DeclareLocal(typeof(object));
                 var skipDbNullReplacement = IlBuilder.DefineLabel();
 
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, nullCheckStore);
+                IlBuilder.Stloc(nullCheckStore);
                 IlBuilder.Ldloc(nullCheckStore);
                 IlBuilder.ILGenerator.Emit(OpCodes.Brtrue, skipDbNullReplacement);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldsfld, DBNULL_VALUE);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, nullCheckStore);
+                IlBuilder.Stloc(nullCheckStore);
 
                 IlBuilder.MarkLabel(skipDbNullReplacement);
 
@@ -222,7 +222,7 @@ namespace Repomat.IlGen
                 lockTakenLocal = IlBuilder.DeclareLocal(typeof(bool));
 
                 IlBuilder.Ldc(0);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, lockTakenLocal);
+                IlBuilder.Stloc(lockTakenLocal);
             }
 
             IlBuilder.BeginExceptionBlock();
@@ -243,7 +243,7 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldfld, _connectionField);
 
                 IlBuilder.Call(_dbConnFuncInvokeMethod);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stloc, connectionLocal);
+                IlBuilder.Stloc(connectionLocal);
                 IlBuilder.Ldloc(connectionLocal);
                 IlBuilder.Call(_dbConnOpenMethod);
                 IlBuilder.Ldloc(connectionLocal);
@@ -255,7 +255,7 @@ namespace Repomat.IlGen
             }
 
             IlBuilder.ILGenerator.Emit(OpCodes.Dup);
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, connectionLocal);
+            IlBuilder.Stloc(connectionLocal);
 
             if (lockConnection)
             {
@@ -265,7 +265,7 @@ namespace Repomat.IlGen
             }
 
             IlBuilder.ILGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, _commandLocal);
+            IlBuilder.Stloc(_commandLocal);
 
             if (passedTransactionIndex.HasValue)
             {

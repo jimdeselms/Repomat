@@ -86,7 +86,7 @@ namespace Repomat.IlGen
             IlBuilder.ILGenerator.Emit(OpCodes.Unbox_Any, _scopeIdentityType);
             IlBuilder.Call(convertMethod);
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, newValueLocal);
+            IlBuilder.Stloc(newValueLocal);
 
             var property = EntityDef.Type.GetProperty(EntityDef.PrimaryKey[0].PropertyName);
             if (property != null)

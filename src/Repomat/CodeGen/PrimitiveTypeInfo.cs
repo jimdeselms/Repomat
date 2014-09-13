@@ -172,7 +172,7 @@ namespace Repomat.CodeGen
                 var nullableValueLabel = il.DeclareLocal(typeof(object));
                 var resultLocal = il.DeclareLocal(typeof(T?));
 
-                il.ILGenerator.Emit(OpCodes.Stloc, nullableValueLabel);
+                il.Stloc(nullableValueLabel);
                 il.Ldloc(nullableValueLabel);
                 il.ILGenerator.Emit(OpCodes.Brfalse, label1);
 
@@ -204,7 +204,7 @@ namespace Repomat.CodeGen
 
                 var nullableValueLabel = il.DeclareLocal(typeof(string));
 
-                il.ILGenerator.Emit(OpCodes.Stloc, nullableValueLabel);
+                il.Stloc(nullableValueLabel);
                 il.Ldloc(nullableValueLabel);
                 il.ILGenerator.Emit(OpCodes.Brfalse, label1);
 
@@ -233,7 +233,7 @@ namespace Repomat.CodeGen
 
                 var nullableValueLabel = il.DeclareLocal(typeof(string));
 
-                il.ILGenerator.Emit(OpCodes.Stloc, nullableValueLabel);
+                il.Stloc(nullableValueLabel);
                 il.Ldloc(nullableValueLabel);
                 il.ILGenerator.Emit(OpCodes.Brfalse_S, label1);
 
@@ -269,7 +269,7 @@ namespace Repomat.CodeGen
             {
                 var loc = il.ILGenerator.DeclareLocal(typeof(string));
                 SimpleConversion("ToString")(il);
-                il.ILGenerator.Emit(OpCodes.Stloc, loc);
+                il.Stloc(loc);
                 il.Ldloc(loc);
 
                 var getChars = typeof(string).GetMethod("get_Chars");
@@ -292,7 +292,7 @@ namespace Repomat.CodeGen
                 var nullableValueLocal = il.DeclareLocal(typeof(object));
                 var resultLocal = il.DeclareLocal(typeof(char?));
 
-                il.ILGenerator.Emit(OpCodes.Stloc, nullableValueLocal);
+                il.Stloc(nullableValueLocal);
                 il.Ldloc(nullableValueLocal);
                 il.ILGenerator.Emit(OpCodes.Brfalse_S, label1);
 
