@@ -18,10 +18,15 @@ namespace Repomat.Schema
         private readonly int _index;
 
         public ParameterDetails(ParameterInfo parameterInfo, int index)
+            : this(parameterInfo.ParameterType, parameterInfo.Name, parameterInfo.IsOut, index)
         {
-            _name = parameterInfo.Name;
-            _type = parameterInfo.ParameterType;
-            _isOut = parameterInfo.IsOut;
+        }
+
+        internal ParameterDetails(Type type, string name, bool isOut, int index)
+        {
+            _name = name;
+            _type = type;
+            _isOut = isOut;
             _isTransaction = _type == typeof(IDbTransaction);
             _isConnection = _type == typeof(IDbConnection);
             _index = index;

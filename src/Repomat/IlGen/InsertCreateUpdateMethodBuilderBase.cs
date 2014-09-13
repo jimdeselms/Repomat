@@ -48,13 +48,13 @@ namespace Repomat.IlGen
 
             foreach (var column in EntityDef.Properties)
             {
-                IlGenerator.BeginScope();
+                IlBuilder.ILGenerator.BeginScope();
 
-                var parm = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+                var parm = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 AddSqlParameterFromProperty(parm, column.PropertyName, propIndex, column);
 
-                IlGenerator.EndScope();
+                IlBuilder.ILGenerator.EndScope();
             }
 
             ExecuteNonQuery();
@@ -74,19 +74,19 @@ namespace Repomat.IlGen
 
             foreach (var column in EntityDef.NonPrimaryKeyColumns)
             {
-                var parm = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+                var parm = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
                 AddSqlParameterFromProperty(parm, column.PropertyName, MethodDef.DtoParameterOrNull.Index, column);
             }
 
             ExecuteScalar();
 
-            var newValueLocal = IlGenerator.DeclareLocal(typeof(int));
+            var newValueLocal = IlBuilder.DeclareLocal(typeof(int));
             var convertMethod = typeof(Convert).GetMethod("ToInt32", new Type[] { _scopeIdentityType });
 
-            IlGenerator.Emit(OpCodes.Unbox_Any, _scopeIdentityType);
-            IlGenerator.Emit(OpCodes.Call, convertMethod);
+            IlBuilder.ILGenerator.Emit(OpCodes.Unbox_Any, _scopeIdentityType);
+            IlBuilder.ILGenerator.Emit(OpCodes.Call, convertMethod);
 
-            IlGenerator.Emit(OpCodes.Stloc, newValueLocal);
+            IlBuilder.ILGenerator.Emit(OpCodes.Stloc, newValueLocal);
 
             var property = EntityDef.Type.GetProperty(EntityDef.PrimaryKey[0].PropertyName);
             if (property != null)
@@ -94,19 +94,19 @@ namespace Repomat.IlGen
                 var setter = property.GetSetMethod();
                 if (setter != null)
                 {
-                    IlGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
-                    IlGenerator.Emit(OpCodes.Ldloc, newValueLocal);
-                    IlGenerator.Emit(OpCodes.Call, setter);
+                    IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
+                    IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, newValueLocal);
+                    IlBuilder.ILGenerator.Emit(OpCodes.Call, setter);
                 }
             }
 
 
             if (MethodDef.ReturnsInt)
             {
-                IlGenerator.Emit(OpCodes.Ldloc, newValueLocal);
+                IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, newValueLocal);
             }
 
-            IlGenerator.Emit(OpCodes.Ret);
+            IlBuilder.ILGenerator.Emit(OpCodes.Ret);
         }
 
         protected void GenerateIlForUpdate(LocalBuilder cmdLocal)
@@ -140,13 +140,13 @@ namespace Repomat.IlGen
 
             foreach (var column in EntityDef.Properties)
             {
-                IlGenerator.BeginScope();
+                IlBuilder.ILGenerator.BeginScope();
 
-                var parm = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+                var parm = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 AddSqlParameterFromProperty(parm, column.PropertyName, propIndex, column);
 
-                IlGenerator.EndScope();
+                IlBuilder.ILGenerator.EndScope();
             }
 
             ExecuteNonQuery();

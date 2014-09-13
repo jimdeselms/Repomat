@@ -41,13 +41,13 @@ namespace Repomat.IlGen
 
             foreach (var key in EntityDef.PrimaryKey)
             {
-                IlGenerator.BeginScope();
+                IlBuilder.ILGenerator.BeginScope();
 
-                var parm = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+                var parm = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 AddSqlParameterFromProperty(parm, key.PropertyName, propIndex, key);
 
-                IlGenerator.EndScope();
+                IlBuilder.ILGenerator.EndScope();
             }
 
             ExecuteNonQuery();

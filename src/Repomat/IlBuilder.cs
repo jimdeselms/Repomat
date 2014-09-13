@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Repomat.Schema;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using EmitMethodBuilder = System.Reflection.Emit.MethodBuilder;
@@ -11,15 +13,26 @@ namespace Repomat
     {
         private readonly ILGenerator _ilGen;
         private readonly Type _returnType;
-        private readonly Type[] _parameterTypes;
+        private readonly ParameterDetails[] _parameterTypes;
 
         private Stack<Type> _evalStack = new Stack<Type>();
 
-        public IlBuilder(EmitMethodBuilder methodBuilder, Type[] parameterTypes)
+        public IlBuilder(EmitMethodBuilder methodBuilder, ParameterDetails[] parameterTypes)
         {
             _ilGen = methodBuilder.GetILGenerator();
             _returnType = methodBuilder.ReturnType;
             _parameterTypes = parameterTypes;
+        }
+
+        public IlBuilder(EmitMethodBuilder methodBuilder, ParameterInfo[] parameterTypes)
+            : this(methodBuilder, parameterTypes.Select(p => new ParameterDetails(p, 0)).ToArray())
+        {
+        }
+
+        // This is just for testing
+        internal IlBuilder(EmitMethodBuilder methodBuilder, Type[] parameterTypes)
+            : this(methodBuilder, parameterTypes.Select(t => new ParameterDetails(t, "x", false, 0)).ToArray())
+        {
         }
 
         internal ILGenerator ILGenerator { get { return _ilGen; } }
@@ -40,8 +53,8 @@ namespace Repomat
         {
             _ilGen.Emit(OpCodes.Ldarg, i);
 
-            var type = _parameterTypes[i];
-            _evalStack.Push(type);
+            var parm = _parameterTypes[i];
+            _evalStack.Push(parm.Type);
         }
 
         public void Ldstr(string s)

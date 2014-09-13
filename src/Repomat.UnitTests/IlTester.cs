@@ -15,7 +15,9 @@ namespace Repomat.UnitTests
     public class IlTester
     {
         private static int _typeIdx = 1;
+#if SAVE_ASSEMBLY
         private static bool _hasBeenSaved = false;
+#endif
 
         private static readonly AssemblyBuilder _assemblyBuilder;
         private static readonly ModuleBuilder _moduleBuilder;
