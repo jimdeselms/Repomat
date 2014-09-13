@@ -81,20 +81,20 @@ namespace Repomat.IlGen
             // cmd.CommandText = commandText
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, commandText);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _commandTextSetMethod);
+            IlBuilder.Call(_commandTextSetMethod);
 
             if (MethodDef.CustomSqlIsStoredProcedure)
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, CommandLocal);
                 IlBuilder.Ldc((int)CommandType.StoredProcedure);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, _commandTypeSet);
+                IlBuilder.Call(_commandTypeSet);
             }
         }
 
         protected void WriteCommandText()
         {
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _commandTextGetMethod);
+            IlBuilder.Call(_commandTextGetMethod);
 
             IlBuilder.ILGenerator.Emit(OpCodes.Stloc, 1);
             IlBuilder.ILGenerator.EmitWriteLine(_testLocal);
@@ -118,7 +118,7 @@ namespace Repomat.IlGen
                 var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, sqlParameter);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, propGet);
+                IlBuilder.Call(propGet);
             });
         }
 
@@ -128,19 +128,19 @@ namespace Repomat.IlGen
 
             // parm = cmd.CreateParameter();
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
+            IlBuilder.Call(_createParameterMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Stloc, sqlParameter);
 
             // parm.ParameterName = name
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, name);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
+            IlBuilder.Call(_parameterNameSetMethod);
 
             // parm.DbType = blah
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, sqlParameter);
             IlBuilder.Ldc((int)typeInfo.DbType);
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _dbTypeSetMethod);
+            IlBuilder.Call(_dbTypeSetMethod);
 
             getParameterValue();
 
@@ -166,13 +166,13 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
             }
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
+            IlBuilder.Call(_valueSetMethod);
 
             //// cmd.Paramters.Add(parm);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _parametersGetMethod);
+            IlBuilder.Call(_parametersGetMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _parametersAddMethod);
+            IlBuilder.Call(_parametersAddMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Pop);
         }
 
@@ -180,7 +180,7 @@ namespace Repomat.IlGen
         {
             // cmd.ExecuteNonQuery();
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _executeNonQueryMethod);
+            IlBuilder.Call(_executeNonQueryMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Pop); // Pop the unused result
         }
 
@@ -188,7 +188,7 @@ namespace Repomat.IlGen
         {
             // cmd.ExecuteScalar();
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _executeScalarMethod);
+            IlBuilder.Call(_executeScalarMethod);
         }
 
         private static readonly ConstructorInfo _repomatExceptionCtor = typeof(RepomatException).GetConstructor(new Type[] { typeof(string), typeof(object[]) });
@@ -235,17 +235,17 @@ namespace Repomat.IlGen
             {
                 var connProperty = typeof(IDbTransaction).GetProperty("Connection").GetGetMethod();
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, connProperty);
+                IlBuilder.Call(connProperty);
             }
             else if (_newConnectionEveryTime)
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldfld, _connectionField);
 
-                IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _dbConnFuncInvokeMethod);
+                IlBuilder.Call(_dbConnFuncInvokeMethod);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, connectionLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _dbConnOpenMethod);
+                IlBuilder.Call(_dbConnOpenMethod);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, connectionLocal);
             }
             else // use the _connectionField
@@ -260,7 +260,7 @@ namespace Repomat.IlGen
             if (lockConnection)
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
+                IlBuilder.Call(_monitorEnterMethod);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, connectionLocal);
             }
 
@@ -272,7 +272,7 @@ namespace Repomat.IlGen
                 var setTransactionProp = typeof(IDbCommand).GetProperty("Transaction").GetSetMethod();
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, setTransactionProp);
+                IlBuilder.Call(setTransactionProp);
             }
 
             IlBuilder.BeginExceptionBlock();
@@ -282,7 +282,7 @@ namespace Repomat.IlGen
             IlBuilder.BeginFinallyBlock();
 
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+            IlBuilder.Call(_disposeMethod);
 
             IlBuilder.EndExceptionBlock();
 
@@ -295,13 +295,13 @@ namespace Repomat.IlGen
                 IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, _monitorExitMethod);
+                IlBuilder.Call(_monitorExitMethod);
                 IlBuilder.MarkLabel(lockNotTakenLabel);
             }
             else
             {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+                IlBuilder.Call(_disposeMethod);
             }
 
             IlBuilder.EndExceptionBlock();

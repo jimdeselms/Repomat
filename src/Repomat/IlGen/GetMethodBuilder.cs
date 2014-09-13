@@ -90,7 +90,7 @@ namespace Repomat.IlGen
                 IlBuilder.BeginExceptionBlock();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, CommandLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, _executeReaderMethod);
+                IlBuilder.Call(_executeReaderMethod);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, readerLocal);
 
                 if (MethodDef.IsSingleton)
@@ -109,7 +109,7 @@ namespace Repomat.IlGen
                 IlBuilder.BeginFinallyBlock();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+                IlBuilder.Call(_disposeMethod);
 
                 IlBuilder.EndExceptionBlock();
             }
@@ -137,7 +137,7 @@ namespace Repomat.IlGen
 
             // if (reader.Read())
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, _readMethod);
+            IlBuilder.Call(_readMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, afterRead);
 
             if (MethodDef.CustomSqlOrNull != null)
@@ -154,7 +154,7 @@ namespace Repomat.IlGen
                 var noMoreRowsFound = IlBuilder.DefineLabel();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, _readMethod);
+                IlBuilder.Call(_readMethod);
                 IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, noMoreRowsFound);
 
                 ThrowRepomatException("More than one row returned from singleton query");
@@ -226,20 +226,20 @@ namespace Repomat.IlGen
 
             IlBuilder.MarkLabel(whileLoopStart);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, _readMethod);
+            IlBuilder.Call(_readMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, whileLoopEnd);
 
             // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
             IlBuilder.Ldc(0);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, _getValueMethod);
+            IlBuilder.Call(_getValueMethod);
             PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder);
 
             var currentResultLocal = IlBuilder.DeclareLocal(rowType);
             IlBuilder.ILGenerator.Emit(OpCodes.Stloc, currentResultLocal);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, resultListLocal);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, currentResultLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, addMethod);
+            IlBuilder.Call(addMethod);
 
             IlBuilder.ILGenerator.Emit(OpCodes.Br, whileLoopStart);
 
@@ -251,7 +251,7 @@ namespace Repomat.IlGen
             {
                 var toArrayMethod = typeof(Enumerable).GetMethod("ToArray", BindingFlags.Static | BindingFlags.Public);
                 var genericToArrayMethod = toArrayMethod.MakeGenericMethod(rowType);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, genericToArrayMethod);
+                IlBuilder.Call(genericToArrayMethod);
             }
 
             IlBuilder.Ret();
@@ -269,14 +269,14 @@ namespace Repomat.IlGen
 
                 // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, _verifyFieldsAreUniqueMethod);
+                IlBuilder.Call(_verifyFieldsAreUniqueMethod);
 
                 foreach (var columnToGet in columnsToGet)
                 {
                     // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Call, _getIndexForColumn);
+                    IlBuilder.Call(_getIndexForColumn);
                     IlBuilder.ILGenerator.Emit(OpCodes.Stsfld, columnIndexFields[columnToGet.PropertyName]);
                 }
 
@@ -315,7 +315,7 @@ namespace Repomat.IlGen
 
             // while (reader.Read())
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, _readMethod);
+            IlBuilder.Call(_readMethod);
             IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, whileReaderReadEnd);
 
             // The inside of the loop goes here.
@@ -341,7 +341,7 @@ namespace Repomat.IlGen
                 var addMethod = listType.GetMethod("Add", new[] { EntityDef.Type });
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, listLocalOrNull);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, rowLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Callvirt, addMethod);
+                IlBuilder.Call(addMethod);
             }
 
             IlBuilder.ILGenerator.Emit(OpCodes.Br, whileReaderReadStart);
@@ -356,7 +356,7 @@ namespace Repomat.IlGen
                     var toArrayMethod = typeof(System.Linq.Enumerable)
                         .GetMethod("ToArray", BindingFlags.Static | BindingFlags.Public)
                         .MakeGenericMethod(EntityDef.Type);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Call, toArrayMethod);
+                    IlBuilder.Call(toArrayMethod);
 
                 }
                 IlBuilder.ILGenerator.Emit(OpCodes.Stloc, ReturnValueLocal);
@@ -409,7 +409,7 @@ namespace Repomat.IlGen
                     var setter = EntityDef.Type.GetProperty(selectColumns[i].PropertyName).GetSetMethod();
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, resultLocal);
                     EmitReaderGetExpression(readerLocal, i, selectColumns[i], queryIndexOrNull, readerIndexes);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Call, setter);
+                    IlBuilder.Call(setter);
                 }
                 for (int i = 0; i < args.Length; i++)
                 {
@@ -419,7 +419,7 @@ namespace Repomat.IlGen
                     var setter = EntityDef.Type.GetProperty(arg.Name.Capitalize()).GetSetMethod();
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, resultLocal);
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, index);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Call, setter);
+                    IlBuilder.Call(setter);
                 }
             }
         }
@@ -431,7 +431,7 @@ namespace Repomat.IlGen
             // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
             IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, readerLocal);
             EmitIndexExpr(index, property.PropertyName, queryIndexOrNull, readerIndexes);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, _getValueMethod);
+            IlBuilder.Call(_getValueMethod);
             PrimitiveTypeInfo.Get(property.Type).EmitConversion(IlBuilder);
         }
 

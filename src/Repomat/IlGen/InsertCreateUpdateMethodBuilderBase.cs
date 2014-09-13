@@ -84,7 +84,7 @@ namespace Repomat.IlGen
             var convertMethod = typeof(Convert).GetMethod("ToInt32", new Type[] { _scopeIdentityType });
 
             IlBuilder.ILGenerator.Emit(OpCodes.Unbox_Any, _scopeIdentityType);
-            IlBuilder.ILGenerator.Emit(OpCodes.Call, convertMethod);
+            IlBuilder.Call(convertMethod);
 
             IlBuilder.ILGenerator.Emit(OpCodes.Stloc, newValueLocal);
 
@@ -96,7 +96,7 @@ namespace Repomat.IlGen
                 {
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, newValueLocal);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Call, setter);
+                    IlBuilder.Call(setter);
                 }
             }
 

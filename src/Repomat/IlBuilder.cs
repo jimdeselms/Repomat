@@ -39,7 +39,6 @@ namespace Repomat
             
         }
        
-
         private IlBuilder(ILGenerator ilGen, Type returnType, ParameterDetails[] parms)
         {
             _ilGen = ilGen;
@@ -48,6 +47,53 @@ namespace Repomat
         }
 
         internal ILGenerator ILGenerator { get { return _ilGen; } }
+
+        public void BeginExceptionBlock()
+        {
+            _ilGen.BeginExceptionBlock();
+        }
+
+        public void BeginFinallyBlock()
+        {
+            _ilGen.BeginFinallyBlock();
+        }
+
+        public void BeginScope()
+        {
+            _ilGen.BeginScope();
+        }
+
+        public void Call(MethodInfo method)
+        {
+            if (method.IsVirtual)
+            {
+                _ilGen.Emit(OpCodes.Callvirt, method);
+            }
+            else
+            {
+                _ilGen.Emit(OpCodes.Call, method);
+            }
+        }
+
+        public LocalBuilder DeclareLocal(Type t)
+        {
+            return _ilGen.DeclareLocal(t);
+        }
+
+        public Label DefineLabel()
+        {
+            return _ilGen.DefineLabel();
+        }
+
+        public void EndExceptionBlock()
+        {
+            _ilGen.EndExceptionBlock();
+        }
+
+        public void EndScope()
+        {
+            _ilGen.EndScope();
+        }
 
         public void Ldc(int i)
         {
@@ -73,41 +119,6 @@ namespace Repomat
         {
             _ilGen.Emit(OpCodes.Ldstr, s);
 //            _evalStack.Push(typeof(string));
-        }
-
-        public void BeginExceptionBlock()
-        {
-            _ilGen.BeginExceptionBlock();
-        }
-
-        public void BeginFinallyBlock()
-        {
-            _ilGen.BeginFinallyBlock();
-        }
-
-        public void BeginScope()
-        {
-            _ilGen.BeginScope();
-        }
-
-        public void EndExceptionBlock()
-        {
-            _ilGen.EndExceptionBlock();
-        }
-        
-        public void EndScope()
-        {
-            _ilGen.EndScope();
-        }
-
-        public LocalBuilder DeclareLocal(Type t)
-        {
-            return _ilGen.DeclareLocal(t);
-        }
-
-        public Label DefineLabel()
-        {
-            return _ilGen.DefineLabel();
         }
 
         public void MarkLabel(Label label)

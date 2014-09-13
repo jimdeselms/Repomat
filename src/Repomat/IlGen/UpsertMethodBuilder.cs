@@ -29,7 +29,7 @@ namespace Repomat.IlGen
                 var afterOperation = IlBuilder.DefineLabel();
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
-                IlBuilder.ILGenerator.Emit(OpCodes.Call, prop);
+                IlBuilder.Call(prop);
                 IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, doCreate);
 
                 GenerateIlForUpdate(cmdVariable);
