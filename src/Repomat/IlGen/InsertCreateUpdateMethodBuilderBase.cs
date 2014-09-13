@@ -95,7 +95,7 @@ namespace Repomat.IlGen
                 if (setter != null)
                 {
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, newValueLocal);
+                    IlBuilder.Ldloc(newValueLocal);
                     IlBuilder.Call(setter);
                 }
             }
@@ -103,7 +103,7 @@ namespace Repomat.IlGen
 
             if (MethodDef.ReturnsInt)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldloc, newValueLocal);
+                IlBuilder.Ldloc(newValueLocal);
             }
 
             IlBuilder.Ret();

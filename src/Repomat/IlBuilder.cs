@@ -115,6 +115,11 @@ namespace Repomat
 //            _evalStack.Push(parm.Type);
         }
 
+        public void Ldloc(LocalBuilder local)
+        {
+            _ilGen.Emit(OpCodes.Ldloc, local);
+        }
+
         public void Ldstr(string s)
         {
             _ilGen.Emit(OpCodes.Ldstr, s);
