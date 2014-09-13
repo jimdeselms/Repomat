@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define SAVE_ASSEMBLY
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -10,47 +12,72 @@ using Repomat.UnitTests.IlGen;
 
 namespace Repomat.UnitTests
 {
-    public class IlTester<T> 
+    public class IlTester
     {
         private static int _typeIdx = 1;
+#if SAVE_ASSEMBLY
         private static bool _hasBeenSaved = false;
+#endif
 
         private static readonly AssemblyBuilder _assemblyBuilder;
         private static readonly ModuleBuilder _moduleBuilder;
 
         private readonly TypeBuilder _typeBuilder;
         private readonly Emit.MethodBuilder _methodBuilder;
-        private readonly ILGenerator _ilGenerator;
+        private readonly IlBuilder _ilBuilder;
 
+        private readonly Type _returnType;
+        
         static IlTester()
         {
             _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new System.Reflection.AssemblyName("IlTester.Assembly"), AssemblyBuilderAccess.RunAndSave);
             _moduleBuilder = _assemblyBuilder.DefineDynamicModule("IlTester", "temp.dll", false);
         }
 
-        public IlTester(params Type[] parmTypes)
+        public static IlTester Create<T>(params Type[] parmTypes)
         {
-            string typeName = "IlTestType" + _typeIdx++;
-            _typeBuilder = _moduleBuilder.DefineType(typeName);
-            _methodBuilder = _typeBuilder.DefineMethod("IlTestMethod", MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard, typeof(T), parmTypes);
-            _ilGenerator = _methodBuilder.GetILGenerator();
+            return new IlTester(typeof(T), parmTypes);
         }
 
-        public ILGenerator IL { get { return _ilGenerator; } }
+        public static IlTester CreateVoid(params Type[] parmTypes)
+        {
+            return new IlTester(typeof(void), parmTypes);
+        }
 
-        public T Invoke(params object[] arguments) 
+        private IlTester(Type returnType, params Type[] parmTypes)
+        {
+            _returnType = returnType;
+
+            string typeName = "IlTestType" + _typeIdx++;
+            _typeBuilder = _moduleBuilder.DefineType(typeName);
+            _methodBuilder = _typeBuilder.DefineMethod("IlTestMethod", MethodAttributes.Public | MethodAttributes.Static, CallingConventions.Standard, _returnType, parmTypes);
+            _ilBuilder = new IlBuilder(_methodBuilder, parmTypes);
+        }
+
+        internal ILGenerator ILGenerator { get { return _ilBuilder.ILGenerator; } }
+
+        internal IlBuilder IL { get { return _ilBuilder; } }
+
+        public T Invoke<T>(params object[] arguments)
         {
             var type = _typeBuilder.CreateType();
 
+#if SAVE_ASSEMBLY
             if (!_hasBeenSaved)
             {
                 _hasBeenSaved = true;
                 _assemblyBuilder.Save("temp.dll");
             }
+#endif
 
             var method = type.GetMethod("IlTestMethod");
 
             return (T)method.Invoke(null, arguments);
+        }
+
+        public void InvokeVoid(params object[] arguments)
+        {
+            Invoke<object>(arguments);
         }
     }
 }

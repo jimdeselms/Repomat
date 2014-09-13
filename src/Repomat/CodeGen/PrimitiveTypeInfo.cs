@@ -16,12 +16,12 @@ namespace Repomat.CodeGen
         private readonly string _readerGetExpr;
         private readonly string _scalarConvertExpr;
         private readonly string _sqlDatatype;
-        private readonly Action<ILGenerator> _emitConversion;
+        private readonly Action<IlBuilder> _emitConversion;
         private readonly bool _canBeNull;
 
         public static readonly FieldInfo DBNULL_VALUE = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
-        public PrimitiveTypeInfo(Type type, DbType dbType, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion)
+        public PrimitiveTypeInfo(Type type, DbType dbType, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<IlBuilder> emitConversion)
         {
             _type = type;
             _dbType = dbType;
@@ -102,7 +102,7 @@ namespace Repomat.CodeGen
                     string getExpr = string.Format("({0})({1})", t.ToCSharp(), underlyingType._readerGetExpr);
                     string convertExpr = string.Format("({0})({1})", t.ToCSharp(), underlyingType._scalarConvertExpr);
                     string datatype = underlyingType._sqlDatatype;
-                    Action<ILGenerator> conversion = underlyingType._emitConversion;
+                    Action<IlBuilder> conversion = underlyingType._emitConversion;
 
                     CreateType(t, underlyingType.DbType, getExpr, convertExpr, datatype, conversion);
                 }
@@ -111,9 +111,9 @@ namespace Repomat.CodeGen
             return _primitiveTypes[t]; 
         }
 
-        public void EmitConversion(ILGenerator ilGenerator)
+        public void EmitConversion(IlBuilder il)
         {
-            _emitConversion(ilGenerator);
+            _emitConversion(il);
         }
 
         static PrimitiveTypeInfo()
@@ -146,139 +146,140 @@ namespace Repomat.CodeGen
             CreateType(typeof(byte[]), DbType.Binary, "reader.IsDBNull({0}) ? null : (byte[])reader.GetValue({0})", "({0} == null || {0} == System.DBNull.Value) ? null : (byte[])({0})", "VARBINARY({1})", ByteArrayConversion());
         }
 
-        private static void CreateType(Type t, DbType dbType, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<ILGenerator> emitConversion=null)
+        private static void CreateType(Type t, DbType dbType, string readerGetExpr, string scalarConvertExpr, string sqlDatatype, Action<IlBuilder> emitConversion=null)
         {
             _primitiveTypes[t] = new PrimitiveTypeInfo(t, dbType, readerGetExpr, scalarConvertExpr, sqlDatatype, emitConversion);
         }
 
-        private static Action<ILGenerator> SimpleConversion(string convertMethodName)
+        private static Action<IlBuilder> SimpleConversion(string convertMethodName)
         {
             MethodInfo convertMethod = typeof(Convert).GetMethod(convertMethodName, new Type[] { typeof(object) });
             return il => {
-                il.EmitCall(OpCodes.Call, convertMethod, new Type[] { typeof(int) });
+                il.Call(convertMethod, new Type[] { typeof(int) });
             };
         }
 
-        private static Action<ILGenerator> NullableConversion<T>(string convertMethodName) where T : struct
+        private static Action<IlBuilder> NullableConversion<T>(string convertMethodName) where T : struct
         {
             var nullableCtor = typeof(T?).GetConstructor(new[] { typeof(T) });
             var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLabel = il.DeclareLocal(typeof(object));
                 var resultLocal = il.DeclareLocal(typeof(T?));
 
-                il.Emit(OpCodes.Stloc, nullableValueLabel);
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Brfalse, label1);
+                il.Stloc(nullableValueLabel);
+                il.Ldloc(nullableValueLabel);
+                il.If(() =>
+                    {
+                        il.Ldloc(nullableValueLabel);
+                        il.Ldfld(dbNullValue);
 
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Ldsfld, dbNullValue);
-                il.Emit(OpCodes.Beq, label1);
-
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                SimpleConversion(convertMethodName)(il);
-                il.Emit(OpCodes.Newobj, nullableCtor);
-                il.Emit(OpCodes.Br, end);
-
-                il.MarkLabel(label1);
-                il.Emit(OpCodes.Ldloca_S, resultLocal);
-                il.Emit(OpCodes.Initobj, typeof(T?));
-                il.Emit(OpCodes.Ldloc, resultLocal);
-                il.MarkLabel(end);
+                        il.Ifeq(() =>
+                            {
+                                il.Ldloca(resultLocal);
+                                il.Initobj(typeof(T?));
+                                il.Ldloc(resultLocal);
+                            },
+                            () =>
+                            {
+                                il.Ldloc(nullableValueLabel);
+                                SimpleConversion(convertMethodName)(il);
+                                il.Newobj(nullableCtor);
+                            });
+                    },
+                    () =>
+                    {
+                        il.Ldloca(resultLocal);
+                        il.Initobj(typeof(T?));
+                        il.Ldloc(resultLocal);
+                    });
             };
         }
 
-        private static Action<ILGenerator> StringConversion()
+        private static Action<IlBuilder> StringConversion()
         {
             var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLabel = il.DeclareLocal(typeof(string));
 
-                il.Emit(OpCodes.Stloc, nullableValueLabel);
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Brfalse, label1);
-                
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Ldsfld, dbNullValue);
-                il.Emit(OpCodes.Beq, label1);
+                il.Stloc(nullableValueLabel);
+                il.Ldloc(nullableValueLabel);
+                il.If(() =>
+                    {
+                        il.Ldloc(nullableValueLabel);
+                        il.Ldfld(dbNullValue);
 
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                SimpleConversion("ToString")(il);
-                il.Emit(OpCodes.Br, end);
-
-                il.MarkLabel(label1);
-                il.Emit(OpCodes.Ldnull);
-                il.MarkLabel(end);
+                        il.Ifeq(il.Ldnull,
+                                () =>
+                                    {
+                                        il.Ldloc(nullableValueLabel);
+                                        SimpleConversion("ToString")(il);
+                                    });
+                    },
+                    il.Ldnull);
             };
         }
 
-        private static Action<ILGenerator> ByteArrayConversion()
+        private static Action<IlBuilder> ByteArrayConversion()
         {
             var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLabel = il.DeclareLocal(typeof(string));
 
-                il.Emit(OpCodes.Stloc, nullableValueLabel);
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Brfalse_S, label1);
+                il.Stloc(nullableValueLabel);
+                il.Ldloc(nullableValueLabel);
 
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                il.Emit(OpCodes.Ldsfld, dbNullValue);
-                il.Emit(OpCodes.Beq_S, label1);
+                il.If(() =>
+                    {
+                        il.Ldloc(nullableValueLabel);
+                        il.Ldfld(dbNullValue);
 
-                il.Emit(OpCodes.Ldloc, nullableValueLabel);
-                CastConversion<byte[]>()(il);
-                il.Emit(OpCodes.Br, end);
-
-                il.MarkLabel(label1);
-                il.Emit(OpCodes.Ldnull);
-                il.MarkLabel(end);
+                        il.Ifeq(
+                            il.Ldnull, 
+                            () =>
+                            {
+                                il.Ldloc(nullableValueLabel);
+                                CastConversion<byte[]>()(il);
+                            });
+                    },
+                    il.Ldnull);
             };
         }
 
-        private static Action<ILGenerator> CastConversion<T>()
+        private static Action<IlBuilder> CastConversion<T>()
         {
             bool needsUnboxing = typeof(T).IsValueType;
 
             return il => {
                 if (needsUnboxing)
                 {
-                    il.Emit(OpCodes.Unbox_Any, typeof(T));
+                    il.Unbox(typeof(T));
                 }
             };
         }
 
-        private static Action<ILGenerator> CharConversion()
+        private static Action<IlBuilder> CharConversion()
         {
             return il =>
             {
-                var loc = il.DeclareLocal(typeof(string));
+                var loc = il.ILGenerator.DeclareLocal(typeof(string));
                 SimpleConversion("ToString")(il);
-                il.Emit(OpCodes.Stloc, loc);
-                il.Emit(OpCodes.Ldloc, loc);
+                il.Stloc(loc);
+                il.Ldloc(loc);
 
                 var getChars = typeof(string).GetMethod("get_Chars");
-                il.Emit(OpCodes.Ldc_I4_0);
-                il.Emit(OpCodes.Callvirt, getChars);
+                il.Ldc(0);
+                il.Call(getChars);
             };
         }
 
-        private static Action<ILGenerator> NullableCharConversion()
+        private static Action<IlBuilder> NullableCharConversion()
         {
             var nullableCtor = typeof(char?).GetConstructor(new[] { typeof(char) });
             var dbNullValue = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
@@ -286,30 +287,35 @@ namespace Repomat.CodeGen
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLocal = il.DeclareLocal(typeof(object));
                 var resultLocal = il.DeclareLocal(typeof(char?));
 
-                il.Emit(OpCodes.Stloc, nullableValueLocal);
-                il.Emit(OpCodes.Ldloc, nullableValueLocal);
-                il.Emit(OpCodes.Brfalse_S, label1);
+                il.Stloc(nullableValueLocal);
+                il.Ldloc(nullableValueLocal);
 
-                il.Emit(OpCodes.Ldloc, nullableValueLocal);
-                il.Emit(OpCodes.Ldsfld, dbNullValue);
-                il.Emit(OpCodes.Beq_S, label1);
+                il.If(() =>
+                    {
+                        il.Ldloc(nullableValueLocal);
+                        il.Ldfld(dbNullValue);
 
-                il.Emit(OpCodes.Ldloc, nullableValueLocal);
-                CharConversion()(il);
-                il.Emit(OpCodes.Newobj, nullableCtor);
-                il.Emit(OpCodes.Br, end);
-
-                il.MarkLabel(label1);
-                il.Emit(OpCodes.Ldloca_S, resultLocal);
-                il.Emit(OpCodes.Initobj, typeof(char?));
-                il.Emit(OpCodes.Ldloc, resultLocal);
-                il.MarkLabel(end);
+                        il.Ifeq(() =>
+                            {
+                                il.Ldloca(resultLocal);
+                                il.Initobj(typeof (char?));
+                                il.Ldloc(resultLocal);
+                            },
+                            () =>
+                            {
+                                il.Ldloc(nullableValueLocal);
+                                CharConversion()(il);
+                                il.Newobj(nullableCtor);
+                            });
+                    },
+                    () => {
+                        il.Ldloca(resultLocal);
+                        il.Initobj(typeof (char?));
+                        il.Ldloc(resultLocal);
+                    });
             };
         }
     }

@@ -13,7 +13,7 @@ namespace Repomat.IlGen
     internal abstract class SqlMethodBuilderFactory
     {
         private readonly TypeBuilder _typeBuilder;
-        private readonly ILGenerator _ctorBuilder;
+        private readonly IlBuilder _ctorBuilder;
         private readonly FieldInfo _connectionField;
 
         private readonly RepositoryDef _repoDef;
@@ -21,7 +21,7 @@ namespace Repomat.IlGen
         private bool _useStrictTypes = false;
         private int _customQueryIdx = 0;
 
-        public SqlMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, ILGenerator ctorIlBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
+        public SqlMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, IlBuilder ctorIlBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
         {
             _typeBuilder = typeBuilder;
             _connectionField = connectionField;
@@ -36,7 +36,7 @@ namespace Repomat.IlGen
         protected bool NewConnectionEveryTime { get { return _newConnectionEveryTime; } }
         protected int CustomQueryIndex { get { return _customQueryIdx; } }
         protected bool UseStrictTypes { get { return _useStrictTypes; } }
-        protected ILGenerator CtorBuilder { get { return _ctorBuilder; } }
+        protected IlBuilder CtorBuilder { get { return _ctorBuilder; } }
 
         public virtual MethodBuilderBase Create(MethodDef method)
         {

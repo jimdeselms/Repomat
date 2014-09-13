@@ -11,7 +11,7 @@ namespace Repomat.IlGen
 {
     internal class GetCountMethodBuilder : GetMethodBuilder
     {
-        public GetCountMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, SqlMethodBuilderFactory methodBuilderFactory, bool useStrictTyping, ILGenerator ctorIlBuilder)
+        public GetCountMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, SqlMethodBuilderFactory methodBuilderFactory, bool useStrictTyping, IlBuilder ctorIlBuilder)
             : base(typeBuilder, connectionField, repoDef, methodDef, newConnectionEveryTime, customQueryIdx, methodBuilderFactory, useStrictTyping, ctorIlBuilder)
         {
         }

@@ -20,7 +20,7 @@ namespace Repomat.IlGen
         private readonly MethodDef _methodDef;
         private readonly bool _newConnectionEveryTime;
         private readonly TypeBuilder _typeBuilder;
-        private readonly ILGenerator _ilGenerator;
+        private readonly IlBuilder _ilBuilder;
         private readonly LocalBuilder _commandLocal;
         private readonly LocalBuilder _returnValueLocal;
 
@@ -69,43 +69,43 @@ namespace Repomat.IlGen
             _newConnectionEveryTime = newConnectionEveryTime;
 
             var methodBuilder = CreateMethod();
-            _ilGenerator = methodBuilder.GetILGenerator();
+            _ilBuilder = new IlBuilder(methodBuilder, _methodDef.MethodInfo.GetParameters());
 
-            _commandLocal = IlGenerator.DeclareLocal(typeof(IDbCommand));
-            _testLocal = IlGenerator.DeclareLocal(typeof (string));
-            _returnValueLocal = MethodDef.ReturnType == typeof(void) ? null : IlGenerator.DeclareLocal(MethodDef.ReturnType);
+            _commandLocal = IlBuilder.DeclareLocal(typeof(IDbCommand));
+            _testLocal = IlBuilder.DeclareLocal(typeof (string));
+            _returnValueLocal = MethodDef.ReturnType == typeof(void) ? null : IlBuilder.DeclareLocal(MethodDef.ReturnType);
         }
 
         protected void SetCommandText(string commandText, bool isStoredProcedure=false)
         {
             // cmd.CommandText = commandText
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Ldstr, commandText);
-            IlGenerator.Emit(OpCodes.Callvirt, _commandTextSetMethod);
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Ldstr(commandText);
+            IlBuilder.Call(_commandTextSetMethod);
 
             if (MethodDef.CustomSqlIsStoredProcedure)
             {
-                IlGenerator.Emit(OpCodes.Ldloc, CommandLocal);
-                IlGenerator.Emit(OpCodes.Ldc_I4, (int)CommandType.StoredProcedure);
-                IlGenerator.Emit(OpCodes.Call, _commandTypeSet);
+                IlBuilder.Ldloc(CommandLocal);
+                IlBuilder.Ldc((int)CommandType.StoredProcedure);
+                IlBuilder.Call(_commandTypeSet);
             }
         }
 
         protected void WriteCommandText()
         {
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _commandTextGetMethod);
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Call(_commandTextGetMethod);
 
-            IlGenerator.Emit(OpCodes.Stloc, 1);
-            IlGenerator.EmitWriteLine(_testLocal);
+            IlBuilder.Stloc(_testLocal);
+            IlBuilder.ILGenerator.EmitWriteLine(_testLocal);
         }
 
         protected void AddSqlParameterFromArgument(LocalBuilder sqlParameter, string name, int argumentIndex, Type parmCSharpType)
         {
             AddSqlParameter(sqlParameter, name, parmCSharpType, () =>
             {
-                IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-                IlGenerator.Emit(OpCodes.Ldarg, argumentIndex);
+                IlBuilder.Ldloc(sqlParameter);
+                IlBuilder.Ldarg(argumentIndex);
             });
         }
 
@@ -116,9 +116,9 @@ namespace Repomat.IlGen
             AddSqlParameter(sqlParameter, name, property.Type, () =>
             {
                 var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
-                IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-                IlGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
-                IlGenerator.Emit(OpCodes.Call, propGet);
+                IlBuilder.Ldloc(sqlParameter);
+                IlBuilder.Ldarg(entityArgumentIndex);
+                IlBuilder.Call(propGet);
             });
         }
 
@@ -127,79 +127,77 @@ namespace Repomat.IlGen
             var typeInfo = PrimitiveTypeInfo.Get(type);
 
             // parm = cmd.CreateParameter();
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _createParameterMethod);
-            IlGenerator.Emit(OpCodes.Stloc, sqlParameter);
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Call(_createParameterMethod);
+            IlBuilder.Stloc(sqlParameter);
 
             // parm.ParameterName = name
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Ldstr, name);
-            IlGenerator.Emit(OpCodes.Callvirt, _parameterNameSetMethod);
+            IlBuilder.Ldloc(sqlParameter);
+            IlBuilder.Ldstr(name);
+            IlBuilder.Call(_parameterNameSetMethod);
 
             // parm.DbType = blah
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Ldc_I4, (int)typeInfo.DbType);
+            IlBuilder.Ldloc(sqlParameter);
+            IlBuilder.Ldc((int)typeInfo.DbType);
 
-            IlGenerator.Emit(OpCodes.Callvirt, _dbTypeSetMethod);
+            IlBuilder.Call(_dbTypeSetMethod);
 
             getParameterValue();
 
             if (type.IsValueType)
             {
-                IlGenerator.Emit(OpCodes.Box, type);
+                IlBuilder.Box(type);
             }
 
             if (typeInfo.CanBeNull)
             {
-                var nullCheckStore = IlGenerator.DeclareLocal(typeof(object));
-                var skipDbNullReplacement = IlGenerator.DefineLabel();
+                var nullCheckStore = IlBuilder.DeclareLocal(typeof(object));
 
-                IlGenerator.Emit(OpCodes.Stloc, nullCheckStore);
-                IlGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
-                IlGenerator.Emit(OpCodes.Brtrue, skipDbNullReplacement);
+                IlBuilder.Stloc(nullCheckStore);
+                IlBuilder.Ldloc(nullCheckStore);
+                IlBuilder.IfFalse(() =>
+                    {
+                        IlBuilder.Ldfld(DBNULL_VALUE);
+                        IlBuilder.Stloc(nullCheckStore);
+                    });
 
-                IlGenerator.Emit(OpCodes.Ldsfld, DBNULL_VALUE);
-                IlGenerator.Emit(OpCodes.Stloc, nullCheckStore);
-
-                IlGenerator.MarkLabel(skipDbNullReplacement);
-
-                IlGenerator.Emit(OpCodes.Ldloc, nullCheckStore);
+                IlBuilder.Ldloc(nullCheckStore);
             }
 
-            IlGenerator.Emit(OpCodes.Callvirt, _valueSetMethod);
+            IlBuilder.Call(_valueSetMethod);
 
             //// cmd.Paramters.Add(parm);
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _parametersGetMethod);
-            IlGenerator.Emit(OpCodes.Ldloc, sqlParameter);
-            IlGenerator.Emit(OpCodes.Callvirt, _parametersAddMethod);
-            IlGenerator.Emit(OpCodes.Pop);
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Call(_parametersGetMethod);
+            IlBuilder.Ldloc(sqlParameter);
+            IlBuilder.Call(_parametersAddMethod);
+            IlBuilder.Pop();
         }
 
         protected void ExecuteNonQuery()
         {
             // cmd.ExecuteNonQuery();
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _executeNonQueryMethod);
-            IlGenerator.Emit(OpCodes.Pop); // Pop the unused result
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Call(_executeNonQueryMethod);
+            IlBuilder.Pop(); // Pop the unused result
         }
 
         protected void ExecuteScalar()
         {
             // cmd.ExecuteScalar();
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _executeScalarMethod);
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Call(_executeScalarMethod);
         }
 
         private static readonly ConstructorInfo _repomatExceptionCtor = typeof(RepomatException).GetConstructor(new Type[] { typeof(string), typeof(object[]) });
 
         protected void ThrowRepomatException(string format, params object[] args)
         {
-            IlGenerator.Emit(OpCodes.Ldstr, string.Format(format, args));
-            IlGenerator.Emit(OpCodes.Ldc_I4_0);
-            IlGenerator.Emit(OpCodes.Newarr, typeof(object));
-            IlGenerator.Emit(OpCodes.Newobj, _repomatExceptionCtor);
-            IlGenerator.Emit(OpCodes.Throw);
+            IlBuilder.Ldstr(string.Format(format, args));
+            IlBuilder.Ldc(0);
+            IlBuilder.Newarr(typeof(object));
+            IlBuilder.Newobj(_repomatExceptionCtor);
+            IlBuilder.Throw();
         }
 
         private static MethodInfo _monitorEnterMethod = typeof(Monitor).GetMethod("Enter", new Type[] { typeof(object), typeof(bool).MakeByRefType() });
@@ -214,103 +212,102 @@ namespace Repomat.IlGen
 
             bool lockConnection = passedConnectionIndex.HasValue || passedTransactionIndex.HasValue || !_newConnectionEveryTime;
 
-            var connectionLocal = IlGenerator.DeclareLocal(typeof(IDbConnection));
+            var connectionLocal = IlBuilder.DeclareLocal(typeof(IDbConnection));
             LocalBuilder lockTakenLocal = null;
 
             if (lockConnection)
             {
-                lockTakenLocal = IlGenerator.DeclareLocal(typeof(bool));
+                lockTakenLocal = IlBuilder.DeclareLocal(typeof(bool));
 
-                IlGenerator.Emit(OpCodes.Ldc_I4_0);
-                IlGenerator.Emit(OpCodes.Stloc, lockTakenLocal);
+                IlBuilder.Ldc(0);
+                IlBuilder.Stloc(lockTakenLocal);
             }
 
-            IlGenerator.BeginExceptionBlock();
+            IlBuilder.BeginExceptionBlock();
 
             if (passedConnectionIndex.HasValue)
             {
-                IlGenerator.Emit(OpCodes.Ldarg, passedConnectionIndex.Value);
+                IlBuilder.Ldarg(passedConnectionIndex.Value);
             }
             else if (passedTransactionIndex.HasValue)
             {
                 var connProperty = typeof(IDbTransaction).GetProperty("Connection").GetGetMethod();
-                IlGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
-                IlGenerator.Emit(OpCodes.Call, connProperty);
+                IlBuilder.Ldarg(passedTransactionIndex.Value);
+                IlBuilder.Call(connProperty);
             }
             else if (_newConnectionEveryTime)
             {
-                IlGenerator.Emit(OpCodes.Ldarg_0);
-                IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
+                IlBuilder.Ldarg(0);
+                IlBuilder.Ldfld(_connectionField);
 
-                IlGenerator.Emit(OpCodes.Callvirt, _dbConnFuncInvokeMethod);
-                IlGenerator.Emit(OpCodes.Stloc, connectionLocal);
-                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-                IlGenerator.Emit(OpCodes.Callvirt, _dbConnOpenMethod);
-                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+                IlBuilder.Call(_dbConnFuncInvokeMethod);
+                IlBuilder.Stloc(connectionLocal);
+                IlBuilder.Ldloc(connectionLocal);
+                IlBuilder.Call(_dbConnOpenMethod);
+                IlBuilder.Ldloc(connectionLocal);
             }
             else // use the _connectionField
             {
-                IlGenerator.Emit(OpCodes.Ldarg_0);
-                IlGenerator.Emit(OpCodes.Ldfld, _connectionField);
+                IlBuilder.Ldarg(0);
+                IlBuilder.Ldfld(_connectionField);
             }
 
-            IlGenerator.Emit(OpCodes.Dup);
-            IlGenerator.Emit(OpCodes.Stloc, connectionLocal);
+            IlBuilder.Dup();
+            IlBuilder.Stloc(connectionLocal);
 
             if (lockConnection)
             {
-                IlGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
-                IlGenerator.Emit(OpCodes.Call, _monitorEnterMethod);
-                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
+                IlBuilder.Ldloca(lockTakenLocal);
+                IlBuilder.Call(_monitorEnterMethod);
+                IlBuilder.Ldloc(connectionLocal);
             }
 
-            IlGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
-            IlGenerator.Emit(OpCodes.Stloc, _commandLocal);
+            IlBuilder.Call(_createCommandMethod, Type.EmptyTypes);
+            IlBuilder.Stloc(_commandLocal);
 
             if (passedTransactionIndex.HasValue)
             {
                 var setTransactionProp = typeof(IDbCommand).GetProperty("Transaction").GetSetMethod();
-                IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-                IlGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
-                IlGenerator.Emit(OpCodes.Call, setTransactionProp);
+                IlBuilder.Ldloc(_commandLocal);
+                IlBuilder.Ldarg(passedTransactionIndex.Value);
+                IlBuilder.Call(setTransactionProp);
             }
 
-            IlGenerator.BeginExceptionBlock();
+            IlBuilder.BeginExceptionBlock();
 
             GenerateMethodIl(_commandLocal);
 
-            IlGenerator.BeginFinallyBlock();
+            IlBuilder.BeginFinallyBlock();
 
-            IlGenerator.Emit(OpCodes.Ldloc, _commandLocal);
-            IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+            IlBuilder.Ldloc(_commandLocal);
+            IlBuilder.Call(_disposeMethod);
 
-            IlGenerator.EndExceptionBlock();
+            IlBuilder.EndExceptionBlock();
 
-            IlGenerator.BeginFinallyBlock();
+            IlBuilder.BeginFinallyBlock();
 
             if (lockConnection)
             {
-                var lockNotTakenLabel = IlGenerator.DefineLabel();
-                IlGenerator.Emit(OpCodes.Ldloc, lockTakenLocal);
-                IlGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
-
-                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-                IlGenerator.Emit(OpCodes.Call, _monitorExitMethod);
-                IlGenerator.MarkLabel(lockNotTakenLabel);
+                IlBuilder.Ldloc(lockTakenLocal);
+                IlBuilder.IfTrue(() =>
+                    {
+                        IlBuilder.Ldloc(connectionLocal);
+                        IlBuilder.Call(_monitorExitMethod);
+                    });
             }
             else
             {
-                IlGenerator.Emit(OpCodes.Ldloc, connectionLocal);
-                IlGenerator.Emit(OpCodes.Callvirt, _disposeMethod);
+                IlBuilder.Ldloc(connectionLocal);
+                IlBuilder.Call(_disposeMethod);
             }
 
-            IlGenerator.EndExceptionBlock();
+            IlBuilder.EndExceptionBlock();
 
             if (_returnValueLocal != null)
             {
-                IlGenerator.Emit(OpCodes.Ldloc, _returnValueLocal);
+                IlBuilder.Ldloc(_returnValueLocal);
             }
-            IlGenerator.Emit(OpCodes.Ret);
+            IlBuilder.Ret();
         }
 
         private int? GetArgumentIndex(Type t)
@@ -343,14 +340,14 @@ namespace Repomat.IlGen
                     }
                 }
 
-                IlGenerator.BeginScope();
+                IlBuilder.BeginScope();
 
-                var parmLocal = IlGenerator.DeclareLocal(typeof(IDbDataParameter));
+                var parmLocal = IlBuilder.DeclareLocal(typeof(IDbDataParameter));
 
                 // Add one to the argument index; the first one is "this"
                 AddSqlParameterFromArgument(parmLocal, arg.Name, argIndex + 1, arg.Type);
 
-                IlGenerator.EndScope();
+                IlBuilder.EndScope();
             }
         }
 
@@ -375,7 +372,7 @@ namespace Repomat.IlGen
         protected RepositoryDef RepoDef { get { return _repoDef; } }
         protected MethodDef MethodDef { get { return _methodDef; } }
         protected bool NewConnectionEveryTime { get { return _newConnectionEveryTime; } }
-        protected ILGenerator IlGenerator { get { return _ilGenerator; } }
+        protected IlBuilder IlBuilder { get { return _ilBuilder; } }
 
         protected LocalBuilder CommandLocal { get { return _commandLocal; } }
         protected LocalBuilder ReturnValueLocal { get { return _returnValueLocal; } }

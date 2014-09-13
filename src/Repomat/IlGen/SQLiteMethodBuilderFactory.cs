@@ -12,7 +12,7 @@ namespace Repomat.IlGen
 {
     internal class SQLiteMethodBuilderFactory : SqlMethodBuilderFactory
     {
-        public SQLiteMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, ILGenerator ctorIlBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
+        public SQLiteMethodBuilderFactory(TypeBuilder typeBuilder, FieldInfo connectionField, IlBuilder ctorIlBuilder, RepositoryDef repoDef, bool newConnectionEveryTime)
             : base(typeBuilder, connectionField, ctorIlBuilder, repoDef, newConnectionEveryTime)
         {
         }

@@ -11,7 +11,7 @@ namespace Repomat.IlGen
 {
     internal class ExistsMethodBuilder : GetMethodBuilder
     {
-        public ExistsMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, SqlMethodBuilderFactory methodBuilderFactory, bool useStrictTyping, ILGenerator ctorIlBuilder)
+        public ExistsMethodBuilder(TypeBuilder typeBuilder, FieldInfo connectionField, RepositoryDef repoDef, MethodDef methodDef, bool newConnectionEveryTime, int customQueryIdx, SqlMethodBuilderFactory methodBuilderFactory, bool useStrictTyping, IlBuilder ctorIlBuilder)
             : base(typeBuilder, connectionField, repoDef, methodDef, newConnectionEveryTime, customQueryIdx, methodBuilderFactory, useStrictTyping, ctorIlBuilder)
         {
         }
