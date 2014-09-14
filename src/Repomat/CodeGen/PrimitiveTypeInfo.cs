@@ -182,11 +182,11 @@ namespace Repomat.CodeGen
 
                 il.Ldloc(nullableValueLabel);
                 SimpleConversion(convertMethodName)(il);
-                il.ILGenerator.Emit(OpCodes.Newobj, nullableCtor);
+                il.Newobj(nullableCtor);
                 il.ILGenerator.Emit(OpCodes.Br, end);
 
                 il.MarkLabel(label1);
-                il.ILGenerator.Emit(OpCodes.Ldloca_S, resultLocal);
+                il.Ldloca(resultLocal);
                 il.ILGenerator.Emit(OpCodes.Initobj, typeof(T?));
                 il.Ldloc(resultLocal);
                 il.MarkLabel(end);
@@ -302,11 +302,11 @@ namespace Repomat.CodeGen
 
                 il.Ldloc(nullableValueLocal);
                 CharConversion()(il);
-                il.ILGenerator.Emit(OpCodes.Newobj, nullableCtor);
+                il.Newobj(nullableCtor);
                 il.ILGenerator.Emit(OpCodes.Br, end);
 
                 il.MarkLabel(label1);
-                il.ILGenerator.Emit(OpCodes.Ldloca_S, resultLocal);
+                il.Ldloca(resultLocal);
                 il.ILGenerator.Emit(OpCodes.Initobj, typeof(char?));
                 il.Ldloc(resultLocal);
                 il.MarkLabel(end);

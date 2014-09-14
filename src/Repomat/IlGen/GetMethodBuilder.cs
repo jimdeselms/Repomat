@@ -151,15 +151,12 @@ namespace Repomat.IlGen
             
             if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
             {
-                var noMoreRowsFound = IlBuilder.DefineLabel();
-
                 IlBuilder.Ldloc(readerLocal);
                 IlBuilder.Call(_readMethod);
-                IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, noMoreRowsFound);
-
-                ThrowRepomatException("More than one row returned from singleton query");
-
-                IlBuilder.MarkLabel(noMoreRowsFound);
+                IlBuilder.If(() =>
+                    {
+                        ThrowRepomatException("More than one row returned from singleton query");
+                    });
             }
 
             var afterElse = IlBuilder.DefineLabel();
@@ -179,8 +176,15 @@ namespace Repomat.IlGen
                 IlBuilder.Stloc(ReturnValueLocal);
 
                 IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
-                IlBuilder.MarkLabel(afterRead);
+            }
+            else
+            {
+                IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
+            }
+            IlBuilder.MarkLabel(afterRead);
 
+            if (MethodDef.IsTryGet)
+            {
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
@@ -189,9 +193,6 @@ namespace Repomat.IlGen
             }
             else
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
-                IlBuilder.MarkLabel(afterRead);
-
                 if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
                 {
                     ThrowRepomatException("No rows returned from singleton query");
@@ -216,7 +217,7 @@ namespace Repomat.IlGen
             var listType = typeof(List<>).MakeGenericType(rowType);
             var ctor = listType.GetConstructor(Type.EmptyTypes);
             var addMethod = listType.GetMethod("Add", new Type[] { rowType });
-            IlBuilder.ILGenerator.Emit(OpCodes.Newobj, ctor);
+            IlBuilder.Newobj(ctor);
 
             var resultListLocal = IlBuilder.DeclareLocal(listType);
             IlBuilder.Stloc(resultListLocal);
@@ -304,7 +305,7 @@ namespace Repomat.IlGen
             if (!isEnumerable)
             {
                 listLocalOrNull = IlBuilder.DeclareLocal(listType);
-                IlBuilder.ILGenerator.Emit(OpCodes.Newobj, listType.GetConstructor(Type.EmptyTypes));
+                IlBuilder.Newobj(listType.GetConstructor(Type.EmptyTypes));
                 IlBuilder.Stloc(listLocalOrNull);
             }
 
@@ -393,14 +394,14 @@ namespace Repomat.IlGen
                     }
                 }
 
-                IlBuilder.ILGenerator.Emit(OpCodes.Newobj, ctor);
+                IlBuilder.Newobj(ctor);
                 IlBuilder.Stloc(resultLocal);
             }
             else
             {
                 // body.WriteLine("var newObj = new {0}();", EntityDef.Type.ToCSharp());
                 var ctor = EntityDef.Type.GetConstructor(Type.EmptyTypes);
-                IlBuilder.ILGenerator.Emit(OpCodes.Newobj, ctor);
+                IlBuilder.Newobj(ctor);
                 IlBuilder.Stloc(resultLocal);
 
                 for (int i = 0; i < selectColumns.Count; i++)

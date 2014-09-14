@@ -198,7 +198,7 @@ namespace Repomat.IlGen
             IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, string.Format(format, args));
             IlBuilder.Ldc(0);
             IlBuilder.ILGenerator.Emit(OpCodes.Newarr, typeof(object));
-            IlBuilder.ILGenerator.Emit(OpCodes.Newobj, _repomatExceptionCtor);
+            IlBuilder.Newobj(_repomatExceptionCtor);
             IlBuilder.ILGenerator.Emit(OpCodes.Throw);
         }
 
@@ -259,7 +259,7 @@ namespace Repomat.IlGen
 
             if (lockConnection)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldloca, lockTakenLocal);
+                IlBuilder.Ldloca(lockTakenLocal);
                 IlBuilder.Call(_monitorEnterMethod);
                 IlBuilder.Ldloc(connectionLocal);
             }
@@ -290,13 +290,12 @@ namespace Repomat.IlGen
 
             if (lockConnection)
             {
-                var lockNotTakenLabel = IlBuilder.DefineLabel();
                 IlBuilder.Ldloc(lockTakenLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, lockNotTakenLabel);
-
-                IlBuilder.Ldloc(connectionLocal);
-                IlBuilder.Call(_monitorExitMethod);
-                IlBuilder.MarkLabel(lockNotTakenLabel);
+                IlBuilder.If(() =>
+                    {
+                        IlBuilder.Ldloc(connectionLocal);
+                        IlBuilder.Call(_monitorExitMethod);
+                    });
             }
             else
             {

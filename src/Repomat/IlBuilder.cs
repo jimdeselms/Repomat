@@ -132,6 +132,11 @@ namespace Repomat
             _ilGen.Emit(OpCodes.Ldloc, local);
         }
 
+        public void Ldloca(LocalBuilder local)
+        {
+            _ilGen.Emit(OpCodes.Ldloca, local);
+        }
+
         public void Ldstr(string s)
         {
             _ilGen.Emit(OpCodes.Ldstr, s);
@@ -141,6 +146,11 @@ namespace Repomat
         public void MarkLabel(Label label)
         {
             _ilGen.MarkLabel(label);
+        }
+
+        public void Newobj(ConstructorInfo ctor)
+        {
+            _ilGen.Emit(OpCodes.Newobj, ctor);
         }
 
         public void Ret()
@@ -195,7 +205,7 @@ namespace Repomat
             var skip = _ilGen.DefineLabel();
 
             _ilGen.Emit(OpCodes.Brfalse, skip);
-            _evalStack.Pop();
+//            _evalStack.Pop();
 
             Stack<Type> stackBefore = new Stack<Type>(_evalStack);
 
@@ -203,7 +213,7 @@ namespace Repomat
 
             _ilGen.MarkLabel(skip);
 
-            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
+//            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
         }
 
         public void If(Action ifTrue, Action ifFalse)
@@ -212,23 +222,23 @@ namespace Repomat
             var skipFalse = _ilGen.DefineLabel();
 
             _ilGen.Emit(OpCodes.Brfalse, skipTrue);
-            _evalStack.Pop();
+//            _evalStack.Pop();
 
-            Stack<Type> stackBefore = new Stack<Type>(_evalStack);
+//            Stack<Type> stackBefore = new Stack<Type>(_evalStack);
 
             ifTrue();
             _ilGen.Emit(OpCodes.Br, skipFalse);
 
-            Stack<Type> stackAfterIf = new Stack<Type>(_evalStack);
-            _evalStack = stackBefore;
+//            Stack<Type> stackAfterIf = new Stack<Type>(_evalStack);
+//            _evalStack = stackBefore;
 
             _ilGen.MarkLabel(skipTrue);
             ifFalse();
             _ilGen.MarkLabel(skipFalse);
 
-            Stack<Type> stackAfterElse = new Stack<Type>(_evalStack);
+//            Stack<Type> stackAfterElse = new Stack<Type>(_evalStack);
 
-            EnsureStacksAreSame(stackAfterIf.ToArray(), stackAfterElse.ToArray());
+//            EnsureStacksAreSame(stackAfterIf.ToArray(), stackAfterElse.ToArray());
         }
 
         private void HandleBoxing(Type targetType)
