@@ -155,7 +155,7 @@ namespace Repomat.CodeGen
         {
             MethodInfo convertMethod = typeof(Convert).GetMethod(convertMethodName, new Type[] { typeof(object) });
             return il => {
-                il.ILGenerator.EmitCall(OpCodes.Call, convertMethod, new Type[] { typeof(int) });
+                il.Call(convertMethod, new Type[] { typeof(int) });
             };
         }
 
@@ -187,7 +187,7 @@ namespace Repomat.CodeGen
 
                 il.MarkLabel(label1);
                 il.Ldloca(resultLocal);
-                il.ILGenerator.Emit(OpCodes.Initobj, typeof(T?));
+                il.Initobj(typeof(T?));
                 il.Ldloc(resultLocal);
                 il.MarkLabel(end);
             };
@@ -307,7 +307,7 @@ namespace Repomat.CodeGen
 
                 il.MarkLabel(label1);
                 il.Ldloca(resultLocal);
-                il.ILGenerator.Emit(OpCodes.Initobj, typeof(char?));
+                il.Initobj(typeof(char?));
                 il.Ldloc(resultLocal);
                 il.MarkLabel(end);
             };

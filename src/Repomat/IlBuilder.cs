@@ -75,6 +75,18 @@ namespace Repomat
             }
         }
 
+        public void Call(MethodInfo method, params Type[] types)
+        {
+            if (method.IsVirtual)
+            {
+                _ilGen.EmitCall(OpCodes.Callvirt, method, types);
+            }
+            else
+            {
+                _ilGen.EmitCall(OpCodes.Call, method, types);
+            }
+        }
+
         public LocalBuilder DeclareLocal(Type t)
         {
             return _ilGen.DeclareLocal(t);
@@ -93,6 +105,11 @@ namespace Repomat
         public void EndScope()
         {
             _ilGen.EndScope();
+        }
+
+        public void Initobj(Type t)
+        {
+            _ilGen.Emit(OpCodes.Initobj, t);
         }
 
         public void Ldc(int i)
