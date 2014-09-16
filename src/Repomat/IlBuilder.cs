@@ -294,6 +294,15 @@ namespace Repomat
 //            EnsureStacksAreSame(stackAfterIf.ToArray(), stackAfterElse.ToArray());
         }
 
+        public void Ifne(Action ifNotEqual)
+        {
+            var skip = _ilGen.DefineLabel();
+
+            _ilGen.Emit(OpCodes.Beq, skip);
+            ifNotEqual();
+            _ilGen.MarkLabel(skip);
+        }
+
         public void Throw()
         {
             _ilGen.Emit(OpCodes.Throw);

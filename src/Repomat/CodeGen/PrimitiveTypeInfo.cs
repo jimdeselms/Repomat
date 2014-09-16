@@ -178,12 +178,14 @@ namespace Repomat.CodeGen
 
                 il.Ldloc(nullableValueLabel);
                 il.Ldfld(dbNullValue);
-                il.ILGenerator.Emit(OpCodes.Beq, label1);
 
-                il.Ldloc(nullableValueLabel);
-                SimpleConversion(convertMethodName)(il);
-                il.Newobj(nullableCtor);
-                il.ILGenerator.Emit(OpCodes.Br, end);
+                il.Ifne(() =>
+                    {
+                        il.Ldloc(nullableValueLabel);
+                        SimpleConversion(convertMethodName)(il);
+                        il.Newobj(nullableCtor);
+                        il.ILGenerator.Emit(OpCodes.Br, end);
+                    });
 
                 il.MarkLabel(label1);
                 il.Ldloca(resultLocal);
@@ -210,11 +212,13 @@ namespace Repomat.CodeGen
 
                 il.Ldloc(nullableValueLabel);
                 il.Ldfld(dbNullValue);
-                il.ILGenerator.Emit(OpCodes.Beq, label1);
 
-                il.Ldloc(nullableValueLabel);
-                SimpleConversion("ToString")(il);
-                il.ILGenerator.Emit(OpCodes.Br, end);
+                il.Ifne(() =>
+                {
+                    il.Ldloc(nullableValueLabel);
+                    SimpleConversion("ToString")(il);
+                    il.ILGenerator.Emit(OpCodes.Br, end);
+                });
 
                 il.MarkLabel(label1);
                 il.Ldnull();
@@ -239,11 +243,13 @@ namespace Repomat.CodeGen
 
                 il.Ldloc(nullableValueLabel);
                 il.Ldfld(dbNullValue);
-                il.ILGenerator.Emit(OpCodes.Beq_S, label1);
 
-                il.Ldloc(nullableValueLabel);
-                CastConversion<byte[]>()(il);
-                il.ILGenerator.Emit(OpCodes.Br, end);
+                il.Ifne(() =>
+                    {
+                        il.Ldloc(nullableValueLabel);
+                        CastConversion<byte[]>()(il);
+                        il.ILGenerator.Emit(OpCodes.Br, end);
+                    });
 
                 il.MarkLabel(label1);
                 il.Ldnull();
@@ -298,12 +304,14 @@ namespace Repomat.CodeGen
 
                 il.Ldloc(nullableValueLocal);
                 il.Ldfld(dbNullValue);
-                il.ILGenerator.Emit(OpCodes.Beq_S, label1);
 
-                il.Ldloc(nullableValueLocal);
-                CharConversion()(il);
-                il.Newobj(nullableCtor);
-                il.ILGenerator.Emit(OpCodes.Br, end);
+                il.Ifne(() =>
+                {
+                    il.Ldloc(nullableValueLocal);
+                    CharConversion()(il);
+                    il.Newobj(nullableCtor);
+                    il.ILGenerator.Emit(OpCodes.Br, end);
+                });
 
                 il.MarkLabel(label1);
                 il.Ldloca(resultLocal);
