@@ -31,7 +31,7 @@ namespace Repomat.UnitTests.IlGen
                         
             var ilGen = ctorBuilder.GetILGenerator();
             
-            ilGen.Emit(OpCodes.Ldarg_0);
+            ilGen.Emit(OpCodes.Ldarg, 0);
             ilGen.Emit(OpCodes.Ldc_I4_S, (byte)25);
             ilGen.Emit(OpCodes.Stfld, myField);
             ilGen.Emit(OpCodes.Ret);

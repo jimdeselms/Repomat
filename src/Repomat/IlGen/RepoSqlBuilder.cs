@@ -134,8 +134,8 @@ namespace Repomat.IlGen
 
             var ctor = _typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, new Type[] { fieldType });
             var ilBuilder = new IlBuilder(ctor, new Type[] { fieldType });
-            ilBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
-            ilBuilder.ILGenerator.Emit(OpCodes.Ldarg_1);
+            ilBuilder.Ldarg(0);
+            ilBuilder.Ldarg(1);
             ilBuilder.Stfld(_connectionField);
 
             return ilBuilder;

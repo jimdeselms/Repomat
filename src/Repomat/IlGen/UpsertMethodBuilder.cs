@@ -25,21 +25,16 @@ namespace Repomat.IlGen
                 var propName = EntityDef.PrimaryKey[0].PropertyName;
                 var prop = EntityDef.Type.GetProperty(propName).GetGetMethod();
 
-                var doCreate = IlBuilder.DefineLabel();
-                var afterOperation = IlBuilder.DefineLabel();
-
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
+                IlBuilder.Ldarg(MethodDef.DtoParameterOrNull.Index);
                 IlBuilder.Call(prop);
-                IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, doCreate);
-
-                GenerateIlForUpdate(cmdVariable);
-
-                IlBuilder.ILGenerator.Emit(OpCodes.Br, afterOperation);
-                IlBuilder.MarkLabel(doCreate);
-
-                GenerateIlForCreate(cmdVariable);
-
-                IlBuilder.MarkLabel(afterOperation);
+                IlBuilder.If(() =>
+                    {
+                        GenerateIlForUpdate(cmdVariable);
+                    },
+                    () =>
+                    {
+                        GenerateIlForCreate(cmdVariable);
+                    });
             }
             else
             {

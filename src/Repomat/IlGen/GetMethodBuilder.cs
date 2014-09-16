@@ -169,7 +169,7 @@ namespace Repomat.IlGen
                 //CodeBuilder.CloseBrace();
                 //CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
                 //CodeBuilder.WriteLine("return false;");
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
+                IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
                 IlBuilder.Ldloc(returnValue);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
                 IlBuilder.Ldc(1);
@@ -185,7 +185,7 @@ namespace Repomat.IlGen
 
             if (MethodDef.IsTryGet)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.OutParameterOrNull.Index);
+                IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
                 IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
                 IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
                 IlBuilder.Ldc(0);
@@ -276,7 +276,7 @@ namespace Repomat.IlGen
                 {
                     // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
                     IlBuilder.Ldloc(readerLocal);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, columnToGet.ColumnName);
+                    IlBuilder.Ldstr(columnToGet.ColumnName);
                     IlBuilder.Call(_getIndexForColumn);
                     IlBuilder.Stfld(columnIndexFields[columnToGet.PropertyName]);
                 }
@@ -390,7 +390,7 @@ namespace Repomat.IlGen
                             .Select((p, i) => new { p, i })
                             .Where(p => p.p.Name.Capitalize() == prop.PropertyName)
                             .Select(p => p.i).First();
-                        IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, argIndex + 1);
+                        IlBuilder.Ldarg(argIndex + 1);
                     }
                 }
 
@@ -419,7 +419,7 @@ namespace Repomat.IlGen
 
                     var setter = EntityDef.Type.GetProperty(arg.Name.Capitalize()).GetSetMethod();
                     IlBuilder.Ldloc(resultLocal);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, index);
+                    IlBuilder.Ldarg(index);
                     IlBuilder.Call(setter);
                 }
             }

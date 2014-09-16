@@ -94,7 +94,7 @@ namespace Repomat.IlGen
                 var setter = property.GetSetMethod();
                 if (setter != null)
                 {
-                    IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, MethodDef.DtoParameterOrNull.Index);
+                    IlBuilder.Ldarg(MethodDef.DtoParameterOrNull.Index);
                     IlBuilder.Ldloc(newValueLocal);
                     IlBuilder.Call(setter);
                 }

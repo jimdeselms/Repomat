@@ -80,7 +80,7 @@ namespace Repomat.IlGen
         {
             // cmd.CommandText = commandText
             IlBuilder.Ldloc(_commandLocal);
-            IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, commandText);
+            IlBuilder.Ldstr(commandText);
             IlBuilder.Call(_commandTextSetMethod);
 
             if (MethodDef.CustomSqlIsStoredProcedure)
@@ -105,7 +105,7 @@ namespace Repomat.IlGen
             AddSqlParameter(sqlParameter, name, parmCSharpType, () =>
             {
                 IlBuilder.Ldloc(sqlParameter);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, argumentIndex);
+                IlBuilder.Ldarg(argumentIndex);
             });
         }
 
@@ -117,7 +117,7 @@ namespace Repomat.IlGen
             {
                 var propGet = EntityDef.Type.GetProperty(name).GetGetMethod();
                 IlBuilder.Ldloc(sqlParameter);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, entityArgumentIndex);
+                IlBuilder.Ldarg(entityArgumentIndex);
                 IlBuilder.Call(propGet);
             });
         }
@@ -133,7 +133,7 @@ namespace Repomat.IlGen
 
             // parm.ParameterName = name
             IlBuilder.Ldloc(sqlParameter);
-            IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, name);
+            IlBuilder.Ldstr(name);
             IlBuilder.Call(_parameterNameSetMethod);
 
             // parm.DbType = blah
@@ -173,7 +173,7 @@ namespace Repomat.IlGen
             IlBuilder.Call(_parametersGetMethod);
             IlBuilder.Ldloc(sqlParameter);
             IlBuilder.Call(_parametersAddMethod);
-            IlBuilder.ILGenerator.Emit(OpCodes.Pop);
+            IlBuilder.Pop();
         }
 
         protected void ExecuteNonQuery()
@@ -181,7 +181,7 @@ namespace Repomat.IlGen
             // cmd.ExecuteNonQuery();
             IlBuilder.Ldloc(_commandLocal);
             IlBuilder.Call(_executeNonQueryMethod);
-            IlBuilder.ILGenerator.Emit(OpCodes.Pop); // Pop the unused result
+            IlBuilder.Pop(); // Pop the unused result
         }
 
         protected void ExecuteScalar()
@@ -195,7 +195,7 @@ namespace Repomat.IlGen
 
         protected void ThrowRepomatException(string format, params object[] args)
         {
-            IlBuilder.ILGenerator.Emit(OpCodes.Ldstr, string.Format(format, args));
+            IlBuilder.Ldstr(string.Format(format, args));
             IlBuilder.Ldc(0);
             IlBuilder.ILGenerator.Emit(OpCodes.Newarr, typeof(object));
             IlBuilder.Newobj(_repomatExceptionCtor);
@@ -229,17 +229,17 @@ namespace Repomat.IlGen
 
             if (passedConnectionIndex.HasValue)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, passedConnectionIndex.Value);
+                IlBuilder.Ldarg(passedConnectionIndex.Value);
             }
             else if (passedTransactionIndex.HasValue)
             {
                 var connProperty = typeof(IDbTransaction).GetProperty("Connection").GetGetMethod();
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
+                IlBuilder.Ldarg(passedTransactionIndex.Value);
                 IlBuilder.Call(connProperty);
             }
             else if (_newConnectionEveryTime)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
+                IlBuilder.Ldarg(0);
                 IlBuilder.Ldfld(_connectionField);
 
                 IlBuilder.Call(_dbConnFuncInvokeMethod);
@@ -250,7 +250,7 @@ namespace Repomat.IlGen
             }
             else // use the _connectionField
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg_0);
+                IlBuilder.Ldarg(0);
                 IlBuilder.Ldfld(_connectionField);
             }
 
@@ -271,7 +271,7 @@ namespace Repomat.IlGen
             {
                 var setTransactionProp = typeof(IDbCommand).GetProperty("Transaction").GetSetMethod();
                 IlBuilder.Ldloc(_commandLocal);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldarg, passedTransactionIndex.Value);
+                IlBuilder.Ldarg(passedTransactionIndex.Value);
                 IlBuilder.Call(setTransactionProp);
             }
 
