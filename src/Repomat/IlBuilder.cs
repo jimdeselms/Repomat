@@ -154,6 +154,11 @@ namespace Repomat
             _ilGen.Emit(OpCodes.Ldloca, local);
         }
 
+        public void Ldnull()
+        {
+            _ilGen.Emit(OpCodes.Ldnull);
+        }
+
         public void Ldstr(string s)
         {
             _ilGen.Emit(OpCodes.Ldstr, s);
@@ -198,6 +203,11 @@ namespace Repomat
         {
             _ilGen.Emit(OpCodes.Pop);
 //            _evalStack.Pop();
+        }
+
+        public void Stind_Ref()
+        {
+            _ilGen.Emit(OpCodes.Stind_Ref);
         }
 
         public void Stfld(FieldInfo field)
@@ -256,6 +266,22 @@ namespace Repomat
 //            Stack<Type> stackAfterElse = new Stack<Type>(_evalStack);
 
 //            EnsureStacksAreSame(stackAfterIf.ToArray(), stackAfterElse.ToArray());
+        }
+
+        public void While(Action loadValue, Action whileTrue)
+        {
+            var loopStart = _ilGen.DefineLabel();
+            var loopEnd = _ilGen.DefineLabel();
+
+            _ilGen.MarkLabel(loopStart);
+            loadValue();
+
+            _ilGen.Emit(OpCodes.Brfalse, loopEnd);
+
+            whileTrue();
+            _ilGen.Emit(OpCodes.Br, loopStart);
+
+            _ilGen.MarkLabel(loopEnd);
         }
 
         private void HandleBoxing(Type targetType)

@@ -162,7 +162,7 @@ namespace Repomat.IlGen
                 {
                     IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
                     IlBuilder.Ldloc(returnValue);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
+                    IlBuilder.Stind_Ref();
                     IlBuilder.Ldc(1);
                     IlBuilder.Stloc(ReturnValueLocal);
 
@@ -173,8 +173,8 @@ namespace Repomat.IlGen
                 if (MethodDef.IsTryGet)
                 {
                     IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
-                    IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
+                    IlBuilder.Ldnull();
+                    IlBuilder.Stind_Ref();
                     IlBuilder.Ldc(0);
                     IlBuilder.Stloc(ReturnValueLocal);
                 }
@@ -187,7 +187,7 @@ namespace Repomat.IlGen
                     else
                     {
                         // return default(X);
-                        IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
+                        IlBuilder.Ldnull();
                         IlBuilder.Stloc(ReturnValueLocal);
                     }
                 }
@@ -211,26 +211,24 @@ namespace Repomat.IlGen
             var whileLoopStart = IlBuilder.DefineLabel();
             var whileLoopEnd = IlBuilder.DefineLabel();
 
-            IlBuilder.MarkLabel(whileLoopStart);
-            IlBuilder.Ldloc(readerLocal);
-            IlBuilder.Call(_readMethod);
-            IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, whileLoopEnd);
+            IlBuilder.While(() =>
+            {
+                IlBuilder.Ldloc(readerLocal);
+                IlBuilder.Call(_readMethod);
+            },
+            () =>
+            {
+                IlBuilder.Ldloc(readerLocal);
+                IlBuilder.Ldc(0);
+                IlBuilder.Call(_getValueMethod);
+                PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder);
 
-            // return PrimitiveTypeInfo.Get(t).GetReaderGetExpr(index, _useStrictTyping);
-            IlBuilder.Ldloc(readerLocal);
-            IlBuilder.Ldc(0);
-            IlBuilder.Call(_getValueMethod);
-            PrimitiveTypeInfo.Get(rowType).EmitConversion(IlBuilder);
-
-            var currentResultLocal = IlBuilder.DeclareLocal(rowType);
-            IlBuilder.Stloc(currentResultLocal);
-            IlBuilder.Ldloc(resultListLocal);
-            IlBuilder.Ldloc(currentResultLocal);
-            IlBuilder.Call(addMethod);
-
-            IlBuilder.ILGenerator.Emit(OpCodes.Br, whileLoopStart);
-
-            IlBuilder.MarkLabel(whileLoopEnd);
+                var currentResultLocal = IlBuilder.DeclareLocal(rowType);
+                IlBuilder.Stloc(currentResultLocal);
+                IlBuilder.Ldloc(resultListLocal);
+                IlBuilder.Ldloc(currentResultLocal);
+                IlBuilder.Call(addMethod);
+            });
 
             IlBuilder.Ldloc(resultListLocal);
 
