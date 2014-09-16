@@ -291,7 +291,7 @@ namespace Repomat.IlGen
             if (lockConnection)
             {
                 IlBuilder.Ldloc(lockTakenLocal);
-                IlBuilder.If(() =>
+                IlBuilder.IfTrue(() =>
                     {
                         IlBuilder.Ldloc(connectionLocal);
                         IlBuilder.Call(_monitorExitMethod);

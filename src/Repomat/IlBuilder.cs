@@ -227,12 +227,12 @@ namespace Repomat
             _ilGen.Emit(OpCodes.Stloc, local);
         }
 
-        public void If(Action ifTrue)
+        public void IfTrue(Action ifTrue)
         {
             var skip = _ilGen.DefineLabel();
 
             _ilGen.Emit(OpCodes.Brfalse, skip);
-//            _evalStack.Pop();
+            //            _evalStack.Pop();
 
             Stack<Type> stackBefore = new Stack<Type>(_evalStack);
 
@@ -240,7 +240,23 @@ namespace Repomat
 
             _ilGen.MarkLabel(skip);
 
-//            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
+            //            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
+        }
+
+        public void IfFalse(Action ifFalse)
+        {
+            var skip = _ilGen.DefineLabel();
+
+            _ilGen.Emit(OpCodes.Brtrue, skip);
+            //            _evalStack.Pop();
+
+            Stack<Type> stackBefore = new Stack<Type>(_evalStack);
+
+            ifFalse();
+
+            _ilGen.MarkLabel(skip);
+
+            //            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
         }
 
         public void If(Action ifTrue, Action ifFalse)

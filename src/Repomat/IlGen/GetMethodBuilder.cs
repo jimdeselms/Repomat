@@ -152,7 +152,7 @@ namespace Repomat.IlGen
                 {
                     IlBuilder.Ldloc(readerLocal);
                     IlBuilder.Call(_readMethod);
-                    IlBuilder.If(() =>
+                    IlBuilder.IfTrue(() =>
                         {
                             ThrowRepomatException("More than one row returned from singleton query");
                         });
@@ -246,26 +246,23 @@ namespace Repomat.IlGen
         {
             if (!MethodDef.IsScalarQuery && MethodDef.CustomSqlOrNull != null)
             {
-                var afterIndexAssignment = IlBuilder.DefineLabel();
-
                 // if (!_query{0}_columnIndexesAssigned)
                 IlBuilder.Ldfld(indexesAssignedField);
-                IlBuilder.ILGenerator.Emit(OpCodes.Brtrue, afterIndexAssignment);
-
-                // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
-                IlBuilder.Ldloc(readerLocal);
-                IlBuilder.Call(_verifyFieldsAreUniqueMethod);
-
-                foreach (var columnToGet in columnsToGet)
+                IlBuilder.IfFalse(() =>
                 {
-                    // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
+                    // Repomat.Runtime.ReaderHelper.VerifyFieldsAreUnique(reader);
                     IlBuilder.Ldloc(readerLocal);
-                    IlBuilder.Ldstr(columnToGet.ColumnName);
-                    IlBuilder.Call(_getIndexForColumn);
-                    IlBuilder.Stfld(columnIndexFields[columnToGet.PropertyName]);
-                }
+                    IlBuilder.Call(_verifyFieldsAreUniqueMethod);
 
-                IlBuilder.MarkLabel(afterIndexAssignment);
+                    foreach (var columnToGet in columnsToGet)
+                    {
+                        // _query{0}_column{1}Idx = Repomat.Runtime.ReaderHelper.GetIndexForColumn(reader, \"{2}\");", queryIdx, columnToGet.PropertyName, columnToGet.ColumnName
+                        IlBuilder.Ldloc(readerLocal);
+                        IlBuilder.Ldstr(columnToGet.ColumnName);
+                        IlBuilder.Call(_getIndexForColumn);
+                        IlBuilder.Stfld(columnIndexFields[columnToGet.PropertyName]);
+                    }
+                });
             }
         }
 
@@ -293,45 +290,38 @@ namespace Repomat.IlGen
                 IlBuilder.Stloc(listLocalOrNull);
             }
 
-            Label whileReaderReadStart = IlBuilder.DefineLabel();
-            IlBuilder.MarkLabel(whileReaderReadStart);
-
-            Label whileReaderReadEnd = IlBuilder.DefineLabel();
-
             // while (reader.Read())
-            IlBuilder.Ldloc(readerLocal);
-            IlBuilder.Call(_readMethod);
-            IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, whileReaderReadEnd);
+            IlBuilder.While(() =>
+                {
+                    IlBuilder.Ldloc(readerLocal);
+                    IlBuilder.Call(_readMethod);
+                },
+                () =>
+                {
+                    if (MethodDef.CustomSqlOrNull != null)
+                    {
+                        AppendObjectSerialization(readerLocal, rowLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
+                    }
+                    else
+                    {
+                        AppendObjectSerialization(readerLocal, rowLocal, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
+                    }
 
-            // The inside of the loop goes here.
+                    if (isEnumerable)
+                    {
+                        //               CodeBuilder.WriteLine("yield return newObj;");
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        // result.Add(newObj);
 
-            if (MethodDef.CustomSqlOrNull != null)
-            {
-                AppendObjectSerialization(readerLocal, rowLocal, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
-            }
-            else
-            {
-                AppendObjectSerialization(readerLocal, rowLocal, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
-            }
-
-            if (isEnumerable)
-            {
-//               CodeBuilder.WriteLine("yield return newObj;");
-                throw new NotImplementedException();
-            }
-            else
-            {
-                // result.Add(newObj);
-
-                var addMethod = listType.GetMethod("Add", new[] { EntityDef.Type });
-                IlBuilder.Ldloc(listLocalOrNull);
-                IlBuilder.Ldloc(rowLocal);
-                IlBuilder.Call(addMethod);
-            }
-
-            IlBuilder.ILGenerator.Emit(OpCodes.Br, whileReaderReadStart);
-
-            IlBuilder.MarkLabel(whileReaderReadEnd);
+                        var addMethod = listType.GetMethod("Add", new[] { EntityDef.Type });
+                        IlBuilder.Ldloc(listLocalOrNull);
+                        IlBuilder.Ldloc(rowLocal);
+                        IlBuilder.Call(addMethod);
+                    }
+                });
 
             if (!isEnumerable)
             {

@@ -115,7 +115,7 @@ namespace Repomat.UnitTests
             il.Ldc(1);
 
             il.Ldarg(0);
-            il.If(() =>
+            il.IfTrue(() =>
             {
                 il.Pop();
                 il.Ldc(2);
@@ -156,7 +156,7 @@ namespace Repomat.UnitTests
             var il = tester.IL;
 
             il.Ldc(0);
-            Assert.Throws<RepomatException>(() => il.If(() =>
+            Assert.Throws<RepomatException>(() => il.IfTrue(() =>
             {
                 il.Ldc(1);
             }));
@@ -172,7 +172,7 @@ namespace Repomat.UnitTests
 
             il.Ldc(1);
 
-            Assert.Throws<RepomatException>(() => il.If(() =>
+            Assert.Throws<RepomatException>(() => il.IfTrue(() =>
             {
                 il.Pop();
                 il.Ldc(1);
