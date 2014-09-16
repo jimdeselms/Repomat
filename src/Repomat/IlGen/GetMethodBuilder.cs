@@ -133,79 +133,65 @@ namespace Repomat.IlGen
             
             EmitArgumentMappingCheck(readerLocal, indexesAssignedField, columnsToGet, columnIndexFields);
 
-            var afterRead = IlBuilder.DefineLabel();
-
             // if (reader.Read())
             IlBuilder.Ldloc(readerLocal);
             IlBuilder.Call(_readMethod);
-            IlBuilder.ILGenerator.Emit(OpCodes.Brfalse, afterRead);
 
-            if (MethodDef.CustomSqlOrNull != null)
+            IlBuilder.If(() =>
             {
-                AppendObjectSerialization(readerLocal, returnValue, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
-            }
-            else
-            {
-                AppendObjectSerialization(readerLocal, returnValue, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
-            }
-            
-            if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
-            {
-                IlBuilder.Ldloc(readerLocal);
-                IlBuilder.Call(_readMethod);
-                IlBuilder.If(() =>
-                    {
-                        ThrowRepomatException("More than one row returned from singleton query");
-                    });
-            }
-
-            var afterElse = IlBuilder.DefineLabel();
-
-            if (MethodDef.IsTryGet)
-            {
-                //var tryGetOutColumn = MethodDef.OutParameterOrNull;
-                //CodeBuilder.WriteLine("{0} = newObj;", tryGetOutColumn.Name);
-                //CodeBuilder.WriteLine("return true;");
-                //CodeBuilder.CloseBrace();
-                //CodeBuilder.WriteLine("{0} = default({1});", tryGetOutColumn.Name, EntityDef.Type.ToCSharp());
-                //CodeBuilder.WriteLine("return false;");
-                IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
-                IlBuilder.Ldloc(returnValue);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
-                IlBuilder.Ldc(1);
-                IlBuilder.Stloc(ReturnValueLocal);
-
-                IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
-            }
-            else
-            {
-                IlBuilder.ILGenerator.Emit(OpCodes.Br, afterElse);
-            }
-            IlBuilder.MarkLabel(afterRead);
-
-            if (MethodDef.IsTryGet)
-            {
-                IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
-                IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
-                IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
-                IlBuilder.Ldc(0);
-                IlBuilder.Stloc(ReturnValueLocal);
-            }
-            else
-            {
-                if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
+                if (MethodDef.CustomSqlOrNull != null)
                 {
-                    ThrowRepomatException("No rows returned from singleton query");
+                    AppendObjectSerialization(readerLocal, returnValue, columnsToGet.ToList(), Enumerable.Empty<ParameterDetails>(), queryIdx, columnIndexFields);
                 }
                 else
                 {
-                    // return default(X);
+                    AppendObjectSerialization(readerLocal, returnValue, columnsToGet.ToList(), MethodDef.Properties, null, columnIndexFields);
+                }
+
+                if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfMultipleRowsFound) != 0)
+                {
+                    IlBuilder.Ldloc(readerLocal);
+                    IlBuilder.Call(_readMethod);
+                    IlBuilder.If(() =>
+                        {
+                            ThrowRepomatException("More than one row returned from singleton query");
+                        });
+                }
+
+                if (MethodDef.IsTryGet)
+                {
+                    IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
+                    IlBuilder.Ldloc(returnValue);
+                    IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
+                    IlBuilder.Ldc(1);
+                    IlBuilder.Stloc(ReturnValueLocal);
+
+                }
+            },
+            () =>
+            {
+                if (MethodDef.IsTryGet)
+                {
+                    IlBuilder.Ldarg(MethodDef.OutParameterOrNull.Index);
                     IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
+                    IlBuilder.ILGenerator.Emit(OpCodes.Stind_Ref);
+                    IlBuilder.Ldc(0);
                     IlBuilder.Stloc(ReturnValueLocal);
                 }
-            }
-
-            IlBuilder.MarkLabel(afterElse);
+                else
+                {
+                    if ((MethodDef.SingletonGetMethodBehavior & SingletonGetMethodBehavior.FailIfNoRowFound) != 0)
+                    {
+                        ThrowRepomatException("No rows returned from singleton query");
+                    }
+                    else
+                    {
+                        // return default(X);
+                        IlBuilder.ILGenerator.Emit(OpCodes.Ldnull);
+                        IlBuilder.Stloc(ReturnValueLocal);
+                    }
+                }
+            });
 
         }
 
