@@ -180,6 +180,11 @@ namespace Repomat
             _ilGen.MarkLabel(label);
         }
 
+        public void Newarr(Type elementType)
+        {
+            _ilGen.Emit(OpCodes.Newarr, elementType);
+        }
+
         public void Newobj(ConstructorInfo ctor)
         {
             _ilGen.Emit(OpCodes.Newobj, ctor);

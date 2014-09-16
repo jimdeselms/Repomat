@@ -152,16 +152,14 @@ namespace Repomat.IlGen
             if (typeInfo.CanBeNull)
             {
                 var nullCheckStore = IlBuilder.DeclareLocal(typeof(object));
-                var skipDbNullReplacement = IlBuilder.DefineLabel();
 
                 IlBuilder.Stloc(nullCheckStore);
                 IlBuilder.Ldloc(nullCheckStore);
-                IlBuilder.ILGenerator.Emit(OpCodes.Brtrue, skipDbNullReplacement);
-
-                IlBuilder.Ldfld(DBNULL_VALUE);
-                IlBuilder.Stloc(nullCheckStore);
-
-                IlBuilder.MarkLabel(skipDbNullReplacement);
+                IlBuilder.IfFalse(() =>
+                    {
+                        IlBuilder.Ldfld(DBNULL_VALUE);
+                        IlBuilder.Stloc(nullCheckStore);
+                    });
 
                 IlBuilder.Ldloc(nullCheckStore);
             }
@@ -197,7 +195,7 @@ namespace Repomat.IlGen
         {
             IlBuilder.Ldstr(string.Format(format, args));
             IlBuilder.Ldc(0);
-            IlBuilder.ILGenerator.Emit(OpCodes.Newarr, typeof(object));
+            IlBuilder.Newarr(typeof(object));
             IlBuilder.Newobj(_repomatExceptionCtor);
             IlBuilder.Throw();
         }
