@@ -217,7 +217,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Br, end);
 
                 il.MarkLabel(label1);
-                il.ILGenerator.Emit(OpCodes.Ldnull);
+                il.Ldnull();
                 il.MarkLabel(end);
             };
         }
@@ -246,7 +246,7 @@ namespace Repomat.CodeGen
                 il.ILGenerator.Emit(OpCodes.Br, end);
 
                 il.MarkLabel(label1);
-                il.ILGenerator.Emit(OpCodes.Ldnull);
+                il.Ldnull();
                 il.MarkLabel(end);
             };
         }
@@ -258,7 +258,7 @@ namespace Repomat.CodeGen
             return il => {
                 if (needsUnboxing)
                 {
-                    il.ILGenerator.Emit(OpCodes.Unbox_Any, typeof(T));
+                    il.Unbox(typeof(T));
                 }
             };
         }
