@@ -146,7 +146,7 @@ namespace Repomat.IlGen
 
             if (type.IsValueType)
             {
-                IlBuilder.ILGenerator.Emit(OpCodes.Box, type);
+                IlBuilder.Box(type);
             }
 
             if (typeInfo.CanBeNull)
@@ -199,7 +199,7 @@ namespace Repomat.IlGen
             IlBuilder.Ldc(0);
             IlBuilder.ILGenerator.Emit(OpCodes.Newarr, typeof(object));
             IlBuilder.Newobj(_repomatExceptionCtor);
-            IlBuilder.ILGenerator.Emit(OpCodes.Throw);
+            IlBuilder.Throw();
         }
 
         private static MethodInfo _monitorEnterMethod = typeof(Monitor).GetMethod("Enter", new Type[] { typeof(object), typeof(bool).MakeByRefType() });
@@ -254,7 +254,7 @@ namespace Repomat.IlGen
                 IlBuilder.Ldfld(_connectionField);
             }
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Dup);
+            IlBuilder.Dup();
             IlBuilder.Stloc(connectionLocal);
 
             if (lockConnection)
@@ -264,7 +264,7 @@ namespace Repomat.IlGen
                 IlBuilder.Ldloc(connectionLocal);
             }
 
-            IlBuilder.ILGenerator.EmitCall(OpCodes.Callvirt, _createCommandMethod, Type.EmptyTypes);
+            IlBuilder.Call(_createCommandMethod, Type.EmptyTypes);
             IlBuilder.Stloc(_commandLocal);
 
             if (passedTransactionIndex.HasValue)

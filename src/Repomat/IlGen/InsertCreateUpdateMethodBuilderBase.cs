@@ -83,7 +83,7 @@ namespace Repomat.IlGen
             var newValueLocal = IlBuilder.DeclareLocal(typeof(int));
             var convertMethod = typeof(Convert).GetMethod("ToInt32", new Type[] { _scopeIdentityType });
 
-            IlBuilder.ILGenerator.Emit(OpCodes.Unbox_Any, _scopeIdentityType);
+            IlBuilder.Unbox(_scopeIdentityType);
             IlBuilder.Call(convertMethod);
 
             IlBuilder.Stloc(newValueLocal);

@@ -63,6 +63,11 @@ namespace Repomat
             _ilGen.BeginScope();
         }
 
+        public void Box(Type t)
+        {
+            _ilGen.Emit(OpCodes.Box, t);
+        }
+
         public void Call(MethodInfo method)
         {
             if (method.IsVirtual)
@@ -95,6 +100,11 @@ namespace Repomat
         public Label DefineLabel()
         {
             return _ilGen.DefineLabel();
+        }
+
+        public void Dup()
+        {
+            _ilGen.Emit(OpCodes.Dup);
         }
 
         public void EndExceptionBlock()
@@ -282,6 +292,16 @@ namespace Repomat
 //            Stack<Type> stackAfterElse = new Stack<Type>(_evalStack);
 
 //            EnsureStacksAreSame(stackAfterIf.ToArray(), stackAfterElse.ToArray());
+        }
+
+        public void Throw()
+        {
+            _ilGen.Emit(OpCodes.Throw);
+        }
+
+        public void Unbox(Type type)
+        {
+            _ilGen.Emit(OpCodes.Unbox_Any, type);
         }
 
         public void While(Action loadValue, Action whileTrue)
