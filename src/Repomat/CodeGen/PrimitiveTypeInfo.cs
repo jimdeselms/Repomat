@@ -166,32 +166,35 @@ namespace Repomat.CodeGen
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLabel = il.DeclareLocal(typeof(object));
                 var resultLocal = il.DeclareLocal(typeof(T?));
 
                 il.Stloc(nullableValueLabel);
                 il.Ldloc(nullableValueLabel);
-                il.ILGenerator.Emit(OpCodes.Brfalse, label1);
-
-                il.Ldloc(nullableValueLabel);
-                il.Ldfld(dbNullValue);
-
-                il.Ifne(() =>
+                il.If(() =>
                     {
                         il.Ldloc(nullableValueLabel);
-                        SimpleConversion(convertMethodName)(il);
-                        il.Newobj(nullableCtor);
-                        il.ILGenerator.Emit(OpCodes.Br, end);
-                    });
+                        il.Ldfld(dbNullValue);
 
-                il.MarkLabel(label1);
-                il.Ldloca(resultLocal);
-                il.Initobj(typeof(T?));
-                il.Ldloc(resultLocal);
-                il.MarkLabel(end);
+                        il.Ifeq(() =>
+                            {
+                                il.Ldloca(resultLocal);
+                                il.Initobj(typeof(T?));
+                                il.Ldloc(resultLocal);
+                            },
+                            () =>
+                            {
+                                il.Ldloc(nullableValueLabel);
+                                SimpleConversion(convertMethodName)(il);
+                                il.Newobj(nullableCtor);
+                            });
+                    },
+                    () =>
+                    {
+                        il.Ldloca(resultLocal);
+                        il.Initobj(typeof(T?));
+                        il.Ldloc(resultLocal);
+                    });
             };
         }
 
@@ -201,9 +204,6 @@ namespace Repomat.CodeGen
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLabel = il.DeclareLocal(typeof(string));
 
                 il.Stloc(nullableValueLabel);
@@ -230,28 +230,25 @@ namespace Repomat.CodeGen
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLabel = il.DeclareLocal(typeof(string));
 
                 il.Stloc(nullableValueLabel);
                 il.Ldloc(nullableValueLabel);
-                il.ILGenerator.Emit(OpCodes.Brfalse_S, label1);
 
-                il.Ldloc(nullableValueLabel);
-                il.Ldfld(dbNullValue);
-
-                il.Ifne(() =>
+                il.If(() =>
                     {
                         il.Ldloc(nullableValueLabel);
-                        CastConversion<byte[]>()(il);
-                        il.ILGenerator.Emit(OpCodes.Br, end);
-                    });
+                        il.Ldfld(dbNullValue);
 
-                il.MarkLabel(label1);
-                il.Ldnull();
-                il.MarkLabel(end);
+                        il.Ifeq(
+                            il.Ldnull, 
+                            () =>
+                            {
+                                il.Ldloc(nullableValueLabel);
+                                CastConversion<byte[]>()(il);
+                            });
+                    },
+                    il.Ldnull);
             };
         }
 
@@ -290,32 +287,35 @@ namespace Repomat.CodeGen
 
             return il =>
             {
-                var label1 = il.DefineLabel();
-                var end = il.DefineLabel();
-
                 var nullableValueLocal = il.DeclareLocal(typeof(object));
                 var resultLocal = il.DeclareLocal(typeof(char?));
 
                 il.Stloc(nullableValueLocal);
                 il.Ldloc(nullableValueLocal);
-                il.ILGenerator.Emit(OpCodes.Brfalse_S, label1);
 
-                il.Ldloc(nullableValueLocal);
-                il.Ldfld(dbNullValue);
+                il.If(() =>
+                    {
+                        il.Ldloc(nullableValueLocal);
+                        il.Ldfld(dbNullValue);
 
-                il.Ifne(() =>
-                {
-                    il.Ldloc(nullableValueLocal);
-                    CharConversion()(il);
-                    il.Newobj(nullableCtor);
-                    il.ILGenerator.Emit(OpCodes.Br, end);
-                });
-
-                il.MarkLabel(label1);
-                il.Ldloca(resultLocal);
-                il.Initobj(typeof(char?));
-                il.Ldloc(resultLocal);
-                il.MarkLabel(end);
+                        il.Ifeq(() =>
+                            {
+                                il.Ldloca(resultLocal);
+                                il.Initobj(typeof (char?));
+                                il.Ldloc(resultLocal);
+                            },
+                            () =>
+                            {
+                                il.Ldloc(nullableValueLocal);
+                                CharConversion()(il);
+                                il.Newobj(nullableCtor);
+                            });
+                    },
+                    () => {
+                        il.Ldloca(resultLocal);
+                        il.Initobj(typeof (char?));
+                        il.Ldloc(resultLocal);
+                    });
             };
         }
     }
