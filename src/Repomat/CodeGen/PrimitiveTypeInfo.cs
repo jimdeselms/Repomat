@@ -208,21 +208,19 @@ namespace Repomat.CodeGen
 
                 il.Stloc(nullableValueLabel);
                 il.Ldloc(nullableValueLabel);
-                il.ILGenerator.Emit(OpCodes.Brfalse, label1);
+                il.If(() =>
+                    {
+                        il.Ldloc(nullableValueLabel);
+                        il.Ldfld(dbNullValue);
 
-                il.Ldloc(nullableValueLabel);
-                il.Ldfld(dbNullValue);
-
-                il.Ifne(() =>
-                {
-                    il.Ldloc(nullableValueLabel);
-                    SimpleConversion("ToString")(il);
-                    il.ILGenerator.Emit(OpCodes.Br, end);
-                });
-
-                il.MarkLabel(label1);
-                il.Ldnull();
-                il.MarkLabel(end);
+                        il.Ifeq(il.Ldnull,
+                                () =>
+                                    {
+                                        il.Ldloc(nullableValueLabel);
+                                        SimpleConversion("ToString")(il);
+                                    });
+                    },
+                    il.Ldnull);
             };
         }
 
