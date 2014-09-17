@@ -66,29 +66,20 @@ namespace Repomat
         public void Box(Type t)
         {
             _ilGen.Emit(OpCodes.Box, t);
-        }
-
-        public void Call(MethodInfo method)
-        {
-            if (method.IsVirtual)
-            {
-                _ilGen.Emit(OpCodes.Callvirt, method);
-            }
-            else
-            {
-                _ilGen.Emit(OpCodes.Call, method);
-            }
+            _evalStack.Push(t);
         }
 
         public void Call(MethodInfo method, params Type[] types)
         {
-            if (method.IsVirtual)
+            OpCode opcode = method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
+
+            if (types.Length == 0)
             {
-                _ilGen.EmitCall(OpCodes.Callvirt, method, types);
+                _ilGen.Emit(opcode, method);
             }
             else
             {
-                _ilGen.EmitCall(OpCodes.Call, method, types);
+                _ilGen.EmitCall(opcode, method, types);
             }
         }
 
