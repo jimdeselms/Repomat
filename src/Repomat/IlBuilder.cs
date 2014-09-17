@@ -242,87 +242,56 @@ namespace Repomat
             _ilGen.Emit(OpCodes.Stloc, local);
         }
 
-        public void IfTrue(Action ifTrue)
+        private void If(OpCode opcode, Action ifFalse)
         {
-            var skip = _ilGen.DefineLabel();
+            var skipFalse = _ilGen.DefineLabel();
 
-            _ilGen.Emit(OpCodes.Brfalse, skip);
-            //            _evalStack.Pop();
-
-            Stack<Type> stackBefore = new Stack<Type>(_evalStack);
-
-            ifTrue();
-
-            _ilGen.MarkLabel(skip);
-
-            //            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
-        }
-
-        public void IfFalse(Action ifFalse)
-        {
-            var skip = _ilGen.DefineLabel();
-
-            _ilGen.Emit(OpCodes.Brtrue, skip);
-            //            _evalStack.Pop();
-
-            Stack<Type> stackBefore = new Stack<Type>(_evalStack);
+            _ilGen.Emit(opcode, skipFalse);
 
             ifFalse();
 
-            _ilGen.MarkLabel(skip);
-
-            //            EnsureStacksAreSame(stackBefore.ToArray(), _evalStack.ToArray());
+            _ilGen.MarkLabel(skipFalse);
         }
 
-        public void If(Action ifTrue, Action ifFalse)
+        private void If(OpCode opcode, Action ifTrue, Action ifFalse)
         {
             var skipTrue = _ilGen.DefineLabel();
             var skipFalse = _ilGen.DefineLabel();
 
-            _ilGen.Emit(OpCodes.Brfalse, skipTrue);
-//            _evalStack.Pop();
-
-//            Stack<Type> stackBefore = new Stack<Type>(_evalStack);
+            _ilGen.Emit(opcode, skipTrue);
 
             ifTrue();
             _ilGen.Emit(OpCodes.Br, skipFalse);
 
-//            Stack<Type> stackAfterIf = new Stack<Type>(_evalStack);
-//            _evalStack = stackBefore;
-
             _ilGen.MarkLabel(skipTrue);
             ifFalse();
             _ilGen.MarkLabel(skipFalse);
+        }
 
-//            Stack<Type> stackAfterElse = new Stack<Type>(_evalStack);
 
-//            EnsureStacksAreSame(stackAfterIf.ToArray(), stackAfterElse.ToArray());
+        public void IfTrue(Action ifTrue)
+        {
+            If(OpCodes.Brfalse, ifTrue);
+        }
+
+        public void IfFalse(Action ifFalse)
+        {
+            If(OpCodes.Brtrue, ifFalse);
+        }
+
+        public void If(Action ifTrue, Action ifFalse)
+        {
+            If(OpCodes.Brfalse, ifTrue, ifFalse);
         }
 
         public void Ifeq(Action ifEqual, Action ifNotEqual)
         {
-            var skipIfNotEqual = _ilGen.DefineLabel();
-            var skipIfEqual = _ilGen.DefineLabel();
-
-            _ilGen.Emit(OpCodes.Beq, skipIfNotEqual);
-
-            ifNotEqual();
-
-            _ilGen.Emit(OpCodes.Br, skipIfEqual);
-            _ilGen.MarkLabel(skipIfNotEqual);
-
-            ifEqual();
-
-            _ilGen.MarkLabel(skipIfEqual);
+            If(OpCodes.Beq, ifNotEqual, ifEqual);
         }
 
         public void Ifne(Action ifNotEqual)
         {
-            var skip = _ilGen.DefineLabel();
-
-            _ilGen.Emit(OpCodes.Beq, skip);
-            ifNotEqual();
-            _ilGen.MarkLabel(skip);
+            If(OpCodes.Beq, ifNotEqual);
         }
 
         public void Throw()
