@@ -117,6 +117,58 @@ namespace Repomat
             _ilGen.EndScope();
         }
 
+        private void If(OpCode opcode, Action ifFalse)
+        {
+            var skipFalse = _ilGen.DefineLabel();
+
+            _ilGen.Emit(opcode, skipFalse);
+
+            ifFalse();
+
+            _ilGen.MarkLabel(skipFalse);
+        }
+
+        private void If(OpCode opcode, Action ifTrue, Action ifFalse)
+        {
+            var skipTrue = _ilGen.DefineLabel();
+            var skipFalse = _ilGen.DefineLabel();
+
+            _ilGen.Emit(opcode, skipTrue);
+
+            ifTrue();
+            _ilGen.Emit(OpCodes.Br, skipFalse);
+
+            _ilGen.MarkLabel(skipTrue);
+            ifFalse();
+            _ilGen.MarkLabel(skipFalse);
+        }
+
+
+        public void IfTrue(Action ifTrue)
+        {
+            If(OpCodes.Brfalse, ifTrue);
+        }
+
+        public void IfFalse(Action ifFalse)
+        {
+            If(OpCodes.Brtrue, ifFalse);
+        }
+
+        public void If(Action ifTrue, Action ifFalse)
+        {
+            If(OpCodes.Brfalse, ifTrue, ifFalse);
+        }
+
+        public void Ifeq(Action ifEqual, Action ifNotEqual)
+        {
+            If(OpCodes.Beq, ifNotEqual, ifEqual);
+        }
+
+        public void Ifne(Action ifNotEqual)
+        {
+            If(OpCodes.Beq, ifNotEqual);
+        }
+
         public void Initobj(Type t)
         {
             _ilGen.Emit(OpCodes.Initobj, t);
@@ -240,58 +292,6 @@ namespace Repomat
         public void Stloc(LocalBuilder local)
         {
             _ilGen.Emit(OpCodes.Stloc, local);
-        }
-
-        private void If(OpCode opcode, Action ifFalse)
-        {
-            var skipFalse = _ilGen.DefineLabel();
-
-            _ilGen.Emit(opcode, skipFalse);
-
-            ifFalse();
-
-            _ilGen.MarkLabel(skipFalse);
-        }
-
-        private void If(OpCode opcode, Action ifTrue, Action ifFalse)
-        {
-            var skipTrue = _ilGen.DefineLabel();
-            var skipFalse = _ilGen.DefineLabel();
-
-            _ilGen.Emit(opcode, skipTrue);
-
-            ifTrue();
-            _ilGen.Emit(OpCodes.Br, skipFalse);
-
-            _ilGen.MarkLabel(skipTrue);
-            ifFalse();
-            _ilGen.MarkLabel(skipFalse);
-        }
-
-
-        public void IfTrue(Action ifTrue)
-        {
-            If(OpCodes.Brfalse, ifTrue);
-        }
-
-        public void IfFalse(Action ifFalse)
-        {
-            If(OpCodes.Brtrue, ifFalse);
-        }
-
-        public void If(Action ifTrue, Action ifFalse)
-        {
-            If(OpCodes.Brfalse, ifTrue, ifFalse);
-        }
-
-        public void Ifeq(Action ifEqual, Action ifNotEqual)
-        {
-            If(OpCodes.Beq, ifNotEqual, ifEqual);
-        }
-
-        public void Ifne(Action ifNotEqual)
-        {
-            If(OpCodes.Beq, ifNotEqual);
         }
 
         public void Throw()
