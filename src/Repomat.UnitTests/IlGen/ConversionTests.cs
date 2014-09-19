@@ -20,11 +20,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(int));
 
             var t = IlTester.Create<int>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "1234");
+            il.Ldstr("1234");
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<int>();
 
@@ -37,12 +37,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(int));
 
             var t = IlTester.Create<int>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldc_I4, 1234);
-            il.Emit(OpCodes.Box, typeof(int));
+            il.Ldc(1234);
+            il.Box(typeof(int));
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<int>();
 
@@ -55,11 +55,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(DateTime));
 
             var t = IlTester.Create<DateTime>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "12/13/1971");
+            il.Ldstr("12/13/1971");
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<DateTime>();
 
@@ -72,11 +72,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(DateTimeOffset));
 
             var t = IlTester.Create<DateTimeOffset>(typeof(object));
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldarg_0);
+            il.Ldarg(0);
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var offset = new DateTimeOffset(new DateTime(2000, 2, 4));
             var result = t.Invoke<DateTimeOffset>(offset);
@@ -89,12 +89,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(string));
 
             var t = IlTester.Create<string>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldc_I4, 9876);
-            il.Emit(OpCodes.Box, typeof(int));
+            il.Ldc(9876);
+            il.Box(typeof(int));
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<string>();
             Assert.AreEqual("9876", result);
@@ -106,11 +106,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(string));
 
             var t = IlTester.Create<string>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldnull);
+            il.Ldnull();
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<string>();
             Assert.IsNull(result);
@@ -122,11 +122,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(char));
 
             var t = IlTester.Create<char>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "Hello");
+            il.Ldstr("Hello");
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<char>();
             Assert.AreEqual('H', result);
@@ -138,11 +138,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(int?));
 
             var t = IlTester.Create<int?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldnull);
+            il.Ldnull();
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<int?>();
 
@@ -155,11 +155,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(int?));
 
             var t = IlTester.Create<int?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "123");
+            il.Ldstr("123");
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<int?>();
 
@@ -190,11 +190,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
 
             var t = IlTester.Create<DateTime?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldnull);
+            il.Ldnull();
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<DateTime?>();
 
@@ -207,11 +207,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
 
             var t = IlTester.Create<DateTime?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "4/5/2012");
+            il.Ldstr("4/5/2012");
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<DateTime?>();
 
@@ -224,12 +224,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(DateTime?));
 
             var t = IlTester.Create<DateTime?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
             var dbNullValueProp = typeof(DBNull).GetField("Value", BindingFlags.Public | BindingFlags.Static);
-            il.Emit(OpCodes.Ldsfld, dbNullValueProp);
+            il.Ldfld(dbNullValueProp);
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<DateTime?>();
 
@@ -242,11 +242,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(char?));
 
             var t = IlTester.Create<char?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldnull);
+            il.Ldnull();
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<char?>();
 
@@ -259,11 +259,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(char?));
 
             var t = IlTester.Create<char?>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldstr, "hi there");
+            il.Ldstr("hi there");
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<char?>();
 
@@ -293,11 +293,11 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(byte[]));
 
             var t = IlTester.Create<byte[]>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldnull);
+            il.Ldnull();
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<byte[]>();
 
@@ -310,12 +310,12 @@ namespace Repomat.UnitTests.IlGen
             var info = PrimitiveTypeInfo.Get(typeof(byte[]));
 
             var t = IlTester.Create<byte[]>();
-            var il = t.ILGenerator;
+            var il = t.IL;
 
-            il.Emit(OpCodes.Ldc_I4, 3);
-            il.Emit(OpCodes.Newarr, typeof(byte));
+            il.Ldc(3);
+            il.Newarr(typeof(byte));
             info.EmitConversion(t.IL);
-            il.Emit(OpCodes.Ret);
+            il.Ret();
 
             var result = t.Invoke<byte[]>();
 

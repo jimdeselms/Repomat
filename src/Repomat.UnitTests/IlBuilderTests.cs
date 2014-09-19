@@ -10,7 +10,6 @@ using System.Xml;
 namespace Repomat.UnitTests
 {
     [TestFixture]
-    [Ignore]
     public class IlBuilderTests
     {
         [Test]
@@ -26,27 +25,6 @@ namespace Repomat.UnitTests
         }
 
         [Test]
-        public void Ret_StackTooBig_Throws()
-        {
-            IlTester tester = IlTester.Create<int>();
-            var il = tester.IL;
-
-            il.Ldc(123);
-            il.Ldc(234);
-
-            Assert.Throws<RepomatException>(() => il.Ret());
-        }
-
-        [Test]
-        public void Ret_StackTooSmall_Throws()
-        {
-            IlTester tester = IlTester.Create<int>();
-            var il = tester.IL;
-
-            Assert.Throws<RepomatException>(() => il.Ret());
-        }
-
-        [Test]
         public void Ret_NoArgs_Success()
         {
             IlTester tester = IlTester.CreateVoid();
@@ -58,44 +36,9 @@ namespace Repomat.UnitTests
         }
 
         [Test]
-        public void Ret_ReturnTypeRefTypeReturningValueType_BoxResult()
-        {
-            IlTester tester = IlTester.Create<object>();
-            var il = tester.IL;
-
-            il.Ldc(123);
-            il.Ret();
-
-            Assert.AreEqual(123, tester.Invoke<object>());
-        }
-
-        [Test]
-        public void Ret_ReturnTypeValueTypeReturningRefType_UnboxResult()
-        {
-            IlTester tester = IlTester.Create<int>(typeof(object));
-            var il = tester.IL;
-
-            il.Ldarg(0);
-            il.Ret();
-
-            Assert.AreEqual(999, tester.Invoke<int>((object)999));
-        }
-
-        [Test]
-        public void Ret_ReturnedValueNotSubclassOfReturnType_Throw()
-        {
-            IlTester tester = IlTester.Create<XmlDocument>(typeof(XmlNode));
-            var il = tester.IL;
-
-            il.Ldarg(0);
-
-            Assert.Throws<RepomatException>(() => il.Ret());
-        }
-
-        [Test]
         public void Ret_ReturnedTypeIsSubclassOfReturnType_Success()
         {
-            IlTester tester = IlTester.Create<XmlNode>(typeof(XmlDocument));
+            IlTester tester = IlTester.Create<XmlNode>(typeof (XmlDocument));
             var il = tester.IL;
 
             il.Ldarg(0);
@@ -109,17 +52,17 @@ namespace Repomat.UnitTests
         [Test]
         public void IfTest()
         {
-            IlTester tester = IlTester.Create<int>(typeof(bool));
-            var il = tester.IL; 
+            IlTester tester = IlTester.Create<int>(typeof (bool));
+            var il = tester.IL;
 
             il.Ldc(1);
 
             il.Ldarg(0);
             il.IfTrue(() =>
-            {
-                il.Pop();
-                il.Ldc(2);
-            });
+                {
+                    il.Pop();
+                    il.Ldc(2);
+                });
 
             il.Ret();
 
@@ -130,91 +73,23 @@ namespace Repomat.UnitTests
         [Test]
         public void IfWithElseTest()
         {
-            IlTester tester = IlTester.Create<int>(typeof(bool));
+            IlTester tester = IlTester.Create<int>(typeof (bool));
             var il = tester.IL;
 
             il.Ldarg(0);
             il.If(() =>
-            {
-                il.Ldc(1);
-            },
-            () =>
-            {
-                il.Ldc(2);
-            });
+                {
+                    il.Ldc(1);
+                },
+                  () =>
+                      {
+                          il.Ldc(2);
+                      });
 
             il.Ret();
 
             Assert.AreEqual(1, tester.Invoke<int>(true));
             Assert.AreEqual(2, tester.Invoke<int>(false));
         }
-
-        [Test]
-        public void If_StackNotSameLength_Throws()
-        {
-            IlTester tester = IlTester.Create<int>();
-            var il = tester.IL;
-
-            il.Ldc(0);
-            Assert.Throws<RepomatException>(() => il.IfTrue(() =>
-            {
-                il.Ldc(1);
-            }));
-        }
-
-        [Test]
-        public void If_StackNotSameType_Throws()
-        {
-            IlTester tester = IlTester.Create<int>();
-            var il = tester.IL;
-
-            il.Ldstr("Hello");
-
-            il.Ldc(1);
-
-            Assert.Throws<RepomatException>(() => il.IfTrue(() =>
-            {
-                il.Pop();
-                il.Ldc(1);
-            }));
-        }
-
-        [Test]
-        public void IfElse_StackNotSameLength_Throws()
-        {
-            IlTester tester = IlTester.Create<int>();
-            var il = tester.IL;
-
-            il.Ldc(0);
-
-            Assert.Throws<RepomatException>(() => il.If(() =>
-            {
-                il.Ldc(1);
-            },
-            () =>
-            {
-                il.Ldc(2);
-                il.Ldc(3);
-            }));
-        }
-
-        [Test]
-        public void IfElse_StackNotSameType_Throws()
-        {
-            IlTester tester = IlTester.Create<int>();
-            var il = tester.IL;
-
-            il.Ldc(1);
-
-            Assert.Throws<RepomatException>(() => il.If(() =>
-            {
-                il.Ldc(1);
-            },
-            () =>
-            {
-                il.Ldstr("Hi");
-            }));
-        }
-
     }
 }

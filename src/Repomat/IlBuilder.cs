@@ -17,8 +17,6 @@ namespace Repomat
         private readonly Type _declaringType;
         private readonly bool _isStatic;
 
-        private Stack<Type> _evalStack = new Stack<Type>();
-
         public IlBuilder(EmitMethodBuilder methodBuilder, ParameterDetails[] parameterTypes)
             : this(methodBuilder.DeclaringType, methodBuilder.IsStatic, methodBuilder.GetILGenerator(), methodBuilder.ReturnType, parameterTypes)
         {
@@ -69,8 +67,6 @@ namespace Repomat
         public void Box(Type t)
         {
             _ilGen.Emit(OpCodes.Box, t);
-            PopType();
-            PushType(t);
         }
 
         public void Call(MethodInfo method, params Type[] types)
@@ -84,18 +80,6 @@ namespace Repomat
             else
             {
                 _ilGen.EmitCall(opcode, method, types);
-            }
-
-            if (!method.IsStatic)
-            {
-                PopType();
-            }
-
-            PopType(method.GetParameters().Length);
-
-            if (method.ReturnType != typeof(void))
-            {
-                PushType(method.ReturnType);
             }
         }
 
@@ -112,7 +96,6 @@ namespace Repomat
         public void Dup()
         {
             _ilGen.Emit(OpCodes.Dup);
-            PushType(PeekType());
         }
 
         public void EndExceptionBlock()
@@ -131,13 +114,7 @@ namespace Repomat
 
             _ilGen.Emit(opcode, skipFalse);
 
-            var originalStack = CopyStack();
-
             ifFalse();
-
-            var currentStack = CopyStack();
-
-            EnsureStacksAreSame(originalStack.ToArray(), currentStack.ToArray());
 
             _ilGen.MarkLabel(skipFalse);
         }
@@ -148,25 +125,15 @@ namespace Repomat
             var skipFalse = _ilGen.DefineLabel();
 
             _ilGen.Emit(opcode, skipTrue);
-            PopType();
-
-            var originalStack = CopyStack();
 
             ifTrue();
             _ilGen.Emit(OpCodes.Br, skipFalse);
 
             _ilGen.MarkLabel(skipTrue);
 
-            var stackAfterTrue = CopyStack();
-            ReplaceStack(originalStack);
-
             ifFalse();
 
-            var stackAfterFalse = CopyStack();
-
             _ilGen.MarkLabel(skipFalse);
-
-            EnsureStacksAreSame(stackAfterTrue.ToArray(), stackAfterFalse.ToArray());
         }
 
 
@@ -198,40 +165,21 @@ namespace Repomat
         public void Initobj(Type t)
         {
             _ilGen.Emit(OpCodes.Initobj, t);
-            PopType();
         }
 
         public void Ldc(int i)
         {
             _ilGen.Emit(OpCodes.Ldc_I4, i);
-            PushType(typeof(int));
         }
 
         public void Ldc(long l)
         {
             _ilGen.Emit(OpCodes.Ldc_I8, l);
-            PushType(typeof(long));
         }
 
         public void Ldarg(int i)
         {
             _ilGen.Emit(OpCodes.Ldarg, i);
-
-            if (_isStatic)
-            {
-                PushType(_parameterTypes[i].Type);
-            }
-            else
-            {
-                if (i == 0)
-                {
-                    PushType(_declaringType);
-                }
-                else
-                {
-                    PushType(_parameterTypes[i - 1].Type);
-                }
-            }
         }
 
         public void Ldfld(FieldInfo field)
@@ -243,34 +191,27 @@ namespace Repomat
             else
             {
                 _ilGen.Emit(OpCodes.Ldfld, field);
-                PopType();
             }
-
-            PushType(field.FieldType);
         }
 
         public void Ldloc(LocalBuilder local)
         {
             _ilGen.Emit(OpCodes.Ldloc, local);
-            PushType(local.LocalType);
         }
 
         public void Ldloca(LocalBuilder local)
         {
             _ilGen.Emit(OpCodes.Ldloca, local);
-            PushType(local.LocalType.MakeByRefType());
         }
 
         public void Ldnull()
         {
             _ilGen.Emit(OpCodes.Ldnull);
-            PushType(null);
         }
 
         public void Ldstr(string s)
         {
             _ilGen.Emit(OpCodes.Ldstr, s);
-            PushType(typeof(string));
         }
 
         public void MarkLabel(Label label)
@@ -281,58 +222,26 @@ namespace Repomat
         public void Newarr(Type elementType)
         {
             _ilGen.Emit(OpCodes.Newarr, elementType);
-
-            PopType();
-            PushType(elementType.MakeArrayType());
         }
 
         public void Newobj(ConstructorInfo ctor)
         {
             _ilGen.Emit(OpCodes.Newobj, ctor);
-
-            PopType(ctor.GetParameters().Length);
-            PushType(ctor.DeclaringType);
         }
 
         public void Ret()
         {
-            //int expectedStackSize = _returnType == typeof(void) ? 0 : 1;
-
-            //if (expectedStackSize != _evalStack.Count)
-            //{
-            //    throw new RepomatException("Invalid stack size {0}, expected {1}", _evalStack.Count, expectedStackSize);
-            //}
-
-            if (_returnType != typeof(void))
-            {
-                //HandleBoxing(_returnType);
-
-                //var topType = PeekType();
-                //if (!_returnType.IsAssignableFrom(topType))
-                //{
-                //    throw new RepomatException("Cannot convert type {0} into type {1}", topType, _returnType);
-                //}
-            }
-
-            if (_returnType != typeof(void))
-            {
-                PopType();
-            }
-
             _ilGen.Emit(OpCodes.Ret);
         }
 
         public void Pop()
         {
             _ilGen.Emit(OpCodes.Pop);
-            PopType();
         }
 
         public void Stind_Ref()
         {
             _ilGen.Emit(OpCodes.Stind_Ref);
-            PopType();
-            PopType();
         }
 
         public void Stfld(FieldInfo field)
@@ -344,16 +253,12 @@ namespace Repomat
             else
             {
                 _ilGen.Emit(OpCodes.Stfld, field);
-                PopType();
             }
-
-            PopType();
         }
 
         public void Stloc(LocalBuilder local)
         {
             _ilGen.Emit(OpCodes.Stloc, local);
-            PopType();
         }
 
         public void Throw()
@@ -364,8 +269,6 @@ namespace Repomat
         public void Unbox(Type type)
         {
             _ilGen.Emit(OpCodes.Unbox_Any, type);
-            PopType();
-            PushType(type);
         }
 
         public void While(Action loadValue, Action whileTrue)
@@ -377,74 +280,31 @@ namespace Repomat
             loadValue();
 
             _ilGen.Emit(OpCodes.Brfalse, loopEnd);
-
+                
             whileTrue();
+
             _ilGen.Emit(OpCodes.Br, loopStart);
 
             _ilGen.MarkLabel(loopEnd);
         }
 
-        private void HandleBoxing(Type targetType)
-        {
-            Type topType = _evalStack.Peek();
+        //private void HandleBoxing(Type targetType)
+        //{
+        //    Type topType = _evalStack.Peek();
 
-            if (topType.IsValueType && !targetType.IsValueType)
-            {
-                _ilGen.Emit(OpCodes.Box, topType);
-                _evalStack.Pop();
-                _evalStack.Push(targetType);
-            }
+        //    if (topType.IsValueType && !targetType.IsValueType)
+        //    {
+        //        _ilGen.Emit(OpCodes.Box, topType);
+        //        _evalStack.Pop();
+        //        _evalStack.Push(targetType);
+        //    }
 
-            if (!topType.IsValueType && targetType.IsValueType)
-            {
-                _ilGen.Emit(OpCodes.Unbox_Any, targetType);
-                _evalStack.Pop();
-                _evalStack.Push(targetType);
-            }
-        }
-
-        private void EnsureStacksAreSame(Type[] branch1, Type[] branch2)
-        {
-//            if (branch1.Length != branch2.Length)
-//            {
-////                throw new RepomatException("Evaluation stack must be of same length after both branches of if statement.");
-//            }
-
-//            for (int i = 0; i < branch2.Length; i++)
-//            {
-//                if (!branch1[i].Equals(branch2[i]))
-//                {
-//  //                  throw new RepomatException("Evaluation stack must have same types after both branches of if statement.");
-//                }
-//            }
-        }
-
-        private void PushType(Type t)
-        {
-            _evalStack.Push(t);
-        }
-
-        private void PopType(int count=1)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                _evalStack.Pop();
-            }
-        }
-
-        private Type PeekType()
-        {
-            return _evalStack.Peek();
-        }
-
-        private Stack<Type> CopyStack()
-        {
-            return new Stack<Type>(_evalStack);
-        }
-
-        private void ReplaceStack(Stack<Type> stack)
-        {
-            _evalStack = stack;
-        }
+        //    if (!topType.IsValueType && targetType.IsValueType)
+        //    {
+        //        _ilGen.Emit(OpCodes.Unbox_Any, targetType);
+        //        _evalStack.Pop();
+        //        _evalStack.Push(targetType);
+        //    }
+        //}
     }
 }
